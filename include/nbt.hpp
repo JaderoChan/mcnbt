@@ -1,8 +1,6 @@
 #ifndef NBT_HPP
 #define NBT_HPP
 
-//#define NBT_NOGZIP
-
 // C Header
 #include <cstring> // std::memcpy()
 #include <cstdint> // std::size_t
