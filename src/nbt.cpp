@@ -125,26 +125,17 @@ Tag::~Tag() {
         delete name_;
         name_ = nullptr;
     }
-    if (data_.s != nullptr) {
+    if (isString() && data_.s != nullptr)
         delete data_.s;
-        data_.s = nullptr;
-    }
-    if (data_.bs != nullptr) {
+    if (isByteArray() && data_.bs != nullptr)
         delete data_.bs;
-        data_.bs = nullptr;
-    }
-    if (data_.is != nullptr) {
+    if (isIntArray() && data_.is != nullptr)
         delete data_.is;
-        data_.is = nullptr;
-    }
-    if (data_.ls != nullptr) {
+    if (isLongArray() && data_.ls != nullptr)
         delete data_.ls;
-        data_.ls = nullptr;
-    }
-    if (data_.d != nullptr) {
+    if (isComplex() && data_.d != nullptr)
         delete data_.d;
-        data_.d = nullptr;
-    }
+    data_.s = nullptr;
 }
 
 bool Tag::hasMember(const std::string &name) const {
