@@ -7,7 +7,7 @@ static Nbt::Tag readNbt(const std::string &filepath, bool isBigEndian) {
     std::ifstream is(filepath, std::ios_base::binary);
 
     if (!is.is_open())
-        return;
+        return Nbt::Tag(Nbt::End);
 
     // The NBT root tag should is a List or Compound.
     Nbt::Tag nbt(Nbt::Compound, is, isBigEndian);       // Construct a Compound from the input stream.
