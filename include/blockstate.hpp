@@ -2,13 +2,18 @@
 #define BLOCKSTATE_HPP
 
 #include "nbt.hpp"
+
 #include <string>
 
 struct BlockStateData
 {
     BlockStateData() {}
     ~BlockStateData() {}
-    Nbt::Tag getTag() const;
+    Nbt::Tag getTag() const {
+        Nbt::Tag tag = Nbt::gCompound("states");
+        _write(tag);
+        return tag;
+    };
 
 protected:
     virtual void _write(Nbt::Tag &tag) const = 0;
@@ -33,7 +38,10 @@ struct CommandBlockSD final : BlockStateData
     FacingDirection fd = Up;
 
 private:
-    void _write(Nbt::Tag &tag) const override;
+    void _write(Nbt::Tag &tag) const override {
+        tag << Nbt::gByte("conditional_bit", static_cast<char>(isConditional));
+        tag << Nbt::gInt("facing_direction", static_cast<int>(fd));
+    };
 };
 
 struct StructureBlockSD final : BlockStateData
@@ -59,7 +67,9 @@ private:
             return std::string("corner");
         return std::string();
     };
-    void _write(Nbt::Tag &tag) const override;
+    void _write(Nbt::Tag &tag) const override {
+        tag << Nbt::gString("structure_block_type", _modestr());
+    };
 };
 
 #endif // !BLOCKSTATE_HPP
