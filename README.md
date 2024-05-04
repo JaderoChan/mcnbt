@@ -1,6 +1,6 @@
 # MCNBT
 
- 一个使用C++编写的易用NBT读写库。
+ 一个使用C++编写的易用NBT读写Only-Header库。
 
 ## :earth_africa: 依赖库
 
@@ -121,12 +121,12 @@ num.getInt();	// return 10.
 ```cpp
 //...
 Nbt::Tag intArray = Nbt::gIntArray("Nums");
-intArray.addInt(1);		// add element.
+intArray.addInt(1);			// add element.
 intArray.addInt(2);
 intArray.addInt(3);
-intArray.remove(0);	// remove element by index.
+intArray.remove(0);			// remove element by index.
 std::vector<int32> *data = intArray.getIntArray();
-int first = (*data)[0];	// first = 2.
+int first = (*data)[0];		// first = 2.
 //...
 ```
 
@@ -137,18 +137,18 @@ int first = (*data)[0];	// first = 2.
 ```cpp
 //...
 Nbt::Tag root = Nbt::gCompound("compound");
-root.addMember(gInt("Num1", 1));	// 使用addMember函数添加元素。
-root << gInt("Num2", 2);	// 使用<<运算符添加元素。
-root.removeMember("Num1");	// 使用元素名称移除元素。
-root.removeMember(0);		// 使用元素索引移除元素。
+root.addMember(gInt("Num1", 1));		 // 使用addMember函数添加元素。
+root << gInt("Num2", 2);				// 使用<<运算符添加元素。
+root.removeMember("Num1");				// 使用元素名称移除元素。
+root.removeMember(0);			    	// 使用元素索引移除元素。
 root.addMember(gString("str", "text"));
-root["str"].setString("text2");	// 使用元素名称获取元素。
-std::string str = root[0].getString();	// 使用元素索引获取元素。str = "text2"。
+root["str"].setString("text2");			// 使用元素名称获取元素。
+std::string str = root[0].getString();	 // 使用元素索引获取元素。str = "text2"。
 
 Nbt::Tag list = Nbt::gList("list", Nbt::Int);	// 除了名称外，还需要指定List内元素的数据类型。
-list.addMember(gpInt(1));	// 使用addMember函数添加元素，推荐使用gp系列函数构造List内的元素。
-list << gpInt(2);	// 使用<<运算符添加元素。
-int num = list[0].getInt();	// num = 1。
+list.addMember(gpInt(1));			// 使用addMember函数添加元素，推荐使用gp系列函数构造List内的元素。
+list << gpInt(2);				   // 使用<<运算符添加元素。
+int num = list[0].getInt();		    // num = 1。
 //...
 ```
 
