@@ -66,9 +66,9 @@ int main(){
 }
 ```
 
-**方法一**构造了一个名为*root*的Compound。
+**方法一** 构造了一个名为*root*的Compound。
 
-**方法二**是一个“便利函数”用于快捷创建特定对象，在本例中，其构造了一个名为*version*的List。
+**方法二** 是一个“便利函数”用于快捷创建特定对象，在本例中，其构造了一个名为*version*的List。
 
 所有的便利函数：
 
@@ -131,13 +131,13 @@ int first = (*data)[0];		// first = 2.
 ```
 
 对于复合数据类型（List，Compound），可以使用addMember与removeMember和<<运算符重载函数进行增删操作，使用getMember或[]运算符重载函数进行读取操作。
-对于Compound标签，[]运算符重载函数可以使用Tag在Compound中的位置索引与Tag的名称作为参数（若有同名Tag，则返回索引值最小的Tag，若未找到则返回FailedTag）。
+对于Compound标签，[]运算符重载函数可以使用Tag在Compound中的位置索引与Tag的名称作为参数（若有同名Tag，则返回索引值最小的Tag，若未找到会引发报错，所以在获取元属前应该使用HasMember()等函数进行判断）。
 而List标签的[]运算符重载函数只能使用索引作为参数。
 
 ```cpp
 //...
 Nbt::Tag root = Nbt::gCompound("compound");
-root.addMember(gInt("Num1", 1));		 // 使用addMember函数添加元素。
+root.addMember(gInt("Num1", 1));		 // 使用addMember()函数添加元素。
 root << gInt("Num2", 2);				// 使用<<运算符添加元素。
 root.removeMember("Num1");				// 使用元素名称移除元素。
 root.removeMember(0);			    	// 使用元素索引移除元素。
@@ -146,9 +146,9 @@ root["str"].setString("text2");			// 使用元素名称获取元素。
 std::string str = root[0].getString();	 // 使用元素索引获取元素。str = "text2"。
 
 Nbt::Tag list = Nbt::gList("list", Nbt::Int);	// 除了名称外，还需要指定List内元素的数据类型。
-list.addMember(gpInt(1));			// 使用addMember函数添加元素，推荐使用gp系列函数构造List内的元素。
+list.addMember(gpInt(1));			// 使用addMember()函数添加元素，推荐使用gp系列函数构造List内的元素。
 list << gpInt(2);				   // 使用<<运算符添加元素。
-int num = list[0].getInt();		    // num = 1。
+int num = list[0].getInt();		    // num = 1
 //...
 ```
 
