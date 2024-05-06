@@ -1,6 +1,6 @@
 # MCNBT
 
- 一个使用C++编写的易用NBT读写库。
+ 一个使用C++编写的易用NBT读写Header-Only库。
 
 ## :earth_africa: 依赖库
 
