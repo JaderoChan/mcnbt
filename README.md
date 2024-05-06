@@ -1,38 +1,38 @@
 # MCNBT
 
- 一个使用C++编写的易用NBT读写Header-Only库。
+An easy-to-use NBT read and write Header-Only library written in C++.
 
-## :earth_africa: 依赖库
+## :earth_africa: Dependency
 
-**cpp-gzip:** 用于解压缩使用GZIP的NBT标签。若不需要使用，可通过在*nbt.hpp*文件中加入以下宏进行禁用。
+**cpp-gzip:** Used to extract NBT tags that use GZIP compressed. If you do not need to use it, you can disable it by adding the following macros to the *nbt.hpp* file.
 
 ```cpp
 #define NBT_NOGZIP
 ```
 
-## :rocket: 特点
+## :rocket: Feature
 
-- 简单易用
-- 速度快
-- 支持不同字节序（对于Java版本的数字标签通常使用大端序，而基岩版则为小端序）
-- 支持NBT转换至SNBT
-- 可生成单方块实体结构（仅基岩版），用于对特殊实体的导入（目前仅支持结构方块与命令方块）
+- Simple and easy to use
+- Fast speed and high-performance
+- Support for different byte orders (large endian order is usually used for numeric Tag for Java, while small endian order is used for bedrock)
+- Support convert NBT to SNBT
+- Can generate a single block entity structure (bedrock only) for importing special entities (currently only structure block and command block are supported)
 
-## :robot: 兼容文件
+## :robot: Files supported
 
 .dat
 .nbt
 .mcstructure
 .schematic
 
-## :triangular_flag_on_post: 使用方法
+## :triangular_flag_on_post: Usage
 
-对于标准NBT操作，只需要在项目中包含*nbt.hpp*头文件（对于未使用NBT_NOGZIP宏进行禁用GZIP库的情况下，项目还需要配置*cpp-gzip*库）
+For standard NBT operations, you only need to include the *nbt.hpp* header file in your project (if the GZIP library is not disabled with the NBT_NOGZIP macro, the project will also need to configure the *cpp-gzip* library)
 
-### 1、从文件中读取NBT
+### 1. Read the NBT from the file
 
 ```cpp
-#include <nbt.hpp>
+#include "nbt.hpp"
 
 int main(){
     //...
@@ -43,34 +43,34 @@ int main(){
 }
 ```
 
-代码中的Nbt::Tag函数是Nbt::Tag类的一个构造函数，此构造函数接受一个Nbt::TagTypes、输入流、布尔值作为参数。
+The *Nbt::Tag()* function in the code is a constructor of the Nbt::Tag class, which takes an Nbt::TagTypes, input stream, and Boolean value as arguments.
 
-**参数一（Nbt::TagTypes）**：用于指示根标签的类型（根标签可以为List和Compound），通常而言第一个参数选择使用Nbt::Compound。
+**Argument1 (Nbt::TagType enum)**: Used to indicate the type of the root tag (which can be both List and Compound), Nbt::Compound is usually chosen as the first parameter.
 
-**参数二（std::istream）**：若是从文件读取（文件必须以二进制形式读取）则应当传递文件的ifstream对象，以表示从文件输入流中读取NBT。
+**Argument2 (std::istream)**: If reading from a file (the file must be read in binary form), the ifstream object of the file should be passed to represent reading the NBT from the file input stream.
 
-**参数三（bool）**：用于指示当前输入流的字节序，默认为小端序，即默认支持读取基岩版NBT文件。
+**Argument3 (bool)**: Used to indicate the byte order of the current input stream, the default is small endian order, that is, the default support for reading bedrock NBT files.
 
-### 2、构造NBT
+### 2、Construct NBT
 
 ```cpp
 #include <nbt.hpp>
 
 int main(){
-    // 方法一
+    // Method 1
     Nbt::Tag nbt = Nbt::Tag(Nbt::Compound, "root");
-    // 方法二
+    // Method 2
     Nbt::Tag list = Nbt::gList("version");
     
     return 0;
 }
 ```
 
-**方法一**构造了一个名为*root*的Compound。
+**Method 1** Constructs a NBT of Compound named *root*.
 
-**方法二**是一个“便利函数”用于快捷创建特定对象，在本例中，其构造了一个名为*version*的List。
+**Method 2** Is a "convenience function" for quickly creating a particular object, which in this case constructs a List named *version*.
 
-所有的便利函数：
+All convenience functions:
 
 - Nbt::gByte()
 - Nbt::gShort()
@@ -84,7 +84,7 @@ int main(){
 - Nbt::gList()
 - Nbt::gCompound()
 
-以及以上便利函数的PureData版本：
+And the PureData version of the above convenience function:
 
 - Nbt::gpByte()
 - Nbt::gpShort()
@@ -98,13 +98,15 @@ int main(){
 - Nbt::gpList()
 - Nbt::gpCompound()
 
-PureData版本与普通版本的区别在于，PureData版本构造出的Tag适用于作为List的元素。（普通版本获得的Tag同样可以作为List的元素，但在被加入List时会对Tag的名称进行删除，并将其转换为PureData）
-以上函数同样可以通过Nbt::Tag的构造函数实现，如Nbt::Tag(Nbt::Int, false)等同于Nbt::gInt()，Nbt::Tag(Nbt::Int, true)等同于Nbt::gpInt()。
+The PureData version differs from the normal version in that the PureData version constructs tags that apply to elements that are lists. (The Tag obtained by the normal version can also be used as a List element, but when added to the List, the Tag name is deleted and converted to PureData.)
 
-### 3、读取与修改Tag值
+The above function can also be implemented through the constructor of Nbt::Tag, such as Nbt::Tag(Nbt::Int, false) is equivalent to Nbt::gInt(), and Nbt::Tag(Nbt::Int, true) is equivalent to Nbt::gpInt().
 
-对于基本数据类型Tag，直接调用对应的get或set函数即可。
-如对于一个Nbt::Int类型的Tag
+### 3. Read and modify Tag values
+
+For the basic data type Tag, call the corresponding get or set function directly.
+
+For example, for a Tag of type Nbt::Int
 
 ```cpp
 //...
@@ -115,8 +117,9 @@ num.getInt();	// return 10.
 //...
 ```
 
-对于数组类型Tag（ByteArray，IntArray，LongArray），可以使用对应的get函数获取整个数据对象（使用std::vector封装）并直接对其操作，对于简单的增删元素可以使用相应的add和remove函数。
-如对于一个Nbt::IntArray类型的Tag
+For the array type Tag (ByteArray, IntArray, LongArray), you can use the corresponding get function to get the entire data object (wrapped in std::vector) and manipulate it directly, and for simple add and delete elements you can use the corresponding add and remove functions.
+
+For example, for an Nbt::IntArray Tag
 
 ```cpp
 //...
@@ -130,25 +133,27 @@ int first = (*data)[0];		// first = 2.
 //...
 ```
 
-对于复合数据类型（List，Compound），可以使用addMember与removeMember和<<运算符重载函数进行增删操作，使用getMember或[]运算符重载函数进行读取操作。
-对于Compound标签，[]运算符重载函数可以使用Tag在Compound中的位置索引与Tag的名称作为参数（若有同名Tag，则返回索引值最小的Tag，若未找到则返回FailedTag）。
-而List标签的[]运算符重载函数只能使用索引作为参数。
+For Compound data types (List, Compound), addMember can be used for add and delete operations with removeMember and << operator overloads, and getMember or [] operator overloads can be used for read operations.
+
+For Compound tags, the [] operator overloading function can take the Tag's location index in Compound and the Tag's name as arguments (if there is a Tag with the same name, return the Tag with the smallest index value, If not found, an error will be reported, so you should use a function such as HasMember() to determine before obtaining the element).
+
+The [] operator overload function of the List tag can only take an index as an argument.
 
 ```cpp
 //...
 Nbt::Tag root = Nbt::gCompound("compound");
-root.addMember(gInt("Num1", 1));		 // 使用addMember函数添加元素。
-root << gInt("Num2", 2);				// 使用<<运算符添加元素。
-root.removeMember("Num1");				// 使用元素名称移除元素。
-root.removeMember(0);			    	// 使用元素索引移除元素。
+root.addMember(gInt("Num1", 1));		 // add elementn by addMember().
+root << gInt("Num2", 2);				// add elementn by << operation overload.
+root.removeMember("Num1");				// remove element by name.
+root.removeMember(0);			    	// remove element by index.
 root.addMember(gString("str", "text"));
-root["str"].setString("text2");			// 使用元素名称获取元素。
-std::string str = root[0].getString();	 // 使用元素索引获取元素。str = "text2"。
+root["str"].setString("text2");			// get element by name.
+std::string str = root[0].getString();	 // get element by index. str = "text2".
 
-Nbt::Tag list = Nbt::gList("list", Nbt::Int);	// 除了名称外，还需要指定List内元素的数据类型。
-list.addMember(gpInt(1));			// 使用addMember函数添加元素，推荐使用gp系列函数构造List内的元素。
-list << gpInt(2);				   // 使用<<运算符添加元素。
-int num = list[0].getInt();		    // num = 1。
+Nbt::Tag list = Nbt::gList("list", Nbt::Int);	// In addition to the name, you also need to specify the data type of the elements in the List to construct List Tag.
+list.addMember(gpInt(1));			// add elementn by addMember(), It is recommended to use the gp family of functions to construct elements within a List.
+list << gpInt(2);				   // add elementn by << operation overload.
+int num = list[0].getInt();		    // num = 1
 //...
 ```
 
