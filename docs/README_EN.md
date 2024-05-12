@@ -5,11 +5,13 @@ An easy-to-use NBT read and write Header-Only library in C++.
 
 ## :earth_africa: Dependency
 
-**cpp-gzip:** Used to extract NBT tags that use GZIP compressed. If you do not need to use it, you can disable it by adding the following macros to the *nbt.hpp* file.
+**gzip-hpp:** Used to extract NBT tags that use GZIP compressed. If you do not need to use it, you can disable it by adding the following macros to the *nbt.hpp* file.
 
 ```cpp
 #define NBT_NOGZIP
 ```
+
+Goto: https://github.com/mapbox/gzip-hpp
 
 ## :rocket: Feature
 
