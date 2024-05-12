@@ -199,12 +199,12 @@ public:
     union Num
     {
         Num() : i64(0) {}
-        int8 i8;
-        int16 i16;
-        int32 i32;
-        int64 i64;
-        fp32 f32;
-        fp64 f64;
+        int8 i8;    // char
+        int16 i16;    // short
+        int32 i32;    // int
+        int64 i64;    // long long
+        fp32 f32;    // float
+        fp64 f64;    // double
     };
 
     // The data of NBT tag.
