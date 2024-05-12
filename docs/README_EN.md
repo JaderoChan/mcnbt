@@ -1,7 +1,7 @@
 
 # MCNBT
 
-An easy-to-use NBT read and write Header-Only library written in C++.
+An easy-to-use NBT read and write Header-Only library in C++.
 
 ## :earth_africa: Dependency
 
