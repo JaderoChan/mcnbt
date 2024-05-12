@@ -4,7 +4,7 @@
 
 ## :earth_africa: 依赖库
 
-**cpp-gzip:** 用于解压缩使用GZIP的NBT标签。若不需要使用，可通过在*nbt.hpp*文件中加入以下宏进行禁用。
+**gzip-hpp:** 用于解压缩使用GZIP的NBT标签。若不需要使用，可通过在*nbt.hpp*文件中加入以下宏进行禁用。
 
 ```cpp
 #define NBT_NOGZIP
