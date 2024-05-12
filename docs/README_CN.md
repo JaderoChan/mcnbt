@@ -10,6 +10,8 @@
 #define NBT_NOGZIP
 ```
 
+跳转：https://github.com/mapbox/gzip-hpp
+
 ## :rocket: 特点
 
 - 简单易用
