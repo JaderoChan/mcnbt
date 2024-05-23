@@ -53,8 +53,8 @@
 #ifndef NBT_MACRO
 #define NBT_MACRO
 
-constexpr auto NBT_WARNHINT = "[NBT Warning] ";
-constexpr auto NBT_ERRHINT = "[NBT Error] ";
+#define NBT_WARNHINT "[NBT Warning] "
+#define NBT_ERRHINT "[NBT Error] "
 #define NBT_TERMINATE std::terminate()
 
 #include <iostream>
