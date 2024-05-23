@@ -475,7 +475,6 @@ public:
         NBT_ASSERT(isLongArray());
         return data_.ls;
     }
-    // @return Return Failed Tag if the object is not a List or Compound.
     // @note If pos is out index range will be cause error.
     Tag &getMember(std::size_t pos) {
         NBT_ASSERT(isComplex() && data_.d != nullptr);
@@ -499,7 +498,7 @@ public:
                 return var;
         }
 
-        NBT_ERR("Not special name member.");
+        NBT_ERR("Not specify name member.");
     }
     Tag &front() {
         NBT_ASSERT(isComplex() && data_.d != nullptr);
