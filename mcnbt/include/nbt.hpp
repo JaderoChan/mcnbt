@@ -29,11 +29,9 @@
 
 #define NBT_NOGZIP
 
-// C Header
 #include <cstring> // std::memcpy()
 #include <cstdint> // std::size_t
 
-// Cpp Header
 #include <vector>   // std::vector
 #include <string>   // std::string
 #include <fstream>  // std::istream, std::ostream, fstream
@@ -52,29 +50,38 @@
 #include <gzip/decompress.h>
 #endif // !NBT_NOGZIP
 
+#if __cplusplus >= 201703L
+#define NBT_STATIC static inline
+#else
+#define NBT_STATIC static
+#endif
+
 #ifndef NBT_MACRO
 #define NBT_MACRO
+
 #define NBT_WARNHINT "[NBT Warning] "
 #define NBT_ERRHINT "[NBT Error] "
 #define NBT_TERMINATE std::terminate()
+
 #include <iostream>
 #define NBT_WARN(x) std::cerr << NBT_WARNHINT << x << std::endl
 #define NBT_ERR(x) {std::cerr << NBT_WARNHINT << x << std::endl; NBT_TERMINATE;}
 #define NBT_IFWARN(x,y) if(x) std::cerr << NBT_WARNHINT << y << std::endl
 #define NBT_IFERR(x,y) if(x) {std::cerr << NBT_ERRHINT << y << std::endl; NBT_TERMINATE;}
+
 #endif // NBT_MACRO
 
 namespace Nbt
 {
 
 // Defines the size of the  buffer used by the _bytesToNum and _numToBytes functions.
-static constexpr const int _BufferSize = 8;
+constexpr const int _BufferSize = 8;
 
-static char _buffer[_BufferSize];
+NBT_STATIC char _buffer[_BufferSize];
 
 // @brief Reverse a C string.
 // @param size The size of range that need reversed, and reverser all if the size is 0.
-static inline void _reverse(char *str, std::size_t size = 0) {
+inline void _reverse(char *str, std::size_t size = 0) {
     std::size_t _size = size;
     if (size == 0)
         _size = std::strlen(str);
@@ -88,7 +95,7 @@ static inline void _reverse(char *str, std::size_t size = 0) {
 }
 
 // @brief Check if system is big endian.
-static inline bool _isBigEndian() {
+inline bool _isBigEndian() {
     static bool inited = false;
     static bool isBig = false;
     if (inited)
@@ -130,6 +137,11 @@ void _numToBytes(T num, std::ostream &os, bool isBigEndian = false) {
     os.write(_buffer, size);
 }
 
+}
+
+namespace Nbt
+{
+
 // NBT tag types
 enum TagTypes : char
 {
@@ -147,40 +159,6 @@ enum TagTypes : char
     IntArray = 11,
     LongArray = 12
 };
-
-// @brief Get the NBT tag string representation. (Usually used to debug)
-static inline std::string getTagString(TagTypes type) {
-    switch (type) {
-        case End:
-            return "End";
-        case Byte:
-            return "Byte";
-        case Short:
-            return "Short";
-        case Int:
-            return "Int";
-        case Long:
-            return "Long";
-        case Float:
-            return "Float";
-        case Double:
-            return "Double";
-        case String:
-            return "String";
-        case ByteArray:
-            return "Byte Array";
-        case IntArray:
-            return "Int Array";
-        case LongArray:
-            return "Long Array";
-        case List:
-            return "List";
-        case Compound:
-            return "Compound";
-        default:
-            return "Undefined";
-    }
-}
 
 class Tag
 {
@@ -237,7 +215,7 @@ public:
     {
         std::stringstream ss;
         is.seekg(0, is.end);
-        long long size = is.tellg();
+        std::size_t size = is.tellg();
         is.seekg(0, is.beg);
         char *buffer = new char[size];
         is.read(buffer, size);
@@ -255,7 +233,7 @@ public:
             delete[] buffer;
         }
 
-        _loadFromStream(ss, isBigEndian);
+        loadFromStream(ss, isBigEndian);
     }
     Tag(const Tag &rhs) :
         mType(rhs.mType), mPureData(rhs.mPureData),
@@ -303,14 +281,8 @@ public:
         mData.s = nullptr;
     }
 
-    // @brief The default assignment case is copy(), and no explicit call is required.
     Tag copy() {
-        Tag tag(*this);
-        return tag;
-    }
-    // @brief Move an object containing a lot of data, and original object will be destroyed.
-    Tag move() {
-        return std::move(*this);
+        return Tag(*this);
     }
 
     bool isEnd() const {
@@ -386,6 +358,12 @@ public:
         return false;
     }
 
+    // @return Return a empty string if the object is not named.
+    std::string name() const {
+        if (mPureData || mName == nullptr)
+            return std::string();
+        return *mName;
+    }
     TagTypes type() const {
         return mType;
     }
@@ -395,12 +373,6 @@ public:
         if (!isList())
             return End;
         return mDataType;
-    }
-    // @return Return a empty string if the object is not named.
-    std::string name() const {
-        if (mPureData || mName == nullptr)
-            return std::string();
-        return *mName;
     }
     // @return Return 0 if the object is not named.
     int16 nameLen() const {
@@ -616,12 +588,12 @@ public:
         mData.ls->push_back(value);
     }
     // @note Do nothing if the object is neither a List nor a Compound.
-    void addMember(const Tag &tag) {
+    void addMember(Tag &tag) {
         if (!isComplex() || tag.mType == End)
             return;
         if (mData.d == nullptr)
             mData.d = new std::vector<Tag>();
-        mData.d->emplace_back(tag);
+        mData.d->emplace_back(std::move(tag));
         if (isList())
             mData.d->back().mPureData = true;
         else
@@ -639,6 +611,7 @@ public:
         else
             mData.d->back().mPureData = false;
     }
+
     // @note Do nothing if the object is not a Byte Array.
     void removeByte(std::size_t pos) {
         if (!isByteArray() || mData.bs == nullptr || pos >= mData.bs->size())
@@ -877,7 +850,7 @@ public:
     Tag &operator[](const std::string &name) {
         return getMember(name);
     }
-    Tag &operator<<(const Tag &tag) {
+    Tag &operator<<(Tag &tag) {
         addMember(tag);
         return *this;
     }
@@ -894,28 +867,166 @@ private:
         mType(type), mPureData(isPuredata),
         mDataType(End), mName(nullptr), mData(Data())
     {
-        _loadFromStream(is, isBigEndian);
+        loadFromStream(is, isBigEndian);
     }
     // @brief Get a NBT tag from binary input stream.
-    void _loadFromStream(std::istream &is, bool isBigEndian) {
-        _construcPrework(is, isBigEndian);
+    void loadFromStream(std::istream &is, bool isBigEndian) {
+        construcPrework(is, isBigEndian);
         if (isEnd())
             return;
         if (isNum())
-            _numConstruct(is, isBigEndian);
+            numConstruct(is, isBigEndian);
         else if (isString())
-            _stringConstruct(is, isBigEndian);
+            stringConstruct(is, isBigEndian);
         else if (isArray())
-            _arrayConstruct(is, isBigEndian);
+            arrayConstruct(is, isBigEndian);
         else if (isList())
-            _listConstruct(is, isBigEndian);
+            listConstruct(is, isBigEndian);
         else if (isCompound())
-            _compoundConstruct(is, isBigEndian);
+            compoundConstruct(is, isBigEndian);
         else
             NBT_ERR(std::to_string(static_cast<int>(mType)) + " Tag type is undefined!");
     }
     // @brief Get a NBT tag from SNBT.
-    void _loadFromSnbt(const std::string &snbt) {};
+    void loadFromSnbt(const std::string &snbt) {};
+    void construcPrework(std::istream &is, bool isBigEndian) {
+        if (mPureData)
+            return;
+
+        TagTypes type = static_cast<TagTypes>(is.get());
+        NBT_ASSERT(type == mType);
+
+        int16 nameLen = _bytesToNum<int16>(is, isBigEndian);
+
+        if (mName != nullptr) {
+            delete mName;
+            mName = nullptr;
+        }
+        if (nameLen == 0)
+            return;
+
+        mName = new std::string();
+        char *bytes = new char[nameLen];
+        is.read(bytes, nameLen);
+        mName->assign(bytes, static_cast<std::size_t>(is.gcount()));
+        delete[] bytes;
+    }
+    void numConstruct(std::istream &is, bool isBigEndian) {
+        switch (mType) {
+            case Byte:
+                mData.n.i8 = _bytesToNum<int8>(is, isBigEndian);
+                break;
+            case Short:
+                mData.n.i16 = _bytesToNum<int16>(is, isBigEndian);
+                break;
+            case Int:
+                mData.n.i32 = _bytesToNum<int32>(is, isBigEndian);
+                break;
+            case Long:
+                mData.n.i64 = _bytesToNum<int64>(is, isBigEndian);
+                break;
+            case Float:
+                mData.n.f32 = _bytesToNum<fp32>(is, isBigEndian);
+                break;
+            case Double:
+                mData.n.f64 = _bytesToNum<fp64>(is, isBigEndian);
+                break;
+            default:
+                break;
+        }
+    }
+    void stringConstruct(std::istream &is, bool isBigEndian) {
+        int16 strlen = _bytesToNum<int16>(is, isBigEndian);
+
+        if (mData.s != nullptr) {
+            delete mData.s;
+            mData.s = nullptr;
+        }
+        if (strlen == 0)
+            return;
+
+        mData.s = new std::string();
+        char *bytes = new char[strlen];
+        is.read(bytes, strlen);
+        mData.s->assign(bytes, static_cast<std::size_t>(is.gcount()));
+        delete[] bytes;
+    }
+    void arrayConstruct(std::istream &is, bool isBigEndian) {
+        int32 dsize = _bytesToNum<int32>(is, isBigEndian);
+
+        if (isByteArray()) {
+            if (mData.bs != nullptr) {
+                delete mData.bs;
+                mData.bs = nullptr;
+            }
+            if (dsize == 0)
+                return;
+            mData.bs = new std::vector<int8>();
+            mData.bs->reserve(dsize);
+        }
+        if (isIntArray()) {
+            if (mData.is != nullptr) {
+                delete mData.is;
+                mData.ls = nullptr;
+            }
+            if (dsize == 0)
+                return;
+            mData.is = new std::vector<int32>();
+            mData.is->reserve(dsize);
+        }
+        if (isLongArray()) {
+            if (mData.ls != nullptr) {
+                delete mData.ls;
+                mData.ls = nullptr;
+            }
+            if (dsize == 0)
+                return;
+            mData.ls = new std::vector<int64>();
+            mData.ls->reserve(dsize);
+        }
+
+        int32 size = 0;
+        while (!is.eof() && size++ < dsize) {
+            if (isByteArray())
+                mData.bs->emplace_back(_bytesToNum<int8>(is, isBigEndian));
+            if (isIntArray())
+                mData.is->emplace_back(_bytesToNum<int32>(is, isBigEndian));
+            if (isLongArray())
+                mData.ls->emplace_back(_bytesToNum<int64>(is, isBigEndian));
+        }
+    }
+    void listConstruct(std::istream &is, bool isBigEndian) {
+        mDataType = static_cast<TagTypes>(is.get());
+        int32 dsize = _bytesToNum<int32>(is, isBigEndian);
+
+        if (mData.d != nullptr) {
+            delete mData.d;
+            mData.d = nullptr;
+        }
+        if (dsize == 0)
+            return;
+
+        mData.d = new std::vector<Tag>();
+        mData.d->reserve(dsize);
+
+        int32 size = 0;
+        while (!is.eof() && size++ < dsize)
+            mData.d->emplace_back(Tag(mDataType, is, isBigEndian, true));
+    }
+    void compoundConstruct(std::istream &is, bool isBigEndian) {
+        if (mData.d != nullptr)
+            delete mData.d;
+        mData.d = new std::vector<Tag>();
+
+        while (!is.eof()) {
+            TagTypes type = static_cast<TagTypes>(is.peek());
+            if (type == End) {
+                is.get();         // Give up End tag and move stream point to next byte.
+                break;
+            }
+            mData.d->emplace_back(Tag(type, is, isBigEndian, false));
+        }
+    }
     void _write(std::ostream &os, bool isBigEndian = false) const {
         if (!mPureData) {
             os.put(static_cast<int8>(mType));
@@ -1017,144 +1128,6 @@ private:
             return;
         }
     }
-    void _construcPrework(std::istream &is, bool isBigEndian) {
-        if (mPureData)
-            return;
-
-        TagTypes type = static_cast<TagTypes>(is.get());
-        NBT_ASSERT(type == mType);
-
-        int16 nameLen = _bytesToNum<int16>(is, isBigEndian);
-
-        if (mName != nullptr) {
-            delete mName;
-            mName = nullptr;
-        }
-        if (nameLen == 0)
-            return;
-
-        mName = new std::string();
-        char *bytes = new char[nameLen];
-        is.read(bytes, nameLen);
-        mName->assign(bytes, static_cast<std::size_t>(is.gcount()));
-        delete[] bytes;
-    }
-    void _numConstruct(std::istream &is, bool isBigEndian) {
-        switch (mType) {
-            case Byte:
-                mData.n.i8 = _bytesToNum<int8>(is, isBigEndian);
-                break;
-            case Short:
-                mData.n.i16 = _bytesToNum<int16>(is, isBigEndian);
-                break;
-            case Int:
-                mData.n.i32 = _bytesToNum<int32>(is, isBigEndian);
-                break;
-            case Long:
-                mData.n.i64 = _bytesToNum<int64>(is, isBigEndian);
-                break;
-            case Float:
-                mData.n.f32 = _bytesToNum<fp32>(is, isBigEndian);
-                break;
-            case Double:
-                mData.n.f64 = _bytesToNum<fp64>(is, isBigEndian);
-                break;
-            default:
-                break;
-        }
-    }
-    void _stringConstruct(std::istream &is, bool isBigEndian) {
-        int16 strlen = _bytesToNum<int16>(is, isBigEndian);
-
-        if (mData.s != nullptr) {
-            delete mData.s;
-            mData.s = nullptr;
-        }
-        if (strlen == 0)
-            return;
-
-        mData.s = new std::string();
-        char *bytes = new char[strlen];
-        is.read(bytes, strlen);
-        mData.s->assign(bytes, static_cast<std::size_t>(is.gcount()));
-        delete[] bytes;
-    }
-    void _arrayConstruct(std::istream &is, bool isBigEndian) {
-        int32 dsize = _bytesToNum<int32>(is, isBigEndian);
-
-        if (isByteArray()) {
-            if (mData.bs != nullptr) {
-                delete mData.bs;
-                mData.bs = nullptr;
-            }
-            if (dsize == 0)
-                return;
-            mData.bs = new std::vector<int8>();
-            mData.bs->reserve(dsize);
-        }
-        if (isIntArray()) {
-            if (mData.is != nullptr) {
-                delete mData.is;
-                mData.ls = nullptr;
-            }
-            if (dsize == 0)
-                return;
-            mData.is = new std::vector<int32>();
-            mData.is->reserve(dsize);
-        }
-        if (isLongArray()) {
-            if (mData.ls != nullptr) {
-                delete mData.ls;
-                mData.ls = nullptr;
-            }
-            if (dsize == 0)
-                return;
-            mData.ls = new std::vector<int64>();
-            mData.ls->reserve(dsize);
-        }
-
-        int32 size = 0;
-        while (!is.eof() && size++ < dsize) {
-            if (isByteArray())
-                mData.bs->emplace_back(_bytesToNum<int8>(is, isBigEndian));
-            if (isIntArray())
-                mData.is->emplace_back(_bytesToNum<int32>(is, isBigEndian));
-            if (isLongArray())
-                mData.ls->emplace_back(_bytesToNum<int64>(is, isBigEndian));
-        }
-    }
-    void _listConstruct(std::istream &is, bool isBigEndian) {
-        mDataType = static_cast<TagTypes>(is.get());
-        int32 dsize = _bytesToNum<int32>(is, isBigEndian);
-
-        if (mData.d != nullptr) {
-            delete mData.d;
-            mData.d = nullptr;
-        }
-        if (dsize == 0)
-            return;
-
-        mData.d = new std::vector<Tag>();
-        mData.d->reserve(dsize);
-
-        int32 size = 0;
-        while (!is.eof() && size++ < dsize)
-            mData.d->emplace_back(Tag(mDataType, is, isBigEndian, true));
-    }
-    void _compoundConstruct(std::istream &is, bool isBigEndian) {
-        if (mData.d != nullptr)
-            delete mData.d;
-        mData.d = new std::vector<Tag>();
-
-        while (!is.eof()) {
-            TagTypes type = static_cast<TagTypes>(is.peek());
-            if (type == End) {
-                is.get();         // Give up End tag and move stream point to next byte.
-                break;
-            }
-            mData.d->emplace_back(Tag(type, is, isBigEndian, false));
-        }
-    }
 
 private:
     // Whether to the object  is a "Base Tag", and the Base Tag has not description prefix. (e.g. name, name length)
@@ -1166,131 +1139,136 @@ private:
     Data mData;
 };
 
-static inline Tag gByte(const std::string &name, char value) {
+}
+
+namespace Nbt
+{
+
+inline Tag gByte(const std::string &name, char value) {
     Tag tag(TagTypes::Byte, name);
     tag.setByte(value);
     return tag;
 }
 
-static inline Tag gpByte(char value) {
+inline Tag gpByte(char value) {
     Tag tag(TagTypes::Byte, true);
     tag.setByte(value);
     return tag;
 }
 
-static inline Tag gShort(const std::string &name, short value) {
+inline Tag gShort(const std::string &name, short value) {
     Tag tag(TagTypes::Short, name);
     tag.setShort(value);
     return tag;
 }
 
-static inline Tag gpShort(short value) {
+inline Tag gpShort(short value) {
     Tag tag(TagTypes::Short, true);
     tag.setShort(value);
     return tag;
 }
 
-static inline Tag gInt(const std::string &name, int value) {
+inline Tag gInt(const std::string &name, int value) {
     Tag tag(TagTypes::Int, name);
     tag.setInt(value);
     return tag;
 }
 
-static inline Tag gpInt(int value) {
+inline Tag gpInt(int value) {
     Tag tag(TagTypes::Int, true);
     tag.setInt(value);
     return tag;
 }
 
-static inline Tag gLong(const std::string &name, long long value) {
+inline Tag gLong(const std::string &name, long long value) {
     Tag tag(TagTypes::Long, name);
     tag.setLong(value);
     return tag;
 }
 
-static inline Tag gpLong(long long value) {
+inline Tag gpLong(long long value) {
     Tag tag(TagTypes::Long, true);
     tag.setLong(value);
     return tag;
 }
 
-static inline Tag gFloat(const std::string &name, float value) {
+inline Tag gFloat(const std::string &name, float value) {
     Tag tag(TagTypes::Float, name);
     tag.setFloat(value);
     return tag;
 }
 
-static inline Tag gpFloat(float value) {
+inline Tag gpFloat(float value) {
     Tag tag(TagTypes::Float, true);
     tag.setFloat(value);
     return tag;
 }
 
-static inline Tag gDouble(const std::string &name, double value) {
+inline Tag gDouble(const std::string &name, double value) {
     Tag tag(TagTypes::Double, name);
     tag.setDouble(value);
     return tag;
 }
 
-static inline Tag gpDouble(double value) {
+inline Tag gpDouble(double value) {
     Tag tag(TagTypes::Double, true);
     tag.setDouble(value);
     return tag;
 }
 
-static inline Tag gString(const std::string &name, const std::string &value) {
+inline Tag gString(const std::string &name, const std::string &value) {
     Tag tag(TagTypes::String, name);
     tag.setString(value);
     return tag;
 }
 
-static inline Tag gpString(const std::string &value) {
+inline Tag gpString(const std::string &value) {
     Tag tag(TagTypes::String, true);
     tag.setString(value);
     return tag;
 }
 
-static inline Tag gByteArray(const std::string &name = std::string()) {
+inline Tag gByteArray(const std::string &name = std::string()) {
     return Tag(TagTypes::ByteArray, name);
 }
 
-static inline Tag gpByteArray() {
+inline Tag gpByteArray() {
     return Tag(TagTypes::ByteArray, true);
 }
 
-static inline Tag gIntArray(const std::string &name = std::string()) {
+inline Tag gIntArray(const std::string &name = std::string()) {
     return Tag(TagTypes::IntArray, name);
 }
 
-static inline Tag gpIntArray() {
+inline Tag gpIntArray() {
     return Tag(TagTypes::IntArray, true);
 }
 
-static inline Tag gLongArray(const std::string &name = std::string()) {
+inline Tag gLongArray(const std::string &name = std::string()) {
     return Tag(TagTypes::LongArray, name);
 }
 
-static inline Tag gpLongArray() {
+inline Tag gpLongArray() {
     return Tag(TagTypes::LongArray, true);
 }
 
-static inline Tag gList(const std::string &name, TagTypes dtype) {
+inline Tag gList(const std::string &name, TagTypes dtype) {
     Tag tag(TagTypes::List, name);
     tag.mDataType = dtype;
     return tag;
 }
 
-static inline Tag gpList(TagTypes dtype) {
+inline Tag gpList(TagTypes dtype) {
     Tag tag(TagTypes::List, true);
     tag.mDataType = dtype;
     return tag;
 }
 
-static inline Tag gCompound(const std::string &name = std::string()) {
+inline Tag gCompound(const std::string &name = std::string()) {
     return Tag(Compound, name);
 }
 
-static inline Tag gpCompound() {
+inline Tag gpCompound() {
     return Tag(Compound, true);
 }
 
