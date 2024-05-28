@@ -38,11 +38,11 @@ struct MCStructure
 
         Tag size = gList("size", Int);
         size << gpInt(sizeX) << gpInt(sizeY) << gpInt(sizeZ);
-        root << size.move();
+        root << size;
 
         Tag swo = gList("structure_world_origin", Int);
         swo << gpInt(0) << gpInt(0) << gpInt(0);
-        root << swo.move();
+        root << swo;
 
         Tag structure = gCompound("structure");
         Tag blockIndices = gList("block_indices", List);
@@ -52,10 +52,10 @@ struct MCStructure
         Tag blockPalette = gList("block_palette", Compound);
         Tag blockPositionData = gCompound("block_position_data");
         palette << gCompound("default");
-        palette["default"] << blockPalette.move() << blockPositionData.move();
+        palette["default"] << blockPalette << blockPositionData;
 
-        structure << blockIndices.move() << entities.move() << palette.move();
-        root << structure.move();
+        structure << blockIndices << entities << palette;
+        root << structure;
     };
 
     Nbt::Tag &formatVersion() { return root[0]; }
@@ -78,10 +78,10 @@ static Nbt::Tag getSingleBlockStructure(const std::string &blockId,
     mcs.blockIndices2() << Nbt::gpInt(-1);
     Nbt::Tag block = Nbt::gpCompound();
     block << Nbt::gString("name", blockId) << bsd.getTag() << Nbt::gInt("version", version);
-    mcs.blockPalette() << block.move();
+    mcs.blockPalette() << block;
     Nbt::Tag bpd = Nbt::gCompound("0");
     bpd << bed.getTag();
-    mcs.blockPositionData() << bpd.move();
+    mcs.blockPositionData() << bpd;
     return mcs.root;
 }
 
