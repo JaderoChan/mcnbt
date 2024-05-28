@@ -1,10 +1,10 @@
-// Project "mcnbt" library by 頔珞JaderoChan
+// The "mcnbt" library written in c++.
+//
+// Webs: https://github.com/JaderoChan/mcnbt
 //
 // MIT License
 //
 // Copyright (c) 2024 頔珞JaderoChan
-//
-// https://github.com/JaderoChan/mcnbt
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
