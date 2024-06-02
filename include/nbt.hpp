@@ -57,7 +57,7 @@
 #endif // _MSVC_LANG
 
 #if NBT_CPPVERS >= 201703L
-#define NBT_STATIC static inline
+#define NBT_STATIC inline
 #else
 #define NBT_STATIC static
 #endif 
