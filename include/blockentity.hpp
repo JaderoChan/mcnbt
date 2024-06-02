@@ -1,3 +1,29 @@
+// The "mcnbt" library written in c++.
+//
+// Webs: https://github.com/JaderoChan/mcnbt
+//
+// MIT License
+//
+// Copyright (c) 2024 頔珞JaderoChan
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 #ifndef BLOCKENTITY_HPP
 #define BLOCKENTITY_HPP
 
@@ -5,13 +31,8 @@
 
 #include <string>
 
-#ifndef BLOCKENTITY_MACRO
-#define BLOCKENTITY_MACRO
-
-#define BLCOKENTITY_BLOCKID_COMMAND "CommandBlock"
-#define BLCOKENTITY_BLOCKID_STRUCTURE "StructureBlock"
-
-#endif // !BLOCKENTITY_MACRO
+namespace Nbt
+{
 
 struct BlockEntityData
 {
@@ -20,12 +41,12 @@ struct BlockEntityData
         id(id), customName(customeName) {}
     virtual ~BlockEntityData() {}
 
-    Nbt::Tag getTag() const {
-        Nbt::Tag tag = Nbt::gCompound("block_entity_data");
-        tag << Nbt::gString("id", id);
-        tag << Nbt::gString("CustomName", customName);
-        tag << Nbt::gByte("isMovable", static_cast<char>(isMovable));
-        tag << Nbt::gInt("x", pos[0]) << Nbt::gInt("y", pos[1]) << Nbt::gInt("z", pos[2]);
+    Tag getTag() const {
+        Tag tag = gCompound("block_entity_data");
+        tag << gString("id", id);
+        tag << gString("CustomName", customName);
+        tag << gByte("isMovable", static_cast<char>(isMovable));
+        tag << gInt("x", pos[0]) << gInt("y", pos[1]) << gInt("z", pos[2]);
         _write(tag);
         return tag;
     };
@@ -39,15 +60,15 @@ struct BlockEntityData
     bool isMovable = true;
 
 protected:
-    virtual void _write(Nbt::Tag &tag) const = 0;
+    virtual void _write(Tag &tag) const = 0;
 };
 
 struct CommandBlockED final : BlockEntityData
 {
-    CommandBlockED() : BlockEntityData(BLCOKENTITY_BLOCKID_COMMAND) {}
+    CommandBlockED() : BlockEntityData("CommandBlock") {}
     CommandBlockED(const std::string &command, int tickDelay = 0,
                    bool isAuto = false, bool isPowered = true, bool conditionMet = false) :
-        BlockEntityData(BLCOKENTITY_BLOCKID_COMMAND), command(command), tickDelay(0),
+        BlockEntityData("CommandBlock"), command(command), tickDelay(0),
         isAuto(isAuto), isPowered(isPowered), conditionMet(conditionMet),
         lastOuTut(std::string()) {}
 
@@ -76,23 +97,23 @@ struct CommandBlockED final : BlockEntityData
     long long lastExecution = 0;
 
 private:
-    void _write(Nbt::Tag &tag) const override {
-        tag << Nbt::gString("Command", command);
-        tag << Nbt::gByte("ExecuteOnFirstTick", static_cast<char>(executeOnFirstTick));
-        tag << Nbt::gInt("LPCommandMode", 0);
-        tag << Nbt::gByte("LPCondionalMode", 0);
-        tag << Nbt::gByte("LPRedstoneMode", 0);
-        tag << Nbt::gLong("LastExecution", lastExecution);
-        tag << Nbt::gString("LastOuTut", lastOuTut);
-        tag << Nbt::gList("LastOuTuTarams", Nbt::End);
-        tag << Nbt::gInt("SuccessCount", successCount);
-        tag << Nbt::gInt("TickDelay", tickDelay);
-        tag << Nbt::gByte("TrackOuTut", static_cast<char>(trackOuTut));
-        tag << Nbt::gInt("Version", version);
-        tag << Nbt::gByte("auto", static_cast<char>(isAuto));
-        tag << Nbt::gByte("conditionMet", static_cast<char>(conditionMet));
-        tag << Nbt::gByte("conditionalMode", conditionalMode);
-        tag << Nbt::gByte("powered", static_cast<char>(isPowered));
+    void _write(Tag &tag) const override {
+        tag << gString("Command", command);
+        tag << gByte("ExecuteOnFirstTick", static_cast<char>(executeOnFirstTick));
+        tag << gInt("LPCommandMode", 0);
+        tag << gByte("LPCondionalMode", 0);
+        tag << gByte("LPRedstoneMode", 0);
+        tag << gLong("LastExecution", lastExecution);
+        tag << gString("LastOuTut", lastOuTut);
+        tag << gList("LastOuTuTarams", End);
+        tag << gInt("SuccessCount", successCount);
+        tag << gInt("TickDelay", tickDelay);
+        tag << gByte("TrackOuTut", static_cast<char>(trackOuTut));
+        tag << gInt("Version", version);
+        tag << gByte("auto", static_cast<char>(isAuto));
+        tag << gByte("conditionMet", static_cast<char>(conditionMet));
+        tag << gByte("conditionalMode", conditionalMode);
+        tag << gByte("powered", static_cast<char>(isPowered));
     };
 };
 
@@ -137,9 +158,9 @@ struct StructureBlockED final : BlockEntityData
         Disk
     };
 
-    StructureBlockED() : BlockEntityData(BLCOKENTITY_BLOCKID_STRUCTURE) {}
+    StructureBlockED() : BlockEntityData("StructureBlock") {}
     StructureBlockED(const std::string &structureName, Mode mode = Load, bool ignoreEntities = false) :
-        BlockEntityData(BLCOKENTITY_BLOCKID_STRUCTURE), structureName(structureName), ignoreEntities(ignoreEntities) {}
+        BlockEntityData("StructureBlock"), structureName(structureName), ignoreEntities(ignoreEntities) {}
 
     std::string structureName;
     Mode data = Load;
@@ -158,31 +179,33 @@ struct StructureBlockED final : BlockEntityData
     int size[3] = { 1, 1, 1 };
 
 private:
-    void _write(Nbt::Tag &tag) const override {
-        tag << Nbt::gByte("animationMode", static_cast<char>(animationMode));
-        tag << Nbt::gFloat("animationSeconds", animationSeconds);
-        tag << Nbt::gInt("data", static_cast<int>(data));
-        tag << Nbt::gString("dataField", std::string());
-        tag << Nbt::gString("id", id);
-        tag << Nbt::gByte("ignoreEntities", static_cast<char>(ignoreEntities));
-        tag << Nbt::gByte("includePlayers", 0);
-        tag << Nbt::gFloat("integrity", integrity);
-        tag << Nbt::gByte("isMovable", static_cast<char>(isMovable));
-        tag << Nbt::gByte("isPowered", static_cast<char>(isPowered));
-        tag << Nbt::gByte("mirror", static_cast<char>(mirror));
-        tag << Nbt::gInt("redstoneSaveMode", static_cast<int>(redstoneSaveMode));
-        tag << Nbt::gByte("removeBlcoks", static_cast<char>(removeBlocks));
-        tag << Nbt::gByte("rotation", static_cast<char>(rotation));
-        tag << Nbt::gByte("seed", static_cast<char>(seed));
-        tag << Nbt::gByte("showBoundingBox", static_cast<char>(showBoundingBox));
-        tag << Nbt::gString("structureName", structureName);
-        tag << Nbt::gInt("xStructureOffset", offset[0]);
-        tag << Nbt::gInt("yStructureOffset", offset[1]);
-        tag << Nbt::gInt("zStructureOffset", offset[2]);
-        tag << Nbt::gInt("xStructureSize", size[0]);
-        tag << Nbt::gInt("yStructureSize", size[1]);
-        tag << Nbt::gInt("zStructureSize", size[2]);
+    void _write(Tag &tag) const override {
+        tag << gByte("animationMode", static_cast<char>(animationMode));
+        tag << gFloat("animationSeconds", animationSeconds);
+        tag << gInt("data", static_cast<int>(data));
+        tag << gString("dataField", std::string());
+        tag << gString("id", id);
+        tag << gByte("ignoreEntities", static_cast<char>(ignoreEntities));
+        tag << gByte("includePlayers", 0);
+        tag << gFloat("integrity", integrity);
+        tag << gByte("isMovable", static_cast<char>(isMovable));
+        tag << gByte("isPowered", static_cast<char>(isPowered));
+        tag << gByte("mirror", static_cast<char>(mirror));
+        tag << gInt("redstoneSaveMode", static_cast<int>(redstoneSaveMode));
+        tag << gByte("removeBlcoks", static_cast<char>(removeBlocks));
+        tag << gByte("rotation", static_cast<char>(rotation));
+        tag << gByte("seed", static_cast<char>(seed));
+        tag << gByte("showBoundingBox", static_cast<char>(showBoundingBox));
+        tag << gString("structureName", structureName);
+        tag << gInt("xStructureOffset", offset[0]);
+        tag << gInt("yStructureOffset", offset[1]);
+        tag << gInt("zStructureOffset", offset[2]);
+        tag << gInt("xStructureSize", size[0]);
+        tag << gInt("yStructureSize", size[1]);
+        tag << gInt("zStructureSize", size[2]);
     };
 };
+
+}
 
 #endif // !BLOCKENTITY_HPP
