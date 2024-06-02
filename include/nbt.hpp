@@ -50,11 +50,17 @@
 #include <gzip/decompress.h>
 #endif // !NBT_NOGZIP
 
-#if __cplusplus >= 201703L
+#ifdef _MSVC_LANG
+#define NBT_CPPVERS _MSVC_LANG
+#else
+#define NBT_CPPVERS __cplusplus
+#endif // _MSVC_LANG
+
+#if NBT_CPPVERS >= 201703L
 #define NBT_STATIC static inline
 #else
 #define NBT_STATIC static
-#endif
+#endif 
 
 #ifndef NBT_MACRO
 #define NBT_MACRO
@@ -120,7 +126,7 @@ T _bytesToNum(std::istream &is, bool isBigEndian = false, bool restoreCursor = f
     is.read(_buffer, size);
     size = static_cast<std::size_t>(is.gcount());
     if (isBigEndian != IsBigEndian)
-        Nbt::_reverse(_buffer, size);
+        _reverse(_buffer, size);
     std::memcpy(&result, _buffer, size);
     if (restoreCursor)
         is.seekg(begpos);
@@ -133,7 +139,7 @@ void _numToBytes(T num, std::ostream &os, bool isBigEndian = false) {
     std::size_t size = sizeof(T);
     std::memcpy(_buffer, &num, size);
     if (isBigEndian != IsBigEndian)
-        Nbt::_reverse(_buffer, size);
+        _reverse(_buffer, size);
     os.write(_buffer, size);
 }
 
@@ -888,7 +894,9 @@ private:
             NBT_ERR(std::to_string(static_cast<int>(mType)) + " Tag type is undefined!");
     }
     // @brief Get a NBT tag from SNBT.
-    void loadFromSnbt(const std::string &snbt) {};
+    void loadFromSnbt(const std::string &snbt) {
+        // TODO
+    };
     void construcPrework(std::istream &is, bool isBigEndian) {
         if (mPureData)
             return;
