@@ -39,7 +39,7 @@
 #include <algorithm> // std::_reverser()
 #include <exception>
 
-// Whether to use GZip to operation NBT.
+// Whether to use GZip to un/compress NBT.
 #ifndef NBT_NOGZIP
 #include <gzip/utils.h>
 #include <gzip/compress.h>
@@ -55,6 +55,22 @@
 #ifndef NBT_MACRO
 #define NBT_MACRO
 
+#define NBT_EMPTY_STRING ""
+#define NBT_CHAR_SPACE ' '
+#define NBT_CHAR_COMMA ','
+#define NBT_CHAR_COLON ':'
+#define NBT_CHAR_QUOTA '"'
+#define NBT_CHAR_NEWLINE '\n'
+
+#define NBT_SUFFIX_BYTE "b"
+#define NBT_SUFFIX_SHORT "s"
+#define NBT_SUFFIX_LONG "l"
+#define NBT_SUFFIX_FLOAT "f"
+#define NBT_SUFFIX_DOUBLE "d"
+#define NBT_ARRAYFLAG_BYTE "B;"
+#define NBT_ARRAYFLAG_INT "I;"
+#define NBT_ARRAYFLAG_LONG "L;"
+
 #define NBT_ERROR_HINT "[NBT Error] "
 #define NBT_TYPE_ERROR(x) NBT_ERROR_HINT "Don't call the " __FUNCTION__ "() for the tag type of \""+ std::string(##x) +"\""
 #define NBT_RANGE_ERROR NBT_ERROR_HINT "The position of request out the range."
@@ -64,12 +80,14 @@
 
 #endif // NBT_MACRO
 
+// The core of read and write.
 namespace Nbt
 {
 
-// Defines the size of the  buffer used by the _bytesToNum and _numToBytes functions.
+// The size of the buffer used by the _bytesToNum() and _numToBytes() functions.
 constexpr int kBufferSize = 8;
 
+// The buffer used by the _bytesToNum() and _numToBytes() functions.
 NBT_INLINE_VAR char _buffer[kBufferSize];
 
 // @brief Reverse a C string.
@@ -103,7 +121,7 @@ inline bool _isBigEndian() {
 NBT_INLINE_VAR const bool kIsBigEndian = _isBigEndian();
 
 // @brief Obtain bytes from input stream, and convert it to number.
-// @param restoreCursor Whether to restore the input stream cursor after read.
+// @param restoreCursor Whether to restore the input stream cursor position after read.
 // @return A number.
 template<typename T>
 T _bytesToNum(std::istream &is, bool isBigEndian = false, bool restoreCursor = false) {
@@ -229,7 +247,11 @@ public:
     };
 
 public:
-    Tag(TagTypes type, bool isPuredata = false) :
+    Tag() :
+        mType(End), mPureData(true),
+        mDataType(End), mName(nullptr), mData(Data()) {}
+
+    explicit Tag(TagTypes type, bool isPuredata = false) :
         mType(type), mPureData(isPuredata),
         mDataType(End), mName(nullptr), mData(Data()) {}
 
@@ -248,7 +270,7 @@ public:
         char *buffer = new char[size];
         is.read(buffer, size);
         std::string content = std::string(buffer, size);
-        delete[]buffer;
+        delete[] buffer;
 #ifndef NBT_NOGZIP
         if (gzip::is_compressed(content.c_str(), size))
             content = gzip::decompress(content.c_str(), content.size());
@@ -385,16 +407,19 @@ public:
         return mType == ByteArray || mType == IntArray || mType == LongArray;
     }
 
-    // @brief Whether to the object is a List and Compound.
+    // @brief Whether the object is a List and Compound.
     // @return Return true if the object is a List or Compound if not return false.
     bool isComplex() const {
         return mType == Compound || mType == List;
     }
 
-    // @brief Whether to the Compound has member with special name.
-    // @return Return true if the object is a Compound and conatins a special member if not return false.
+    // @brief Whether the Compound has member with specify name, only valid when tag type is Compound.
+    // @return Return true if the object is a Compound and conatins a specify member else return false.
     bool hasMember(const std::string &name) const {
-        if (!isCompound() || mData.d == nullptr)
+        if (!isCompound())
+            throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
+        if (mData.d == nullptr)
             return false;
 
         for (auto &var : *mData.d) {
@@ -407,10 +432,11 @@ public:
         return false;
     }
 
-    // @return Return a empty string if the object is not named.
+    // @return Return a empty string if the object is not named or it is "pure data".
     std::string name() const {
         if (mPureData || mName == nullptr)
-            return std::string();
+            return NBT_EMPTY_STRING;
+
         return *mName;
     }
 
@@ -418,123 +444,143 @@ public:
         return mType;
     }
 
-    // @brief Get the member type of List.
-    // @return Return End when object not a List.
+    // @brief Get the element type of List, only valid when tag type is List.
     TagTypes dtype() const {
         if (!isList())
-            return End;
+            throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         return mDataType;
     }
 
-    // @return Return 0 if the object is not named.
+    // @return Return 0 if the object is not named or it is "pure data".
     int16 nameLen() const {
         if (mPureData || mName == nullptr)
             return 0;
+
         return static_cast<int16>(mName->size());
     }
 
-    // @return Return 0 if the object is not a String.
+    // @brief Get the string length, only valid when tag type is String.
     int32 stringLen() const {
-        if (!isString() || mData.s == nullptr)
+        if (!isString())
+            throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
+        if (mData.s == nullptr)
             return 0;
+
         return static_cast<int32>(mData.s->size());
     }
 
-    // @brief Get the size of the container.
-    // @return Return 0 if the object is a number or End.
+    // @brief Get the size of the container, only valid when tag type not is Number.
     size_t size() const {
-        if (isNum())
-            return 0;
-        else if (isString() && mData.s != nullptr)
-            return mData.s->size();
-        else if (isArray() && mData.bs != nullptr)
-            return mData.bs->size();
-        else if (isIntArray() && mData.is != nullptr)
-            return mData.is->size();
-        else if (isLongArray() && mData.ls != nullptr)
-            return mData.ls->size();
-        else if (isComplex() && mData.d != nullptr)
-            return mData.d->size();
-        else
-            return 0;
+        if (!isString() && !isArray() && !isComplex())
+            throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
+        switch (mType) {
+            case Nbt::ByteArray:
+                return mData.bs == nullptr ? 0 : mData.bs->size();
+            case Nbt::String:
+                return mData.s == nullptr ? 0 : mData.s->size();
+            case Nbt::List:
+                return mData.d == nullptr ? 0 : mData.d->size();
+            case Nbt::Compound:
+                return mData.d == nullptr ? 0 : mData.d->size();
+            case Nbt::IntArray:
+                return mData.is == nullptr ? 0 : mData.is->size();
+            case Nbt::LongArray:
+                return mData.ls == nullptr ? 0 : mData.ls->size();
+            default:
+                return 0;
+        }
     }
 
     byte getByte() const {
         if (!isByte())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         return mData.n.i8;
     }
 
     int16 getShort() const {
         if (!isShort())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         return mData.n.i16;
     }
 
     int32 getInt() const {
         if (!isInt())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         return mData.n.i32;
     }
 
     int64 getLong() const {
         if (!isLong())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         return mData.n.i64;
     }
 
     fp32 getFloat() const {
         if (!isFloat())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         return mData.n.f32;
     }
 
     fp64 getDouble() const {
         if (!isDouble())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         return mData.n.f64;
     }
 
     std::string getString() const {
         if (!isString())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.s == nullptr)
-            return std::string();
+            return NBT_EMPTY_STRING;
+
         return *mData.s;
     }
 
     std::vector<byte> *getByteArray() const {
         if (!isByteArray())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         return mData.bs;
     }
 
     std::vector<int32> *getIntArray() const {
         if (!isIntArray())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         return mData.is;
     }
 
     std::vector<int64> *getLongArray() const {
         if (!isLongArray())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         return mData.ls;
     }
 
-    // @return Return Failed Tag if the object is not a List or Compound.
-    // @note If pos is out index range will be cause error.
     Tag &getMember(size_t pos) {
         if (!isComplex())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.d == nullptr || pos >= mData.d->size())
             throw std::range_error(NBT_RANGE_ERROR);
 
         return (*mData.d)[pos];
     }
-    // @return Return Failed Tag if the object is not a Compound or does not contains a special member
+
     Tag &getMember(const std::string &name) {
         if (!isCompound())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.d == nullptr)
             throw std::logic_error(NBT_NOSPECIFY_ERROR(name));
 
@@ -551,6 +597,7 @@ public:
     Tag &front() {
         if (!isComplex())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.d == nullptr)
             throw std::range_error(NBT_RANGE_ERROR);
 
@@ -560,132 +607,155 @@ public:
     Tag &back() {
         if (!isComplex())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.d == nullptr)
             throw std::range_error(NBT_RANGE_ERROR);
 
         return mData.d->back();
     }
 
+    // @note If the tag is "pure data" it do nothing.
     void setName(const std::string &name) {
         if (mPureData)
             return;
+
         if (mName != nullptr) {
             *mName = name;
             return;
         }
+
         mName = new std::string(name);
     }
 
     void setByte(byte value) {
         if (!isByte())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         mData.n.i8 = value;
     }
 
     void setShort(int16 value) {
         if (!isShort())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         mData.n.i16 = value;
     }
 
     void setInt(int32 value) {
         if (!isInt())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         mData.n.i32 = value;
     }
 
     void setLong(int64 value) {
         if (!isLong())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         mData.n.i64 = value;
     }
 
     void setFloat(fp32 value) {
         if (!isFloat())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         mData.n.f32 = value;
     }
 
     void setDouble(fp64 value) {
         if (!isDouble())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         mData.n.f64 = value;
     }
 
     void setString(const std::string &value) {
         if (!isString())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.s != nullptr) {
             *mData.s = value;
             return;
         }
+
         mData.s = new std::string(value);
     }
 
     void setByteArray(const std::vector<byte> &value) {
         if (!isByteArray())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.bs != nullptr) {
             *mData.bs = value;
             return;
         }
+
         mData.bs = new std::vector<byte>(value);
     }
 
     void setIntArray(const std::vector<int32> &value) {
         if (!isIntArray())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.is != nullptr) {
             *mData.is = value;
             return;
         }
+
         mData.is = new std::vector<int32>(value);
     }
 
     void setLongArray(const std::vector<int64> &value) {
         if (!isLongArray())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.ls != nullptr) {
             *mData.ls = value;
             return;
         }
+
         mData.ls = new std::vector<int64>(value);
     }
 
-    // @note Do nothing if the object is not a Byte Array.
     void addByte(byte value) {
         if (!isByteArray())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.bs == nullptr)
             mData.bs = new std::vector<byte>();
+
         mData.bs->push_back(value);
     }
 
-    // @note Do nothing if the object is not a Int Array.
     void addInt(int32 value) {
         if (!isIntArray())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.is == nullptr)
             mData.is = new std::vector<int32>();
+
         mData.is->push_back(value);
     }
 
-    // @note Do nothing if the object is not a Long Array.
     void addLong(int64 value) {
         if (!isLongArray())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.ls == nullptr)
             mData.ls = new std::vector<int64>();
+
         mData.ls->push_back(value);
     }
 
-    // @note Do nothing if the object is neither a List nor a Compound.
     void addMember(Tag &tag) {
-        if (!isComplex() || (isList() && tag.mType != mDataType))
+        if (!isComplex() || (isList() && tag.type() != dtype()))
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.d == nullptr)
             mData.d = new std::vector<Tag>();
+
         mData.d->emplace_back(std::move(tag));
+
         if (isList())
             mData.d->back().mPureData = true;
         else
@@ -694,54 +764,64 @@ public:
 
     // @overload An rigth value overloaded version of the function addMember()
     void addMember(Tag &&tag) {
-        if (!isComplex() || (isList() && tag.mType != mDataType))
+        if (!isComplex() || (isList() && tag.type() != dtype()))
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.d == nullptr)
             mData.d = new std::vector<Tag>();
+
         mData.d->emplace_back(std::move(tag));
+
         if (isList())
             mData.d->back().mPureData = true;
         else
             mData.d->back().mPureData = false;
     }
 
-    // @note Do nothing if the object is not a Byte Array.
     void removeByte(size_t pos) {
         if (!isByteArray())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.bs == nullptr || pos >= mData.bs->size())
             throw std::range_error(NBT_RANGE_ERROR);
+
         mData.bs->erase(mData.bs->begin() + pos);
     }
 
-    // @note Do nothing if the object is not a Int Array.
     void removeInt(size_t pos) {
         if (!isIntArray())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.is == nullptr || pos >= mData.is->size())
             throw std::range_error(NBT_RANGE_ERROR);
+
         mData.is->erase(mData.is->begin() + pos);
     }
 
     void removeLong(size_t pos) {
         if (!isLongArray())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.ls == nullptr || pos >= mData.ls->size())
             throw std::range_error(NBT_RANGE_ERROR);
+
         mData.ls->erase(mData.ls->begin() + pos);
     }
 
     void removeMember(size_t pos) {
         if (!isComplex())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.d == nullptr || pos >= mData.d->size())
             throw std::range_error(NBT_RANGE_ERROR);
+
         mData.d->erase(mData.d->begin() + pos);
     }
 
     void removeMember(const std::string &name) {
         if (!isCompound())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
+
         if (mData.d == nullptr)
             return;
 
@@ -780,84 +860,92 @@ public:
         std::string result;
 
         if (!mPureData && mName != nullptr && !mName->empty())
-            result += *mName + ":";
+            result += *mName + NBT_CHAR_COLON;
         if (isIndented)
-            result += " ";
+            result += NBT_CHAR_SPACE;
 
         auto getNumString = [&] () ->std::string {
             if (mType == Byte)
-                return std::to_string(static_cast<int>(mData.n.i8)) + "b";
+                return std::to_string(static_cast<int>(mData.n.i8)) + NBT_SUFFIX_BYTE;
             else if (mType == Short)
-                return std::to_string(static_cast<int>(mData.n.i16)) + "s";
+                return std::to_string(static_cast<int>(mData.n.i16)) + NBT_SUFFIX_SHORT;
             else if (mType == Int)
                 return std::to_string(mData.n.i32);
             else if (mType == Long)
-                return std::to_string(mData.n.i64) + "l";
+                return std::to_string(mData.n.i64) + NBT_SUFFIX_LONG;
             else if (mType == Float)
-                return std::to_string(mData.n.f32) + "f";
+                return std::to_string(mData.n.f32) + NBT_SUFFIX_FLOAT;
             else if (mType == Double)
-                return std::to_string(mData.n.f64) + "d";
+                return std::to_string(mData.n.f64) + NBT_SUFFIX_DOUBLE;
             else
-                return "";
+                return NBT_EMPTY_STRING;
         };
 
         if (isEnd())
-            return "";
+            return NBT_EMPTY_STRING;
+
         if (isNum())
             return result += getNumString();
+
         if (isString()) {
-            result += "\"";
+            result += NBT_CHAR_QUOTA;
             if (mData.s != nullptr)
                 result += *mData.s;
-            result += "\"";
+            result += NBT_CHAR_QUOTA;
             return result;
         }
+
         if (isArray()) {
             result += "[";
             indentSize += indentStep;
+
             if (isIndented)
-                result += "\n" + std::string(indentSize, ' ');
+                result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+
             if (isByteArray())
-                result += "B;";
+                result += NBT_ARRAYFLAG_BYTE;
             else if (isIntArray())
-                result += "I;";
+                result += NBT_ARRAYFLAG_INT;
             else if (isLongArray())
-                result += "L;";
+                result += NBT_ARRAYFLAG_LONG;
             else
                 result;
+
             if (isByteArray() && mData.bs != nullptr) {
                 for (int i = 0; i < mData.bs->size(); ++i) {
                     if (isIndented)
-                        result += "\n" + std::string(indentSize, ' ');
-                    result += std::to_string(static_cast<int>((*mData.bs)[i])) + "b";
+                        result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+                    result += std::to_string(static_cast<int>((*mData.bs)[i])) + NBT_SUFFIX_BYTE;
                     if (i != mData.bs->size() - 1)
-                        result += ",";
+                        result += NBT_CHAR_COMMA;
                 }
             } else if (isIntArray() && mData.is != nullptr) {
                 for (int i = 0; i < mData.is->size(); ++i) {
                     if (isIndented)
-                        result += "\n" + std::string(indentSize, ' ');
+                        result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
                     result += std::to_string(static_cast<int>((*mData.is)[i]));
                     if (i != mData.is->size() - 1)
-                        result += ",";
+                        result += NBT_CHAR_COMMA;
                 }
             } else if (isLongArray() && mData.ls != nullptr) {
                 for (int i = 0; i < mData.ls->size(); ++i) {
                     if (isIndented)
-                        result += "\n" + std::string(indentSize, ' ');
-                    result += std::to_string(static_cast<int>((*mData.ls)[i])) + "l";
+                        result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+                    result += std::to_string(static_cast<int>((*mData.ls)[i])) + NBT_SUFFIX_LONG;
                     if (i != mData.ls->size() - 1)
-                        result += ",";
+                        result += NBT_CHAR_COMMA;
                 }
             }
+
             indentSize = indentSize -= indentStep;
             if (indentSize < 0)
                 indentSize = 0;
             if (isIndented)
-                result += "\n" + std::string(indentSize, ' ');
+                result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
             result += "]";
             return result;
         }
+
         if (isList()) {
             if (mData.d == nullptr || mData.d->empty()) {
                 result += "[]";
@@ -867,19 +955,20 @@ public:
             indentSize += indentStep;
             for (int i = 0; i < mData.d->size(); ++i) {
                 if (isIndented)
-                    result += "\n" + std::string(indentSize, ' ');
+                    result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
                 result += (*mData.d)[i].toSnbt(isIndented);
                 if (i != mData.d->size() - 1)
-                    result += ",";
+                    result += NBT_CHAR_COMMA;
             }
             indentSize = indentSize -= indentStep;
             if (indentSize < 0)
                 indentSize = 0;
             if (isIndented)
-                result += "\n" + std::string(indentSize, ' ');
+                result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
             result += "]";
             return result;
         }
+
         if (isCompound()) {
             if (mData.d == nullptr || mData.d->empty()) {
                 result += "{}";
@@ -889,20 +978,21 @@ public:
             indentSize += indentStep;
             for (int i = 0; i < mData.d->size(); ++i) {
                 if (isIndented)
-                    result += "\n" + std::string(indentSize, ' ');
+                    result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
                 result += (*mData.d)[i].toSnbt(isIndented);
                 if (i != mData.d->size() - 1)
-                    result += ",";
+                    result += NBT_CHAR_COMMA;
             }
             indentSize = indentSize -= indentStep;
             if (indentSize < 0)
                 indentSize = 0;
             if (isIndented)
-                result += "\n" + std::string(indentSize, ' ');
+                result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
             result += "}";
             return result;
         }
-        return "";
+
+        return NBT_EMPTY_STRING;
     }
 
     Tag &operator=(const Tag &rhs) {
@@ -1249,14 +1339,19 @@ private:
     // Whether to the object  is a "Base Tag", and the Base Tag has not description prefix. (e.g. name, name length)
     // The all members of List is a "Base Tag".
     bool mPureData;
+    // The tag type.
     TagTypes mType;
+    // The tag type of element, only used to List.
     TagTypes mDataType;
+    // The tag "key".
     std::string *mName;
+    // The tag "value".
     Data mData;
-    };
+};
 
 }
 
+// The utility functions.
 namespace Nbt
 {
 
