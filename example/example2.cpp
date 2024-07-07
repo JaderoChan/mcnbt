@@ -1,3 +1,7 @@
+#include <fstream>
+#include <iostream>
+#include <exception>
+
 #include "nbt.hpp"
 
 int main(){
