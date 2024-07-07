@@ -37,8 +37,10 @@ namespace Nbt
 struct BlockEntityData
 {
     BlockEntityData() {}
+
     BlockEntityData(const std::string &id, const std::string &customeName = std::string()) :
         id(id), customName(customeName) {}
+
     virtual ~BlockEntityData() {}
 
     Tag getTag() const {
@@ -66,6 +68,7 @@ protected:
 struct CommandBlockED final : BlockEntityData
 {
     CommandBlockED() : BlockEntityData("CommandBlock") {}
+
     CommandBlockED(const std::string &command, int tickDelay = 0,
                    bool isAuto = false, bool isPowered = true, bool conditionMet = false) :
         BlockEntityData("CommandBlock"), command(command), tickDelay(0),
@@ -159,6 +162,7 @@ struct StructureBlockED final : BlockEntityData
     };
 
     StructureBlockED() : BlockEntityData("StructureBlock") {}
+
     StructureBlockED(const std::string &structureName, Mode mode = Load, bool ignoreEntities = false) :
         BlockEntityData("StructureBlock"), structureName(structureName), ignoreEntities(ignoreEntities) {}
 

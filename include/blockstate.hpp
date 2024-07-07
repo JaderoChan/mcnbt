@@ -37,7 +37,9 @@ namespace Nbt
 struct BlockStateData
 {
     BlockStateData() {}
-    ~BlockStateData() {}
+
+    virtual ~BlockStateData() {}
+
     Tag getTag() const {
         Tag tag = gCompound("states");
         _write(tag);
@@ -96,6 +98,7 @@ private:
             return std::string("corner");
         return std::string();
     };
+
     void _write(Tag &tag) const override {
         tag << gString("structure_block_type", _modestr());
     };
