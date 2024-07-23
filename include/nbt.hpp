@@ -62,6 +62,8 @@
 #define NBT_INLINE_VAR static
 #endif // NBT_CPPVERS >= 201703L
 
+#define NBT_MAX_TYPE long long
+
 #ifndef NBT_MACRO
 #define NBT_MACRO
 
@@ -95,7 +97,7 @@ namespace Nbt
 {
 
 // The size of the buffer used by the _bytes2num() and _num2bytes() functions.
-constexpr int kBufferSize = sizeof(long long);
+constexpr int kBufferSize = sizeof(NBT_MAX_TYPE);
 
 // The buffer used by the _bytes2num() and _num2bytes() functions.
 NBT_INLINE_VAR char kBuffer[kBufferSize];
