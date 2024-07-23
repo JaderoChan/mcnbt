@@ -46,11 +46,21 @@
 #include <gzip/decompress.h>
 #endif // !NBT_NOGZIP
 
-#if __cplusplus >= 201703L
+#ifdef _MSVC_LANG
+#define NBT_CPPVERS _MSVC_LANG
+#else
+#define NBT_CPPVERS __cpluscplus
+#endif // _MSVC_LANG
+
+#if NBT_CPPVERS >= 201703L
+#define NBT_CPP17
+#endif // NBT_CPPVERS >= 201703L
+
+#if NBT_CPPVERS >= 201703L
 #define NBT_INLINE_VAR inline
 #else
 #define NBT_INLINE_VAR static
-#endif
+#endif // NBT_CPPVERS >= 201703L
 
 #ifndef NBT_MACRO
 #define NBT_MACRO
@@ -78,16 +88,16 @@
 #define NBT_RUNTIME_ERROR NBT_ERROR_HINT "The other error occured."
 #define NBT_TAG_UNDEFINED_ERROR(x) NBT_ERROR_HINT "The tag type is undefined for \"" + std::string(##x) + "\""
 
-#endif // NBT_MACRO
+#endif // !NBT_MACRO
 
 // The core of read and write.
 namespace Nbt
 {
 
-// The size of the buffer used by the _bytesToNum() and _numToBytes() functions.
+// The size of the buffer used by the _bytes2num() and _num2bytes() functions.
 constexpr int kBufferSize = 8;
 
-// The buffer used by the _bytesToNum() and _numToBytes() functions.
+// The buffer used by the _bytes2num() and _num2bytes() functions.
 NBT_INLINE_VAR char _buffer[kBufferSize];
 
 // @brief Reverse a C string.
@@ -124,7 +134,7 @@ NBT_INLINE_VAR const bool kIsBigEndian = _isBigEndian();
 // @param restoreCursor Whether to restore the input stream cursor position after read.
 // @return A number.
 template<typename T>
-T _bytesToNum(std::istream &is, bool isBigEndian = false, bool restoreCursor = false) {
+T _bytes2num(std::istream &is, bool isBigEndian = false, bool restoreCursor = false) {
     size_t size = sizeof(T);
     T result = T();
     auto begpos = is.tellg();
@@ -140,7 +150,7 @@ T _bytesToNum(std::istream &is, bool isBigEndian = false, bool restoreCursor = f
 
 // @brief Convert the number to bytes, and output it to output stream.
 template<typename T>
-void _numToBytes(T num, std::ostream &os, bool isBigEndian = false) {
+void _num2bytes(T num, std::ostream &os, bool isBigEndian = false) {
     size_t size = sizeof(T);
     std::memcpy(_buffer, &num, size);
     if (isBigEndian != kIsBigEndian)
@@ -762,7 +772,7 @@ public:
             mData.d->back().mPureData = false;
     }
 
-    // @overload An rigth value overloaded version of the function addMember()
+    // @overload The rigth value overloaded version of the function addMember()
     void addMember(Tag &&tag) {
         if (!isComplex() || (isList() && tag.type() != dtype()))
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
@@ -1096,7 +1106,7 @@ private:
         if (type != mType)
             throw std::runtime_error(NBT_RUNTIME_ERROR);
 
-        int16 nameLen = _bytesToNum<int16>(is, isBigEndian);
+        int16 nameLen = _bytes2num<int16>(is, isBigEndian);
 
         if (mName != nullptr) {
             delete mName;
@@ -1115,22 +1125,22 @@ private:
     void numConstruct(std::istream &is, bool isBigEndian) {
         switch (mType) {
             case Byte:
-                mData.n.i8 = _bytesToNum<int8>(is, isBigEndian);
+                mData.n.i8 = _bytes2num<int8>(is, isBigEndian);
                 break;
             case Short:
-                mData.n.i16 = _bytesToNum<int16>(is, isBigEndian);
+                mData.n.i16 = _bytes2num<int16>(is, isBigEndian);
                 break;
             case Int:
-                mData.n.i32 = _bytesToNum<int32>(is, isBigEndian);
+                mData.n.i32 = _bytes2num<int32>(is, isBigEndian);
                 break;
             case Long:
-                mData.n.i64 = _bytesToNum<int64>(is, isBigEndian);
+                mData.n.i64 = _bytes2num<int64>(is, isBigEndian);
                 break;
             case Float:
-                mData.n.f32 = _bytesToNum<fp32>(is, isBigEndian);
+                mData.n.f32 = _bytes2num<fp32>(is, isBigEndian);
                 break;
             case Double:
-                mData.n.f64 = _bytesToNum<fp64>(is, isBigEndian);
+                mData.n.f64 = _bytes2num<fp64>(is, isBigEndian);
                 break;
             default:
                 break;
@@ -1138,7 +1148,7 @@ private:
     }
 
     void stringConstruct(std::istream &is, bool isBigEndian) {
-        int16 strlen = _bytesToNum<int16>(is, isBigEndian);
+        int16 strlen = _bytes2num<int16>(is, isBigEndian);
 
         if (mData.s != nullptr) {
             delete mData.s;
@@ -1155,7 +1165,7 @@ private:
     }
 
     void arrayConstruct(std::istream &is, bool isBigEndian) {
-        int32 dsize = _bytesToNum<int32>(is, isBigEndian);
+        int32 dsize = _bytes2num<int32>(is, isBigEndian);
 
         if (isByteArray()) {
             if (mData.bs != nullptr) {
@@ -1191,17 +1201,17 @@ private:
         int32 size = 0;
         while (!is.eof() && size++ < dsize) {
             if (isByteArray())
-                mData.bs->emplace_back(_bytesToNum<int8>(is, isBigEndian));
+                mData.bs->emplace_back(_bytes2num<int8>(is, isBigEndian));
             if (isIntArray())
-                mData.is->emplace_back(_bytesToNum<int32>(is, isBigEndian));
+                mData.is->emplace_back(_bytes2num<int32>(is, isBigEndian));
             if (isLongArray())
-                mData.ls->emplace_back(_bytesToNum<int64>(is, isBigEndian));
+                mData.ls->emplace_back(_bytes2num<int64>(is, isBigEndian));
         }
     }
 
     void listConstruct(std::istream &is, bool isBigEndian) {
         mDataType = static_cast<TagTypes>(is.get());
-        int32 dsize = _bytesToNum<int32>(is, isBigEndian);
+        int32 dsize = _bytes2num<int32>(is, isBigEndian);
 
         if (mData.d != nullptr) {
             delete mData.d;
@@ -1237,9 +1247,9 @@ private:
         if (!mPureData) {
             os.put(static_cast<int8>(mType));
             if (mName == nullptr || mName->empty()) {
-                _numToBytes<int16>(static_cast<int16>(0), os, isBigEndian);
+                _num2bytes<int16>(static_cast<int16>(0), os, isBigEndian);
             } else {
-                _numToBytes<int16>(static_cast<int16>(mName->size()), os, isBigEndian);
+                _num2bytes<int16>(static_cast<int16>(mName->size()), os, isBigEndian);
                 os.write(mName->c_str(), mName->size());
             }
         }
@@ -1253,72 +1263,72 @@ private:
             return;
         }
         if (isShort()) {
-            _numToBytes<int16>(mData.n.i16, os, isBigEndian);
+            _num2bytes<int16>(mData.n.i16, os, isBigEndian);
             return;
         }
         if (isInt()) {
-            _numToBytes<int32>(mData.n.i32, os, isBigEndian);
+            _num2bytes<int32>(mData.n.i32, os, isBigEndian);
             return;
         }
         if (isLong()) {
-            _numToBytes<int64>(mData.n.i64, os, isBigEndian);
+            _num2bytes<int64>(mData.n.i64, os, isBigEndian);
             return;
         }
         if (isFloat()) {
-            _numToBytes<fp32>(mData.n.f32, os, isBigEndian);
+            _num2bytes<fp32>(mData.n.f32, os, isBigEndian);
             return;
         }
         if (isDouble()) {
-            _numToBytes<fp64>(mData.n.f64, os, isBigEndian);
+            _num2bytes<fp64>(mData.n.f64, os, isBigEndian);
             return;
         }
         if (isString()) {
             if (mData.s == nullptr || mData.s->empty()) {
-                _numToBytes<int16>(static_cast<int16>(0), os, isBigEndian);
+                _num2bytes<int16>(static_cast<int16>(0), os, isBigEndian);
                 return;
             }
-            _numToBytes<int16>(static_cast<int16>(mData.s->size()), os, isBigEndian);
+            _num2bytes<int16>(static_cast<int16>(mData.s->size()), os, isBigEndian);
             os.write(mData.s->c_str(), mData.s->size());
             return;
         }
         if (isByteArray()) {
             if (mData.bs == nullptr || mData.bs->empty()) {
-                _numToBytes<int32>(static_cast<int32>(0), os, isBigEndian);
+                _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                 return;
             }
-            _numToBytes<int32>(static_cast<int32>(mData.bs->size()), os, isBigEndian);
+            _num2bytes<int32>(static_cast<int32>(mData.bs->size()), os, isBigEndian);
             for (auto &var : *mData.bs)
                 os.put(var);
             return;
         }
         if (isIntArray()) {
             if (mData.is == nullptr || mData.is->empty()) {
-                _numToBytes<int32>(static_cast<int32>(0), os, isBigEndian);
+                _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                 return;
             }
-            _numToBytes<int32>(static_cast<int32>(mData.is->size()), os, isBigEndian);
+            _num2bytes<int32>(static_cast<int32>(mData.is->size()), os, isBigEndian);
             for (auto &var : *mData.is)
-                _numToBytes<int32>(var, os, isBigEndian);
+                _num2bytes<int32>(var, os, isBigEndian);
             return;
         }
         if (isLongArray()) {
             if (mData.ls == nullptr || mData.ls->empty()) {
-                _numToBytes<int32>(static_cast<int32>(0), os, isBigEndian);
+                _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                 return;
             }
-            _numToBytes<int32>(static_cast<int32>(mData.ls->size()), os, isBigEndian);
+            _num2bytes<int32>(static_cast<int32>(mData.ls->size()), os, isBigEndian);
             for (auto &var : *mData.ls)
-                _numToBytes<int64>(var, os, isBigEndian);
+                _num2bytes<int64>(var, os, isBigEndian);
             return;
         }
         if (isList()) {
             if (mData.d == nullptr || mData.d->empty()) {
                 os.put(static_cast<int8>(End));
-                _numToBytes<int32>(static_cast<int32>(0), os, isBigEndian);
+                _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                 return;
             }
             os.put(static_cast<int8>(mDataType));
-            _numToBytes<int32>(static_cast<int32>(mData.d->size()), os, isBigEndian);
+            _num2bytes<int32>(static_cast<int32>(mData.d->size()), os, isBigEndian);
             for (auto &var : *mData.d)
                 var._write(os, isBigEndian);
             return;
