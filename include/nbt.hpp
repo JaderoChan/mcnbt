@@ -95,10 +95,10 @@ namespace Nbt
 {
 
 // The size of the buffer used by the _bytes2num() and _num2bytes() functions.
-constexpr int kBufferSize = 8;
+constexpr int kBufferSize = sizeof(long long);
 
 // The buffer used by the _bytes2num() and _num2bytes() functions.
-NBT_INLINE_VAR char _buffer[kBufferSize];
+NBT_INLINE_VAR char kBuffer[kBufferSize];
 
 // @brief Reverse a C string.
 // @param size The size of range that need reversed, and reverser all if the size is 0.
@@ -138,11 +138,11 @@ T _bytes2num(std::istream &is, bool isBigEndian = false, bool restoreCursor = fa
     size_t size = sizeof(T);
     T result = T();
     auto begpos = is.tellg();
-    is.read(_buffer, size);
+    is.read(kBuffer, size);
     size = static_cast<size_t>(is.gcount());
     if (isBigEndian != kIsBigEndian)
-        Nbt::_reverse(_buffer, size);
-    std::memcpy(&result, _buffer, size);
+        Nbt::_reverse(kBuffer, size);
+    std::memcpy(&result, kBuffer, size);
     if (restoreCursor)
         is.seekg(begpos);
     return result;
@@ -152,10 +152,10 @@ T _bytes2num(std::istream &is, bool isBigEndian = false, bool restoreCursor = fa
 template<typename T>
 void _num2bytes(T num, std::ostream &os, bool isBigEndian = false) {
     size_t size = sizeof(T);
-    std::memcpy(_buffer, &num, size);
+    std::memcpy(kBuffer, &num, size);
     if (isBigEndian != kIsBigEndian)
-        Nbt::_reverse(_buffer, size);
-    os.write(_buffer, size);
+        Nbt::_reverse(kBuffer, size);
+    os.write(kBuffer, size);
 }
 
 }
