@@ -31,7 +31,6 @@
 
 #include <cstring>      // memcpy()
 #include <cstdint>      // size_t
-
 #include <vector>       // vector
 #include <string>       // string
 #include <fstream>      // istream, ostream, fstream
@@ -83,9 +82,10 @@
 
 #endif // !NBT_MACRO
 
-// The core of read and write.
 namespace Nbt
 {
+
+// The core of read and write.
 
 // @brief Reverse a C string.
 // @param size The size of range that need reversed, and reverser all if the size is 0.
@@ -1354,9 +1354,10 @@ private:
 
 }
 
-// The utility functions.
 namespace Nbt
 {
+
+// The utility functions.
 
 inline Tag gByte(const std::string &name, char value) {
     Tag tag(TagTypes::Byte, name);
