@@ -29,14 +29,14 @@
 
 #define NBT_NOGZIP
 
-#include <cstring> // std::memcpy()
-#include <cstdint> // size_t
+#include <cstring>      // std::memcpy()
+#include <cstdint>      // size_t
 
-#include <vector>   // std::vector
-#include <string>   // std::string
-#include <fstream>  // std::istream, std::ostream, fstream
-#include <sstream> // std::stringstream
-#include <algorithm> // std::_reverser()
+#include <vector>       // std::vector
+#include <string>       // std::string
+#include <fstream>      // std::istream, std::ostream, fstream
+#include <sstream>      // std::stringstream
+#include <algorithm>    // std::_reverser()
 #include <exception>
 
 // Whether to use GZip to un/compress NBT.
@@ -304,19 +304,19 @@ public:
     {
         if (rhs.mType == End)
             return;
-        if (!rhs.mPureData && rhs.mName != nullptr)
+        if (!rhs.mPureData && rhs.mName)
             mName = new std::string(*rhs.mName);
         if (rhs.isNum())
             mData.n = rhs.mData.n;
-        else if (rhs.isString() && rhs.mData.s != nullptr)
+        else if (rhs.isString() && rhs.mData.s)
             mData.s = new std::string(*rhs.mData.s);
-        else if (rhs.isArray() && rhs.mData.bs != nullptr)
+        else if (rhs.isArray() && rhs.mData.bs)
             mData.bs = new std::vector<byte>(*rhs.mData.bs);
-        else if (rhs.isIntArray() && rhs.mData.is != nullptr)
+        else if (rhs.isIntArray() && rhs.mData.is)
             mData.is = new std::vector<int32>(*rhs.mData.is);
-        else if (rhs.isLongArray() && rhs.mData.ls != nullptr)
+        else if (rhs.isLongArray() && rhs.mData.ls)
             mData.ls = new std::vector<int64>(*rhs.mData.ls);
-        else if (rhs.isComplex() && rhs.mData.d != nullptr)
+        else if (rhs.isComplex() && rhs.mData.d)
             mData.d = new std::vector<Tag>(*rhs.mData.d);
     }
 
@@ -329,19 +329,19 @@ public:
     }
 
     ~Tag() {
-        if (mName != nullptr) {
+        if (mName) {
             delete mName;
             mName = nullptr;
         }
-        if (isString() && mData.s != nullptr)
+        if (isString() && mData.s)
             delete mData.s;
-        else if (isByteArray() && mData.bs != nullptr)
+        else if (isByteArray() && mData.bs)
             delete mData.bs;
-        else if (isIntArray() && mData.is != nullptr)
+        else if (isIntArray() && mData.is)
             delete mData.is;
-        else if (isLongArray() && mData.ls != nullptr)
+        else if (isLongArray() && mData.ls)
             delete mData.ls;
-        else if (isComplex() && mData.d != nullptr)
+        else if (isComplex() && mData.d)
             delete mData.d;
         mData.s = nullptr;
     }
@@ -631,7 +631,7 @@ public:
         if (mPureData)
             return;
 
-        if (mName != nullptr) {
+        if (mName) {
             *mName = name;
             return;
         }
@@ -685,7 +685,7 @@ public:
         if (!isString())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
 
-        if (mData.s != nullptr) {
+        if (mData.s) {
             *mData.s = value;
             return;
         }
@@ -697,7 +697,7 @@ public:
         if (!isByteArray())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
 
-        if (mData.bs != nullptr) {
+        if (mData.bs) {
             *mData.bs = value;
             return;
         }
@@ -709,7 +709,7 @@ public:
         if (!isIntArray())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
 
-        if (mData.is != nullptr) {
+        if (mData.is) {
             *mData.is = value;
             return;
         }
@@ -721,7 +721,7 @@ public:
         if (!isLongArray())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
 
-        if (mData.ls != nullptr) {
+        if (mData.ls) {
             *mData.ls = value;
             return;
         }
@@ -871,7 +871,7 @@ public:
         static int indentSize = 0;
         std::string result;
 
-        if (!mPureData && mName != nullptr && !mName->empty())
+        if (!mPureData && mName && !mName->empty())
             result += *mName + NBT_CHAR_COLON;
         if (isIndented)
             result += NBT_CHAR_SPACE;
@@ -901,7 +901,7 @@ public:
 
         if (isString()) {
             result += NBT_CHAR_QUOTA;
-            if (mData.s != nullptr)
+            if (mData.s)
                 result += *mData.s;
             result += NBT_CHAR_QUOTA;
             return result;
@@ -923,7 +923,7 @@ public:
             else
                 result;
 
-            if (isByteArray() && mData.bs != nullptr) {
+            if (isByteArray() && mData.bs) {
                 for (int i = 0; i < mData.bs->size(); ++i) {
                     if (isIndented)
                         result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
@@ -931,7 +931,7 @@ public:
                     if (i != mData.bs->size() - 1)
                         result += NBT_CHAR_COMMA;
                 }
-            } else if (isIntArray() && mData.is != nullptr) {
+            } else if (isIntArray() && mData.is) {
                 for (int i = 0; i < mData.is->size(); ++i) {
                     if (isIndented)
                         result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
@@ -939,7 +939,7 @@ public:
                     if (i != mData.is->size() - 1)
                         result += NBT_CHAR_COMMA;
                 }
-            } else if (isLongArray() && mData.ls != nullptr) {
+            } else if (isLongArray() && mData.ls) {
                 for (int i = 0; i < mData.ls->size(); ++i) {
                     if (isIndented)
                         result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
@@ -1016,19 +1016,19 @@ public:
 
         if (rhs.mType == End)
             return *this;
-        if (!rhs.mPureData && rhs.mName != nullptr)
+        if (!rhs.mPureData && rhs.mName)
             mName = new std::string(*rhs.mName);
         if (rhs.isNum())
             mData.n = rhs.mData.n;
-        else if (rhs.isString() && rhs.mData.s != nullptr)
+        else if (rhs.isString() && rhs.mData.s)
             mData.s = new std::string(*rhs.mData.s);
-        else if (rhs.isByteArray() && rhs.mData.bs != nullptr)
+        else if (rhs.isByteArray() && rhs.mData.bs)
             mData.bs = new std::vector<byte>(*rhs.mData.bs);
-        else if (rhs.isIntArray() && rhs.mData.is != nullptr)
+        else if (rhs.isIntArray() && rhs.mData.is)
             mData.is = new std::vector<int32>(*rhs.mData.is);
-        else if (rhs.isLongArray() && rhs.mData.ls != nullptr)
+        else if (rhs.isLongArray() && rhs.mData.ls)
             mData.ls = new std::vector<int64>(*rhs.mData.ls);
-        else if (rhs.isComplex() && rhs.mData.d != nullptr)
+        else if (rhs.isComplex() && rhs.mData.d)
             mData.d = new std::vector<Tag>(*rhs.mData.d);
 
         return *this;
@@ -1110,7 +1110,7 @@ private:
 
         int16 nameLen = _bytes2num<int16>(is, isBigEndian);
 
-        if (mName != nullptr) {
+        if (mName) {
             delete mName;
             mName = nullptr;
         }
@@ -1152,7 +1152,7 @@ private:
     void stringConstruct(std::istream &is, bool isBigEndian) {
         int16 strlen = _bytes2num<int16>(is, isBigEndian);
 
-        if (mData.s != nullptr) {
+        if (mData.s) {
             delete mData.s;
             mData.s = nullptr;
         }
@@ -1170,7 +1170,7 @@ private:
         int32 dsize = _bytes2num<int32>(is, isBigEndian);
 
         if (isByteArray()) {
-            if (mData.bs != nullptr) {
+            if (mData.bs) {
                 delete mData.bs;
                 mData.bs = nullptr;
             }
@@ -1180,7 +1180,7 @@ private:
             mData.bs->reserve(dsize);
         }
         if (isIntArray()) {
-            if (mData.is != nullptr) {
+            if (mData.is) {
                 delete mData.is;
                 mData.ls = nullptr;
             }
@@ -1190,7 +1190,7 @@ private:
             mData.is->reserve(dsize);
         }
         if (isLongArray()) {
-            if (mData.ls != nullptr) {
+            if (mData.ls) {
                 delete mData.ls;
                 mData.ls = nullptr;
             }
@@ -1215,7 +1215,7 @@ private:
         mDataType = static_cast<TagTypes>(is.get());
         int32 dsize = _bytes2num<int32>(is, isBigEndian);
 
-        if (mData.d != nullptr) {
+        if (mData.d) {
             delete mData.d;
             mData.d = nullptr;
         }
@@ -1231,7 +1231,7 @@ private:
     }
 
     void compoundConstruct(std::istream &is, bool isBigEndian) {
-        if (mData.d != nullptr)
+        if (mData.d)
             delete mData.d;
         mData.d = new std::vector<Tag>();
 

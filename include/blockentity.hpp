@@ -12,7 +12,7 @@ struct BlockEntityData
 {
     BlockEntityData() {}
 
-    BlockEntityData(const std::string &id, const std::string &customeName = std::string()) :
+    BlockEntityData(const std::string &id, const std::string &customeName = "") :
         id(id), customName(customeName) {}
 
     virtual ~BlockEntityData() {}
