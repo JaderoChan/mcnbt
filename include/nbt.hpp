@@ -44,16 +44,6 @@
 #include <gzip/decompress.h>
 #endif // !NBT_NOGZIP
 
-#ifdef _MSVC_LANG
-#define NBT_CPPVERS _MSVC_LANG
-#else
-#define NBT_CPPVERS __cpluscplus
-#endif // _MSVC_LANG
-
-#if NBT_CPPVERS >= 201703L
-#define NBT_CPP17
-#endif // NBT_CPPVERS >= 201703L
-
 #ifndef NBT_MACRO
 #define NBT_MACRO
 
@@ -115,12 +105,6 @@ inline bool _isBigEndian() {
     return isBig;
 }
 
-#if NBT_CPPVERS >= 201703L
-inline const bool kIsBigEndian = _isBigEndian();
-#else
-static const bool kIsBigEndian = _isBigEndian();
-#endif
-
 // @brief Obtain bytes from input stream, and convert it to number.
 // @param restoreCursor Whether to restore the input stream cursor position after read.
 // @return A number.
@@ -132,7 +116,7 @@ T _bytes2num(std::istream &is, bool isBigEndian = false, bool restoreCursor = fa
     static char buffer[sizeof(size_t)];
     is.read(buffer, size);
     size = static_cast<size_t>(is.gcount());
-    if (isBigEndian != kIsBigEndian)
+    if (isBigEndian != _isBigEndian())
         Nbt::_reverse(buffer, size);
     std::memcpy(&result, buffer, size);
     if (restoreCursor)
@@ -146,7 +130,7 @@ void _num2bytes(T num, std::ostream &os, bool isBigEndian = false) {
     size_t size = sizeof(T);
     static char buffer[sizeof(size_t)];
     std::memcpy(buffer, &num, size);
-    if (isBigEndian != kIsBigEndian)
+    if (isBigEndian != _isBigEndian())
         Nbt::_reverse(buffer, size);
     os.write(buffer, size);
 }
