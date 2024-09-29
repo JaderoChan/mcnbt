@@ -29,15 +29,14 @@
 
 #define NBT_NOGZIP
 
-#include <cstring>      // std::memcpy()
+#include <cstring>      // memcpy()
 #include <cstdint>      // size_t
 
-#include <vector>       // std::vector
-#include <string>       // std::string
-#include <fstream>      // std::istream, std::ostream, fstream
-#include <sstream>      // std::stringstream
-#include <algorithm>    // std::_reverser()
-#include <exception>
+#include <vector>       // vector
+#include <string>       // string
+#include <fstream>      // istream, ostream, fstream
+#include <sstream>      // stringstream
+#include <stdexcept>
 
 // Whether to use GZip to un/compress NBT.
 #ifndef NBT_NOGZIP
