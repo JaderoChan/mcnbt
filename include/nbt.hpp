@@ -56,12 +56,6 @@
 #define NBT_CPP17
 #endif // NBT_CPPVERS >= 201703L
 
-#if NBT_CPPVERS >= 201703L
-#define NBT_INLINE_VAR inline
-#else
-#define NBT_INLINE_VAR static
-#endif // NBT_CPPVERS >= 201703L
-
 #ifndef NBT_MACRO
 #define NBT_MACRO
 
@@ -122,7 +116,11 @@ inline bool _isBigEndian() {
     return isBig;
 }
 
-NBT_INLINE_VAR const bool kIsBigEndian = _isBigEndian();
+#if NBT_CPPVERS >= 201703L
+inline const bool kIsBigEndian = _isBigEndian();
+#else
+static const bool kIsBigEndian = _isBigEndian();
+#endif
 
 // @brief Obtain bytes from input stream, and convert it to number.
 // @param restoreCursor Whether to restore the input stream cursor position after read.
