@@ -113,7 +113,7 @@ T _bytes2num(std::istream &is, bool isBigEndian = false, bool restoreCursor = fa
     size_t size = sizeof(T);
     T result = T();
     auto begpos = is.tellg();
-    static char buffer[sizeof(size_t)];
+    static char buffer[sizeof(T)];
     is.read(buffer, size);
     size = static_cast<size_t>(is.gcount());
     if (isBigEndian != _isBigEndian())
@@ -128,7 +128,7 @@ T _bytes2num(std::istream &is, bool isBigEndian = false, bool restoreCursor = fa
 template<typename T>
 void _num2bytes(T num, std::ostream &os, bool isBigEndian = false) {
     size_t size = sizeof(T);
-    static char buffer[sizeof(size_t)];
+    static char buffer[sizeof(T)];
     std::memcpy(buffer, &num, size);
     if (isBigEndian != _isBigEndian())
         Nbt::_reverse(buffer, size);
