@@ -1003,7 +1003,7 @@ public:
 
         if (isArray()) {
             result += "[";
-            
+
             indentSize += indentStep;
 
             if (isIndented)
@@ -1406,7 +1406,7 @@ private:
     {
         if (!pureData_) {
             os.put(static_cast<int8>(type_));
-            
+
             if (name_ == nullptr || name_->empty()) {
                 _num2bytes<int16>(static_cast<int16>(0), os, isBigEndian);
             } else {
@@ -1592,7 +1592,7 @@ inline Tag gInt(const std::string& name, int value)
 {
     Tag tag(INT, name);
     tag.setInt(value);
-    
+
     return tag;
 }
 
