@@ -12,7 +12,7 @@ struct BlockEntityData
 {
     BlockEntityData() {}
 
-    BlockEntityData(const std::string &id, const std::string &customeName = "") :
+    BlockEntityData(const std::string& id, const std::string& customeName = "") :
         id(id), customName(customeName)
     {}
 
@@ -38,14 +38,14 @@ struct BlockEntityData
     bool isMovable = true;
 
 protected:
-    virtual void write_(Tag &tag) const = 0;
+    virtual void write_(Tag& tag) const = 0;
 };
 
 struct CommandBlockED final : BlockEntityData
 {
     CommandBlockED() : BlockEntityData("CommandBlock") {}
 
-    CommandBlockED(const std::string &command, int tickDelay = 0,
+    CommandBlockED(const std::string& command, int tickDelay = 0,
                    bool isAuto = false, bool isPowered = true, bool conditionMet = false) :
         BlockEntityData("CommandBlock"), command(command), tickDelay(0),
         isAuto(isAuto), isPowered(isPowered), conditionMet(conditionMet),
@@ -77,7 +77,7 @@ struct CommandBlockED final : BlockEntityData
     long long lastExecution = 0;
 
 private:
-    void write_(Tag &tag) const override
+    void write_(Tag& tag) const override
     {
         tag << gString("Command", command);
         tag << gByte("ExecuteOnFirstTick", static_cast<char>(executeOnFirstTick));
@@ -141,7 +141,7 @@ struct StructureBlockED final : BlockEntityData
 
     StructureBlockED() : BlockEntityData("StructureBlock") {}
 
-    StructureBlockED(const std::string &structureName, Mode mode = LOAD, bool ignoreEntities = false) :
+    StructureBlockED(const std::string& structureName, Mode mode = LOAD, bool ignoreEntities = false) :
         BlockEntityData("StructureBlock"), structureName(structureName), ignoreEntities(ignoreEntities)
     {}
 
@@ -162,7 +162,7 @@ struct StructureBlockED final : BlockEntityData
     int size[3] = {1, 1, 1};
 
 private:
-    void write_(Tag &tag) const override
+    void write_(Tag& tag) const override
     {
         tag << gByte("animationMode", static_cast<char>(animationMode));
         tag << gFloat("animationSeconds", animationSeconds);

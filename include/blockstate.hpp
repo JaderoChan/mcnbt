@@ -22,7 +22,7 @@ struct BlockStateData
     };
 
 protected:
-    virtual void write_(Tag &tag) const = 0;
+    virtual void write_(Tag& tag) const = 0;
 };
 
 struct CommandBlockSD final : BlockStateData
@@ -45,7 +45,7 @@ struct CommandBlockSD final : BlockStateData
     FacingDirection fd = UP;
 
 private:
-    void write_(Tag &tag) const override
+    void write_(Tag& tag) const override
     {
         tag << gByte("conditional_bit", static_cast<char>(isConditional));
         tag << gInt("facing_direction", static_cast<int>(fd));
@@ -77,7 +77,7 @@ private:
         return std::string();
     };
 
-    void write_(Tag &tag) const override
+    void write_(Tag& tag) const override
     {
         tag << gString("structure_block_type", modestr_());
     };

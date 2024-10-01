@@ -36,42 +36,42 @@ struct MCStructure
         root << structure;
     };
 
-    Tag &formatVersion()
+    Tag& formatVersion()
     {
         return root[0];
     }
 
-    Tag &size()
+    Tag& size()
     {
         return root[1];
     }
 
-    Tag &structureWorldOrigin()
+    Tag& structureWorldOrigin()
     {
         return root[2];
     }
 
-    Tag &blockIndices1()
+    Tag& blockIndices1()
     {
         return root[3][0][0];
     }
 
-    Tag &blockIndices2()
+    Tag& blockIndices2()
     {
         return root[3][0][1];
     }
 
-    Tag &entities()
+    Tag& entities()
     {
         return root[3][1];
     }
 
-    Tag &blockPalette()
+    Tag& blockPalette()
     {
         return root[3][2][0][0];
     }
 
-    Tag &blockPositionData()
+    Tag& blockPositionData()
     {
         return root[3][2][0][1];
     }
@@ -79,8 +79,8 @@ struct MCStructure
     Tag root;
 };
 
-inline Tag getSingleBlockStructure(const std::string &blockId,
-                                   const BlockEntityData &bed, const BlockStateData &bsd,
+inline Tag getSingleBlockStructure(const std::string& blockId,
+                                   const BlockEntityData& bed, const BlockStateData& bsd,
                                    int version = 18105860)
 {
     MCStructure mcs;
