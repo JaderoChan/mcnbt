@@ -5,7 +5,7 @@
 
 #include <string>
 
-namespace Nbt
+namespace nbt
 {
 
 struct BlockStateData
@@ -16,12 +16,12 @@ struct BlockStateData
 
     Tag getTag() const {
         Tag tag = gCompound("states");
-        _write(tag);
+        write_(tag);
         return tag;
     };
 
 protected:
-    virtual void _write(Tag &tag) const = 0;
+    virtual void write_(Tag &tag) const = 0;
 };
 
 struct CommandBlockSD final : BlockStateData
@@ -43,7 +43,7 @@ struct CommandBlockSD final : BlockStateData
     FacingDirection fd = Up;
 
 private:
-    void _write(Tag &tag) const override {
+    void write_(Tag &tag) const override {
         tag << gByte("conditional_bit", static_cast<char>(isConditional));
         tag << gInt("facing_direction", static_cast<int>(fd));
     };
@@ -63,7 +63,7 @@ struct StructureBlockSD final : BlockStateData
     Mode mode = Load;
 
 private:
-    std::string _modestr() const {
+    std::string modestr_() const {
         if (mode == Save)
             return std::string("save");
         if (mode == Load)
@@ -73,8 +73,8 @@ private:
         return std::string();
     };
 
-    void _write(Tag &tag) const override {
-        tag << gString("structure_block_type", _modestr());
+    void write_(Tag &tag) const override {
+        tag << gString("structure_block_type", modestr_());
     };
 };
 

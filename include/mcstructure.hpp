@@ -4,7 +4,7 @@
 #include "blockentity.hpp"
 #include "blockstate.hpp"
 
-namespace Nbt
+namespace nbt
 {
 
 struct MCStructure

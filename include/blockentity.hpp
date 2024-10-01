@@ -5,7 +5,7 @@
 
 #include <string>
 
-namespace Nbt
+namespace nbt
 {
 
 struct BlockEntityData
@@ -23,7 +23,7 @@ struct BlockEntityData
         tag << gString("CustomName", customName);
         tag << gByte("isMovable", static_cast<char>(isMovable));
         tag << gInt("x", pos[0]) << gInt("y", pos[1]) << gInt("z", pos[2]);
-        _write(tag);
+        write_(tag);
         return tag;
     };
 
@@ -36,7 +36,7 @@ struct BlockEntityData
     bool isMovable = true;
 
 protected:
-    virtual void _write(Tag &tag) const = 0;
+    virtual void write_(Tag &tag) const = 0;
 };
 
 struct CommandBlockED final : BlockEntityData
@@ -74,7 +74,7 @@ struct CommandBlockED final : BlockEntityData
     long long lastExecution = 0;
 
 private:
-    void _write(Tag &tag) const override {
+    void write_(Tag &tag) const override {
         tag << gString("Command", command);
         tag << gByte("ExecuteOnFirstTick", static_cast<char>(executeOnFirstTick));
         tag << gInt("LPCommandMode", 0);
@@ -157,7 +157,7 @@ struct StructureBlockED final : BlockEntityData
     int size[3] = { 1, 1, 1 };
 
 private:
-    void _write(Tag &tag) const override {
+    void write_(Tag &tag) const override {
         tag << gByte("animationMode", static_cast<char>(animationMode));
         tag << gFloat("animationSeconds", animationSeconds);
         tag << gInt("data", static_cast<int>(data));
