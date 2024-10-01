@@ -302,7 +302,7 @@ public:
     Tag(const Tag& rhs) :
         type_(rhs.type_), pureData_(rhs.pureData_),
         dtype_(rhs.dtype_), name_(nullptr), data_(Data())
-    {        
+    {
         if (rhs.type_ == END)
             return;
         if (!rhs.pureData_ && rhs.name_)
@@ -1025,9 +1025,9 @@ public:
                 for (int i = 0; i < data_.is->size(); ++i) {
                     if (isIndented)
                         result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
-                    
+
                     result += std::to_string(static_cast<int>((*data_.is)[i]));
-                    
+
                     if (i != data_.is->size() - 1)
                         result += NBT_CHAR_COMMA;
                 }
@@ -1035,7 +1035,7 @@ public:
                 for (int i = 0; i < data_.ls->size(); ++i) {
                     if (isIndented)
                         result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
-                    
+
                     result += std::to_string(static_cast<int>((*data_.ls)[i])) + NBT_SUFFIX_LONG;
 
                     if (i != data_.ls->size() - 1)
@@ -1047,7 +1047,7 @@ public:
 
             if (indentSize < 0)
                 indentSize = 0;
-            
+
             if (isIndented)
                 result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
 
@@ -1069,19 +1069,19 @@ public:
             for (int i = 0; i < data_.d->size(); ++i) {
                 if (isIndented)
                     result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
-                
+
                 result += (*data_.d)[i].toSnbt(isIndented);
-                
+
                 if (i != data_.d->size() - 1)
                     result += NBT_CHAR_COMMA;
             }
             indentSize = indentSize -= indentStep;
             if (indentSize < 0)
                 indentSize = 0;
-            
+
             if (isIndented)
                 result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
-            
+
             result += "]";
 
             return result;
@@ -1094,27 +1094,27 @@ public:
             }
 
             result += "{";
-            
+
             indentSize += indentStep;
-            
+
             for (int i = 0; i < data_.d->size(); ++i) {
                 if (isIndented)
                     result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
-                
+
                 result += (*data_.d)[i].toSnbt(isIndented);
-                
+
                 if (i != data_.d->size() - 1)
                     result += NBT_CHAR_COMMA;
             }
-            
+
             indentSize = indentSize -= indentStep;
-            
+
             if (indentSize < 0)
                 indentSize = 0;
-            
+
             if (isIndented)
                 result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
-            
+
             result += "}";
 
             return result;
@@ -1445,7 +1445,7 @@ private:
 
             _num2bytes<int16>(static_cast<int16>(data_.s->size()), os, isBigEndian);
             os.write(data_.s->c_str(), data_.s->size());
-            
+
             return;
         }
 
@@ -1454,7 +1454,7 @@ private:
                 _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                 return;
             }
-            
+
             _num2bytes<int32>(static_cast<int32>(data_.bs->size()), os, isBigEndian);
 
             for (auto& var : *data_.bs)
@@ -1468,9 +1468,9 @@ private:
                 _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                 return;
             }
-            
+
             _num2bytes<int32>(static_cast<int32>(data_.is->size()), os, isBigEndian);
-            
+
             for (auto& var : *data_.is)
                 _num2bytes<int32>(var, os, isBigEndian);
 
@@ -1484,20 +1484,20 @@ private:
             }
 
             _num2bytes<int32>(static_cast<int32>(data_.ls->size()), os, isBigEndian);
-            
+
             for (auto& var : *data_.ls)
                 _num2bytes<int64>(var, os, isBigEndian);
-            
+
             return;
         }
-        
+
         if (isList()) {
             if (data_.d == nullptr || data_.d->empty()) {
                 os.put(static_cast<int8>(END));
                 _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                 return;
             }
-            
+
             os.put(static_cast<int8>(dtype_));
             _num2bytes<int32>(static_cast<int32>(data_.d->size()), os, isBigEndian);
 

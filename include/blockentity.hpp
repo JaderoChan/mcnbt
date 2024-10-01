@@ -27,7 +27,7 @@ struct BlockEntityData
         tag << gInt("x", pos[0]) << gInt("y", pos[1]) << gInt("z", pos[2]);
 
         write_(tag);
-        
+
         return tag;
     };
 
@@ -35,7 +35,7 @@ struct BlockEntityData
     std::string id;
     // (May not exist) The custom name of the block entity.
     std::string customName;
-    int pos[3] = {0, 0, 0};
+    int pos[3] = { 0, 0, 0 };
     // 1 or 0 (true/false) - true if the block entity is movable with a piston.
     bool isMovable = true;
 
@@ -160,8 +160,8 @@ struct StructureBlockED final : BlockEntityData
     long long seed = 0;
     float integrity = 100.;
     float animationSeconds = 0.;
-    int offset[3] = {0, 0, 0};
-    int size[3] = {1, 1, 1};
+    int offset[3] = { 0, 0, 0 };
+    int size[3] = { 1, 1, 1 };
 
 private:
     void write_(Tag& tag) const override

@@ -109,7 +109,7 @@ inline Tag getSingleBlockStructure(const std::string& blockId,
     Tag bpd = gCompound("0");
     bpd << bed.getTag();
     mcs.blockPositionData() << bpd;
-    
+
     return mcs.root;
 }
 

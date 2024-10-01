@@ -19,7 +19,7 @@ struct BlockStateData
         Tag tag = gCompound("states");
 
         write_(tag);
-        
+
         return tag;
     };
 
@@ -71,8 +71,7 @@ struct StructureBlockSD final : BlockStateData
 private:
     std::string modestr_() const
     {
-        switch (mode)
-        {
+        switch (mode) {
             case SAVE:
                 return "save";
             case LOAD:
