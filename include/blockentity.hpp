@@ -13,11 +13,13 @@ struct BlockEntityData
     BlockEntityData() {}
 
     BlockEntityData(const std::string &id, const std::string &customeName = "") :
-        id(id), customName(customeName) {}
+        id(id), customName(customeName)
+    {}
 
     virtual ~BlockEntityData() {}
 
-    Tag getTag() const {
+    Tag getTag() const
+    {
         Tag tag = gCompound("block_entity_data");
         tag << gString("id", id);
         tag << gString("CustomName", customName);
@@ -31,7 +33,7 @@ struct BlockEntityData
     std::string id;
     // (May not exist) The custom name of the block entity.
     std::string customName;
-    int pos[3] = { 0, 0, 0 };
+    int pos[3] = {0, 0, 0};
     // 1 or 0 (true/false) - true if the block entity is movable with a piston.
     bool isMovable = true;
 
@@ -47,9 +49,10 @@ struct CommandBlockED final : BlockEntityData
                    bool isAuto = false, bool isPowered = true, bool conditionMet = false) :
         BlockEntityData("CommandBlock"), command(command), tickDelay(0),
         isAuto(isAuto), isPowered(isPowered), conditionMet(conditionMet),
-        lastOuTut(std::string()) {}
+        lastOuTut(std::string())
+    {}
 
-    // The command entered into the command block.
+// The command entered into the command block.
     std::string command;
     // The custom name or hover text of this command block.
     std::string lastOuTut;
@@ -74,7 +77,8 @@ struct CommandBlockED final : BlockEntityData
     long long lastExecution = 0;
 
 private:
-    void write_(Tag &tag) const override {
+    void write_(Tag &tag) const override
+    {
         tag << gString("Command", command);
         tag << gByte("ExecuteOnFirstTick", static_cast<char>(executeOnFirstTick));
         tag << gInt("LPCommandMode", 0);
@@ -82,7 +86,7 @@ private:
         tag << gByte("LPRedstoneMode", 0);
         tag << gLong("LastExecution", lastExecution);
         tag << gString("LastOuTut", lastOuTut);
-        tag << gList("LastOuTuTarams", End);
+        tag << gList("LastOuTuTarams", END);
         tag << gInt("SuccessCount", successCount);
         tag << gInt("TickDelay", tickDelay);
         tag << gByte("TrackOuTut", static_cast<char>(trackOuTut));
@@ -96,25 +100,25 @@ private:
 
 struct StructureBlockED final : BlockEntityData
 {
-    enum Mode : char
+    enum Mode : unsigned char
     {
-        Data,
-        Save,
-        Load,
-        Corner,
-        Inventory,
-        Export
+        DATA,
+        SAVE,
+        LOAD,
+        CORNER,
+        INVENTORY,
+        EXPORT
     };
 
-    enum Mirror : char
+    enum Mirror : unsigned char
     {
-        NoMirror,
+        NO_MIRROR,
         X,
         Y,
         XY
     };
 
-    enum Rotation : char
+    enum Rotation : unsigned char
     {
         R0,
         R90,
@@ -122,30 +126,31 @@ struct StructureBlockED final : BlockEntityData
         R270
     };
 
-    enum Animation : char
+    enum Animation : unsigned char
     {
-        NoAnimation,
-        ByLayer,
-        ByBlock
+        NO_ANIMATION,
+        BY_LAYER,
+        BY_BLOCK
     };
 
-    enum RedstoneSaveMode : char
+    enum RedstoneSaveMode : unsigned char
     {
-        Memory,
-        Disk
+        MEMORY,
+        DISK
     };
 
     StructureBlockED() : BlockEntityData("StructureBlock") {}
 
-    StructureBlockED(const std::string &structureName, Mode mode = Load, bool ignoreEntities = false) :
-        BlockEntityData("StructureBlock"), structureName(structureName), ignoreEntities(ignoreEntities) {}
+    StructureBlockED(const std::string &structureName, Mode mode = LOAD, bool ignoreEntities = false) :
+        BlockEntityData("StructureBlock"), structureName(structureName), ignoreEntities(ignoreEntities)
+    {}
 
     std::string structureName;
-    Mode data = Load;
-    Animation animationMode = NoAnimation;
+    Mode data = LOAD;
+    Animation animationMode = NO_ANIMATION;
     Rotation rotation = R0;
-    Mirror mirror = NoMirror;
-    RedstoneSaveMode redstoneSaveMode = Memory;
+    Mirror mirror = NO_MIRROR;
+    RedstoneSaveMode redstoneSaveMode = MEMORY;
     bool ignoreEntities = false;
     bool removeBlocks = false;
     bool isPowered = true;
@@ -153,11 +158,12 @@ struct StructureBlockED final : BlockEntityData
     long long seed = 0;
     float integrity = 100.;
     float animationSeconds = 0.;
-    int offset[3] = { 0, 0, 0 };
-    int size[3] = { 1, 1, 1 };
+    int offset[3] = {0, 0, 0};
+    int size[3] = {1, 1, 1};
 
 private:
-    void write_(Tag &tag) const override {
+    void write_(Tag &tag) const override
+    {
         tag << gByte("animationMode", static_cast<char>(animationMode));
         tag << gFloat("animationSeconds", animationSeconds);
         tag << gInt("data", static_cast<int>(data));

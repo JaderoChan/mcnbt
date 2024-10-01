@@ -14,7 +14,8 @@ struct BlockStateData
 
     virtual ~BlockStateData() {}
 
-    Tag getTag() const {
+    Tag getTag() const
+    {
         Tag tag = gCompound("states");
         write_(tag);
         return tag;
@@ -26,24 +27,26 @@ protected:
 
 struct CommandBlockSD final : BlockStateData
 {
-    enum FacingDirection : char
+    enum FacingDirection : unsigned char
     {
-        Up,
-        Down,
-        North,
-        South,
-        West,
-        East
+        UP,
+        DOWN,
+        NORTH,
+        SOUTH,
+        WEST,
+        EAST
     };
 
-    CommandBlockSD(bool isConditional = false, FacingDirection fd = Up) :
-        isConditional(isConditional), fd(fd) {}
+    CommandBlockSD(bool isConditional = false, FacingDirection fd = UP) :
+        isConditional(isConditional), fd(fd)
+    {}
 
     bool isConditional;
-    FacingDirection fd = Up;
+    FacingDirection fd = UP;
 
 private:
-    void write_(Tag &tag) const override {
+    void write_(Tag &tag) const override
+    {
         tag << gByte("conditional_bit", static_cast<char>(isConditional));
         tag << gInt("facing_direction", static_cast<int>(fd));
     };
@@ -51,29 +54,31 @@ private:
 
 struct StructureBlockSD final : BlockStateData
 {
-    enum Mode : char
+    enum Mode : unsigned char
     {
-        Save,
-        Load,
-        Corner
+        SAVE,
+        LOAD,
+        CORNER
     };
 
-    StructureBlockSD(Mode mode = Load) : mode(mode) {}
+    StructureBlockSD(Mode mode = LOAD) : mode(mode) {}
 
-    Mode mode = Load;
+    Mode mode = LOAD;
 
 private:
-    std::string modestr_() const {
-        if (mode == Save)
+    std::string modestr_() const
+    {
+        if (mode == SAVE)
             return std::string("save");
-        if (mode == Load)
+        if (mode == LOAD)
             return std::string("load");
-        if (mode == Corner)
+        if (mode == CORNER)
             return std::string("corner");
         return std::string();
     };
 
-    void write_(Tag &tag) const override {
+    void write_(Tag &tag) const override
+    {
         tag << gString("structure_block_type", modestr_());
     };
 };
