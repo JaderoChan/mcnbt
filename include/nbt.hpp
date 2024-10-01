@@ -72,7 +72,7 @@
 
 #endif // !NBT_MACRO
 
-namespace Nbt
+namespace nbt
 {
 
 // The core of read and write.
@@ -117,7 +117,7 @@ T _bytes2num(std::istream &is, bool isBigEndian = false, bool restoreCursor = fa
     is.read(buffer, size);
     size = static_cast<size_t>(is.gcount());
     if (isBigEndian != _isBigEndian())
-        Nbt::_reverse(buffer, size);
+        _reverse(buffer, size);
     std::memcpy(&result, buffer, size);
     if (restoreCursor)
         is.seekg(begpos);
@@ -131,17 +131,17 @@ void _num2bytes(T num, std::ostream &os, bool isBigEndian = false) {
     static char buffer[sizeof(T)] {};
     std::memcpy(buffer, &num, size);
     if (isBigEndian != _isBigEndian())
-        Nbt::_reverse(buffer, size);
+        _reverse(buffer, size);
     os.write(buffer, size);
 }
 
 }
 
-namespace Nbt
+namespace nbt
 {
 
 // NBT tag types
-enum TagTypes : char
+enum TagType : unsigned char
 {
     End = 0,
     Byte = 1,
@@ -158,33 +158,33 @@ enum TagTypes : char
     LongArray = 12
 };
 
-const char *getTypeString(TagTypes type) {
+const char *getTypeString(TagType type) {
     switch (type) {
-        case Nbt::End:
+        case End:
             return "End";
-        case Nbt::Byte:
+        case Byte:
             return "Byte";
-        case Nbt::Short:
+        case Short:
             return "Short";
-        case Nbt::Int:
+        case Int:
             return "Int";
-        case Nbt::Long:
+        case Long:
             return "Long";
-        case Nbt::Float:
+        case Float:
             return "Float";
-        case Nbt::Double:
+        case Double:
             return "Double";
-        case Nbt::ByteArray:
+        case ByteArray:
             return "Byte Array";
-        case Nbt::String:
+        case String:
             return "String";
-        case Nbt::List:
+        case List:
             return "List";
-        case Nbt::Compound:
+        case Compound:
             return "Compound";
-        case Nbt::IntArray:
+        case IntArray:
             return "Int Array";
-        case Nbt::LongArray:
+        case LongArray:
             return "Long Array";
         default:
             return "";
@@ -238,15 +238,15 @@ public:
         mType(End), mPureData(true),
         mDataType(End), mName(nullptr), mData(Data()) {}
 
-    explicit Tag(TagTypes type, bool isPuredata = false) :
+    explicit Tag(TagType type, bool isPuredata = false) :
         mType(type), mPureData(isPuredata),
         mDataType(End), mName(nullptr), mData(Data()) {}
 
-    Tag(TagTypes type, const std::string &name) :
+    Tag(TagType type, const std::string &name) :
         mType(type), mPureData(false),
         mDataType(End), mName(new std::string(name)), mData(Data()) {}
 
-    Tag(TagTypes type, std::istream &is, bool isBigEndian = false, size_t headerSize = 0) :
+    Tag(TagType type, std::istream &is, bool isBigEndian = false, size_t headerSize = 0) :
         mType(type), mPureData(false),
         mDataType(End), mName(nullptr), mData(Data())
     {
@@ -427,12 +427,12 @@ public:
         return *mName;
     }
 
-    TagTypes type() const {
+    TagType type() const {
         return mType;
     }
 
     // @brief Get the element type of List, only valid when tag type is List.
-    TagTypes dtype() const {
+    TagType dtype() const {
         if (!isList())
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
 
@@ -464,17 +464,17 @@ public:
             throw std::logic_error(NBT_TYPE_ERROR(getTypeString(type())));
 
         switch (mType) {
-            case Nbt::ByteArray:
+            case ByteArray:
                 return mData.bs == nullptr ? 0 : mData.bs->size();
-            case Nbt::String:
+            case String:
                 return mData.s == nullptr ? 0 : mData.s->size();
-            case Nbt::List:
+            case List:
                 return mData.d == nullptr ? 0 : mData.d->size();
-            case Nbt::Compound:
+            case Compound:
                 return mData.d == nullptr ? 0 : mData.d->size();
-            case Nbt::IntArray:
+            case IntArray:
                 return mData.is == nullptr ? 0 : mData.is->size();
-            case Nbt::LongArray:
+            case LongArray:
                 return mData.ls == nullptr ? 0 : mData.ls->size();
             default:
                 return 0;
@@ -1041,11 +1041,11 @@ public:
         return *this;
     }
 
-    friend Tag gList(const std::string &name, TagTypes dtype);
-    friend Tag gpList(TagTypes dtype);
+    friend Tag gList(const std::string &name, TagType dtype);
+    friend Tag gpList(TagType dtype);
 
 private:
-    Tag(TagTypes type, std::istream &is, bool isBigEndian, bool isPuredata) :
+    Tag(TagType type, std::istream &is, bool isBigEndian, bool isPuredata) :
         mType(type), mPureData(isPuredata),
         mDataType(End), mName(nullptr), mData(Data())
     {
@@ -1079,7 +1079,7 @@ private:
         if (mPureData)
             return;
 
-        TagTypes type = static_cast<TagTypes>(is.get());
+        TagType type = static_cast<TagType>(is.get());
         if (type != mType)
             throw std::runtime_error(NBT_RUNTIME_ERROR);
 
@@ -1187,7 +1187,7 @@ private:
     }
 
     void listConstruct(std::istream &is, bool isBigEndian) {
-        mDataType = static_cast<TagTypes>(is.get());
+        mDataType = static_cast<TagType>(is.get());
         int32 dsize = _bytes2num<int32>(is, isBigEndian);
 
         if (mData.d) {
@@ -1211,7 +1211,7 @@ private:
         mData.d = new std::vector<Tag>();
 
         while (!is.eof()) {
-            TagTypes type = static_cast<TagTypes>(is.peek());
+            TagType type = static_cast<TagType>(is.peek());
             if (type == End) {
                 is.get();         // Give up End tag and move stream point to next byte.
                 break;
@@ -1327,9 +1327,9 @@ private:
     // The all members of List is a "Base Tag".
     bool mPureData;
     // The tag type.
-    TagTypes mType;
+    TagType mType;
     // The tag type of element, only used to List.
-    TagTypes mDataType;
+    TagType mDataType;
     // The tag "key".
     std::string *mName;
     // The tag "value".
@@ -1338,127 +1338,127 @@ private:
 
 }
 
-namespace Nbt
+namespace nbt
 {
 
 // The utility functions.
 
 inline Tag gByte(const std::string &name, char value) {
-    Tag tag(TagTypes::Byte, name);
+    Tag tag(TagType::Byte, name);
     tag.setByte(value);
     return tag;
 }
 
 inline Tag gpByte(char value) {
-    Tag tag(TagTypes::Byte, true);
+    Tag tag(TagType::Byte, true);
     tag.setByte(value);
     return tag;
 }
 
 inline Tag gShort(const std::string &name, short value) {
-    Tag tag(TagTypes::Short, name);
+    Tag tag(TagType::Short, name);
     tag.setShort(value);
     return tag;
 }
 
 inline Tag gpShort(short value) {
-    Tag tag(TagTypes::Short, true);
+    Tag tag(TagType::Short, true);
     tag.setShort(value);
     return tag;
 }
 
 inline Tag gInt(const std::string &name, int value) {
-    Tag tag(TagTypes::Int, name);
+    Tag tag(TagType::Int, name);
     tag.setInt(value);
     return tag;
 }
 
 inline Tag gpInt(int value) {
-    Tag tag(TagTypes::Int, true);
+    Tag tag(TagType::Int, true);
     tag.setInt(value);
     return tag;
 }
 
 inline Tag gLong(const std::string &name, long long value) {
-    Tag tag(TagTypes::Long, name);
+    Tag tag(TagType::Long, name);
     tag.setLong(value);
     return tag;
 }
 
 inline Tag gpLong(long long value) {
-    Tag tag(TagTypes::Long, true);
+    Tag tag(TagType::Long, true);
     tag.setLong(value);
     return tag;
 }
 
 inline Tag gFloat(const std::string &name, float value) {
-    Tag tag(TagTypes::Float, name);
+    Tag tag(TagType::Float, name);
     tag.setFloat(value);
     return tag;
 }
 
 inline Tag gpFloat(float value) {
-    Tag tag(TagTypes::Float, true);
+    Tag tag(TagType::Float, true);
     tag.setFloat(value);
     return tag;
 }
 
 inline Tag gDouble(const std::string &name, double value) {
-    Tag tag(TagTypes::Double, name);
+    Tag tag(TagType::Double, name);
     tag.setDouble(value);
     return tag;
 }
 
 inline Tag gpDouble(double value) {
-    Tag tag(TagTypes::Double, true);
+    Tag tag(TagType::Double, true);
     tag.setDouble(value);
     return tag;
 }
 
 inline Tag gString(const std::string &name, const std::string &value) {
-    Tag tag(TagTypes::String, name);
+    Tag tag(TagType::String, name);
     tag.setString(value);
     return tag;
 }
 
 inline Tag gpString(const std::string &value) {
-    Tag tag(TagTypes::String, true);
+    Tag tag(TagType::String, true);
     tag.setString(value);
     return tag;
 }
 
 inline Tag gByteArray(const std::string &name = std::string()) {
-    return Tag(TagTypes::ByteArray, name);
+    return Tag(TagType::ByteArray, name);
 }
 
 inline Tag gpByteArray() {
-    return Tag(TagTypes::ByteArray, true);
+    return Tag(TagType::ByteArray, true);
 }
 
 inline Tag gIntArray(const std::string &name = std::string()) {
-    return Tag(TagTypes::IntArray, name);
+    return Tag(TagType::IntArray, name);
 }
 
 inline Tag gpIntArray() {
-    return Tag(TagTypes::IntArray, true);
+    return Tag(TagType::IntArray, true);
 }
 
 inline Tag gLongArray(const std::string &name = std::string()) {
-    return Tag(TagTypes::LongArray, name);
+    return Tag(TagType::LongArray, name);
 }
 
 inline Tag gpLongArray() {
-    return Tag(TagTypes::LongArray, true);
+    return Tag(TagType::LongArray, true);
 }
 
-inline Tag gList(const std::string &name, TagTypes dtype) {
-    Tag tag(TagTypes::List, name);
+inline Tag gList(const std::string &name, TagType dtype) {
+    Tag tag(TagType::List, name);
     tag.mDataType = dtype;
     return tag;
 }
 
-inline Tag gpList(TagTypes dtype) {
-    Tag tag(TagTypes::List, true);
+inline Tag gpList(TagType dtype) {
+    Tag tag(TagType::List, true);
     tag.mDataType = dtype;
     return tag;
 }
