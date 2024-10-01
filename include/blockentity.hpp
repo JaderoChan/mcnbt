@@ -25,7 +25,9 @@ struct BlockEntityData
         tag << gString("CustomName", customName);
         tag << gByte("isMovable", static_cast<char>(isMovable));
         tag << gInt("x", pos[0]) << gInt("y", pos[1]) << gInt("z", pos[2]);
+
         write_(tag);
+        
         return tag;
     };
 

@@ -17,7 +17,9 @@ struct BlockStateData
     Tag getTag() const
     {
         Tag tag = gCompound("states");
+
         write_(tag);
+        
         return tag;
     };
 
@@ -27,6 +29,7 @@ protected:
 
 struct CommandBlockSD final : BlockStateData
 {
+    // Block facing direction.
     enum FacingDirection : unsigned char
     {
         UP,
@@ -68,13 +71,17 @@ struct StructureBlockSD final : BlockStateData
 private:
     std::string modestr_() const
     {
-        if (mode == SAVE)
-            return std::string("save");
-        if (mode == LOAD)
-            return std::string("load");
-        if (mode == CORNER)
-            return std::string("corner");
-        return std::string();
+        switch (mode)
+        {
+            case SAVE:
+                return "save";
+            case LOAD:
+                return "load";
+            case CORNER:
+                return "corner";
+            default:
+                return "";
+        }
     };
 
     void write_(Tag& tag) const override

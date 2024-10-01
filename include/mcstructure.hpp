@@ -12,27 +12,42 @@ struct MCStructure
     MCStructure(int formatVersion = 1, int sizeX = 1, int sizeY = 1, int sizeZ = 1) :
         root(gCompound())
     {
+        // Write format version.
         root << gInt("format_version", formatVersion);
 
+        // Write size.
         Tag size = gList("size", INT);
         size << gpInt(sizeX) << gpInt(sizeY) << gpInt(sizeZ);
         root << size;
 
+        // Write structure world origin.
         Tag swo = gList("structure_world_origin", INT);
         swo << gpInt(0) << gpInt(0) << gpInt(0);
         root << swo;
 
+        // Create structure tag.
         Tag structure = gCompound("structure");
+
+        // Create block indices.
         Tag blockIndices = gList("block_indices", LIST);
         blockIndices << gpList(INT) << gpList(INT);
+
+        // Create entities tag.
         Tag entities = gList("entities", COMPOUND);
+
+        // Create palette tag.
         Tag palette = gCompound("palette");
         Tag blockPalette = gList("block_palette", COMPOUND);
+
+        // Create block position data tag.
         Tag blockPositionData = gCompound("block_position_data");
         palette << gCompound("default");
         palette["default"] << blockPalette << blockPositionData;
 
+        // Merge block data.
         structure << blockIndices << entities << palette;
+
+        // Write structure tag.
         root << structure;
     };
 
@@ -86,12 +101,15 @@ inline Tag getSingleBlockStructure(const std::string& blockId,
     MCStructure mcs;
     mcs.blockIndices1() << gpInt(0);
     mcs.blockIndices2() << gpInt(-1);
+
     Tag block = gpCompound();
     block << gString("name", blockId) << bsd.getTag() << gInt("version", version);
     mcs.blockPalette() << block;
+
     Tag bpd = gCompound("0");
     bpd << bed.getTag();
     mcs.blockPositionData() << bpd;
+    
     return mcs.root;
 }
 

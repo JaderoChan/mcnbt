@@ -81,49 +81,61 @@ namespace nbt
 // @param size The size of range that need reversed, and reverser all if the size is 0.
 inline void _reverse(char* str, size_t size = 0)
 {
-    size_t _size = size;
     if (size == 0)
-        _size = std::strlen(str);
+        size = std::strlen(str);
+
     size_t i = 0;
-    while (i < _size / 2) {
+    while (i < size / 2) {
         char ch = str[i];
-        str[i] = str[_size - 1 - i];
-        str[_size - 1 - i] = ch;
+        str[i] = str[size - 1 - i];
+        str[size - 1 - i] = ch;
+
         ++i;
     }
 }
 
-// @brief Check if system is big endian.
+// @brief Check whther the system is big endian.
 inline bool _isBigEndian()
 {
-    static bool inited = false;
-    static bool isBig = false;
-    if (inited)
-        return isBig;
+    static bool isInited = false;
+    static bool isBigEndian = false;
+
+    if (isInited)
+        return isBigEndian;
+
     int num = 1;
     char* numPtr = reinterpret_cast<char*>(&num);
-    isBig = numPtr[0] == 0 ? true : false;
-    inited = true;
-    return isBig;
+    isBigEndian = numPtr[0] == 0 ? true : false;
+
+    isInited = true;
+
+    return isBigEndian;
 }
 
 // @brief Obtain bytes from input stream, and convert it to number.
-// @param restoreCursor Whether to restore the input stream cursor position after read.
+// @param resumeCursor Whether to resume the input stream cursor position after read.
 // @return A number.
 template<typename T>
-T _bytes2num(std::istream& is, bool isBigEndian = false, bool restoreCursor = false)
+T _bytes2num(std::istream& is, bool isBigEndian = false, bool resumeCursor = false)
 {
     size_t size = sizeof(T);
     T result = T();
+
     auto begpos = is.tellg();
-    static char buffer[sizeof(T)]{};
+
+    static char buffer[sizeof(T)] {};
     is.read(buffer, size);
+
     size = static_cast<size_t>(is.gcount());
+
     if (isBigEndian != _isBigEndian())
         _reverse(buffer, size);
+
     std::memcpy(&result, buffer, size);
-    if (restoreCursor)
+
+    if (resumeCursor)
         is.seekg(begpos);
+
     return result;
 }
 
@@ -132,10 +144,14 @@ template<typename T>
 void _num2bytes(T num, std::ostream& os, bool isBigEndian = false)
 {
     size_t size = sizeof(T);
-    static char buffer[sizeof(T)]{};
+
+    static char buffer[sizeof(T)] {};
+
     std::memcpy(buffer, &num, size);
+
     if (isBigEndian != _isBigEndian())
         _reverse(buffer, size);
+
     os.write(buffer, size);
 }
 
@@ -259,9 +275,11 @@ public:
         dtype_(END), name_(nullptr), data_(Data())
     {
         std::stringstream ss;
+
         is.seekg(0, is.end);
         size_t size = is.tellg();
         is.seekg(0, is.beg);
+
         char* buffer = new char[size];
         is.read(buffer, size);
         std::string content = std::string(buffer, size);
@@ -284,7 +302,7 @@ public:
     Tag(const Tag& rhs) :
         type_(rhs.type_), pureData_(rhs.pureData_),
         dtype_(rhs.dtype_), name_(nullptr), data_(Data())
-    {
+    {        
         if (rhs.type_ == END)
             return;
         if (!rhs.pureData_ && rhs.name_)
@@ -400,12 +418,6 @@ public:
         return type_ == COMPOUND;
     }
 
-    bool isNum() const
-    {
-        return type_ == BYTE || type_ == SHORT || type_ == INT ||
-            type_ == LONG || type_ == FLOAT || type_ == DOUBLE;
-    }
-
     bool isInteger() const
     {
         return type_ == BYTE || type_ == SHORT || type_ == INT || type_ == LONG;
@@ -414,6 +426,11 @@ public:
     bool isFloatPoint() const
     {
         return type_ == FLOAT || type_ == DOUBLE;
+    }
+
+    bool isNum() const
+    {
+        return isInteger() || isFloatPoint();
     }
 
     bool isArray() const
@@ -621,6 +638,7 @@ public:
         for (auto& var : *data_.d) {
             if (var.name_ == nullptr)
                 continue;
+
             if (*var.name_ == name)
                 return var;
         }
@@ -885,6 +903,7 @@ public:
         for (auto it = data_.d->begin(); it != data_.d->end(); ++it) {
             if (it->name_ == nullptr)
                 continue;
+
             if (*(it->name_) == name) {
                 data_.d->erase(it);
                 return;
@@ -900,9 +919,9 @@ public:
             std::stringstream ss;
             _write(ss, isBigEndian);
             os << gzip::compress(ss.str().c_str(), ss.str().size());
-            return;
+        } else {
+            _write(os, isBigEndian);
         }
-        _write(os, isBigEndian);
     }
 
     void write(const std::string& filename, bool isBigEndian = false, bool isCompressed = false) const
@@ -941,6 +960,7 @@ public:
 
         if (!pureData_ && name_ && !name_->empty())
             result += *name_ + NBT_CHAR_COLON;
+
         if (isIndented)
             result += NBT_CHAR_SPACE;
 
@@ -995,7 +1015,9 @@ public:
                 for (int i = 0; i < data_.bs->size(); ++i) {
                     if (isIndented)
                         result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+
                     result += std::to_string(static_cast<int>((*data_.bs)[i])) + NBT_SUFFIX_BYTE;
+
                     if (i != data_.bs->size() - 1)
                         result += NBT_CHAR_COMMA;
                 }
@@ -1003,7 +1025,9 @@ public:
                 for (int i = 0; i < data_.is->size(); ++i) {
                     if (isIndented)
                         result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+                    
                     result += std::to_string(static_cast<int>((*data_.is)[i]));
+                    
                     if (i != data_.is->size() - 1)
                         result += NBT_CHAR_COMMA;
                 }
@@ -1011,18 +1035,24 @@ public:
                 for (int i = 0; i < data_.ls->size(); ++i) {
                     if (isIndented)
                         result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+                    
                     result += std::to_string(static_cast<int>((*data_.ls)[i])) + NBT_SUFFIX_LONG;
+
                     if (i != data_.ls->size() - 1)
                         result += NBT_CHAR_COMMA;
                 }
             }
 
             indentSize = indentSize -= indentStep;
+
             if (indentSize < 0)
                 indentSize = 0;
+            
             if (isIndented)
                 result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+
             result += "]";
+
             return result;
         }
 
@@ -1031,21 +1061,29 @@ public:
                 result += "[]";
                 return result;
             }
+
             result += "[";
+
             indentSize += indentStep;
+
             for (int i = 0; i < data_.d->size(); ++i) {
                 if (isIndented)
                     result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+                
                 result += (*data_.d)[i].toSnbt(isIndented);
+                
                 if (i != data_.d->size() - 1)
                     result += NBT_CHAR_COMMA;
             }
             indentSize = indentSize -= indentStep;
             if (indentSize < 0)
                 indentSize = 0;
+            
             if (isIndented)
                 result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+            
             result += "]";
+
             return result;
         }
 
@@ -1054,21 +1092,31 @@ public:
                 result += "{}";
                 return result;
             }
+
             result += "{";
+            
             indentSize += indentStep;
+            
             for (int i = 0; i < data_.d->size(); ++i) {
                 if (isIndented)
                     result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+                
                 result += (*data_.d)[i].toSnbt(isIndented);
+                
                 if (i != data_.d->size() - 1)
                     result += NBT_CHAR_COMMA;
             }
+            
             indentSize = indentSize -= indentStep;
+            
             if (indentSize < 0)
                 indentSize = 0;
+            
             if (isIndented)
                 result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+            
             result += "}";
+
             return result;
         }
 
@@ -1190,6 +1238,7 @@ private:
             delete name_;
             name_ = nullptr;
         }
+
         if (nameLen == 0)
             return;
 
@@ -1234,6 +1283,7 @@ private:
             delete data_.s;
             data_.s = nullptr;
         }
+
         if (strlen == 0)
             return;
 
@@ -1253,28 +1303,36 @@ private:
                 delete data_.bs;
                 data_.bs = nullptr;
             }
+
             if (dsize == 0)
                 return;
+
             data_.bs = new std::vector<int8>();
             data_.bs->reserve(dsize);
         }
+
         if (isIntArray()) {
             if (data_.is) {
                 delete data_.is;
                 data_.ls = nullptr;
             }
+
             if (dsize == 0)
                 return;
+
             data_.is = new std::vector<int32>();
             data_.is->reserve(dsize);
         }
+
         if (isLongArray()) {
             if (data_.ls) {
                 delete data_.ls;
                 data_.ls = nullptr;
             }
+
             if (dsize == 0)
                 return;
+
             data_.ls = new std::vector<int64>();
             data_.ls->reserve(dsize);
         }
@@ -1283,8 +1341,10 @@ private:
         while (!is.eof() && size++ < dsize) {
             if (isByteArray())
                 data_.bs->emplace_back(_bytes2num<int8>(is, isBigEndian));
+
             if (isIntArray())
                 data_.is->emplace_back(_bytes2num<int32>(is, isBigEndian));
+
             if (isLongArray())
                 data_.ls->emplace_back(_bytes2num<int64>(is, isBigEndian));
         }
@@ -1299,6 +1359,7 @@ private:
             delete data_.d;
             data_.d = nullptr;
         }
+
         if (dsize == 0)
             return;
 
@@ -1314,14 +1375,17 @@ private:
     {
         if (data_.d)
             delete data_.d;
+
         data_.d = new std::vector<Tag>();
 
         while (!is.eof()) {
             TagType type = static_cast<TagType>(is.peek());
+
             if (type == END) {
                 is.get();         // Give up End tag and move stream point to next byte.
                 break;
             }
+
             data_.d->emplace_back(Tag(type, is, isBigEndian, false));
         }
     }
@@ -1342,89 +1406,118 @@ private:
             os.put(END);
             return;
         }
+
         if (isByte()) {
             os.put(data_.n.i8);
             return;
         }
+
         if (isShort()) {
             _num2bytes<int16>(data_.n.i16, os, isBigEndian);
             return;
         }
+
         if (isInt()) {
             _num2bytes<int32>(data_.n.i32, os, isBigEndian);
             return;
         }
+
         if (isLong()) {
             _num2bytes<int64>(data_.n.i64, os, isBigEndian);
             return;
         }
+
         if (isFloat()) {
             _num2bytes<fp32>(data_.n.f32, os, isBigEndian);
             return;
         }
+
         if (isDouble()) {
             _num2bytes<fp64>(data_.n.f64, os, isBigEndian);
             return;
         }
+
         if (isString()) {
             if (data_.s == nullptr || data_.s->empty()) {
                 _num2bytes<int16>(static_cast<int16>(0), os, isBigEndian);
                 return;
             }
+
             _num2bytes<int16>(static_cast<int16>(data_.s->size()), os, isBigEndian);
             os.write(data_.s->c_str(), data_.s->size());
+            
             return;
         }
+
         if (isByteArray()) {
             if (data_.bs == nullptr || data_.bs->empty()) {
                 _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                 return;
             }
+            
             _num2bytes<int32>(static_cast<int32>(data_.bs->size()), os, isBigEndian);
+
             for (auto& var : *data_.bs)
                 os.put(var);
+
             return;
         }
+
         if (isIntArray()) {
             if (data_.is == nullptr || data_.is->empty()) {
                 _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                 return;
             }
+            
             _num2bytes<int32>(static_cast<int32>(data_.is->size()), os, isBigEndian);
+            
             for (auto& var : *data_.is)
                 _num2bytes<int32>(var, os, isBigEndian);
+
             return;
         }
+
         if (isLongArray()) {
             if (data_.ls == nullptr || data_.ls->empty()) {
                 _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                 return;
             }
+
             _num2bytes<int32>(static_cast<int32>(data_.ls->size()), os, isBigEndian);
+            
             for (auto& var : *data_.ls)
                 _num2bytes<int64>(var, os, isBigEndian);
+            
             return;
         }
+        
         if (isList()) {
             if (data_.d == nullptr || data_.d->empty()) {
                 os.put(static_cast<int8>(END));
                 _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                 return;
             }
+            
             os.put(static_cast<int8>(dtype_));
             _num2bytes<int32>(static_cast<int32>(data_.d->size()), os, isBigEndian);
+
             for (auto& var : *data_.d)
                 var._write(os, isBigEndian);
+
             return;
         }
+
         if (isCompound()) {
             if (data_.d == nullptr || data_.d->empty()) {
                 os.put(END);
                 return;
             }
+
             for (auto& var : *data_.d)
                 var._write(os, isBigEndian);
+
             os.put(END);
+
             return;
         }
     }
@@ -1548,7 +1641,7 @@ inline Tag gpString(const std::string& value)
     return tag;
 }
 
-inline Tag gByteArray(const std::string& name = std::string())
+inline Tag gByteArray(const std::string& name = "")
 {
     return Tag(BYTE_ARRAY, name);
 }
@@ -1558,7 +1651,7 @@ inline Tag gpByteArray()
     return Tag(BYTE_ARRAY, true);
 }
 
-inline Tag gIntArray(const std::string& name = std::string())
+inline Tag gIntArray(const std::string& name = "")
 {
     return Tag(INT_ARRAY, name);
 }
@@ -1568,7 +1661,7 @@ inline Tag gpIntArray()
     return Tag(INT_ARRAY, true);
 }
 
-inline Tag gLongArray(const std::string& name = std::string())
+inline Tag gLongArray(const std::string& name = "")
 {
     return Tag(LONG_ARRAY, name);
 }
@@ -1592,7 +1685,7 @@ inline Tag gpList(TagType dtype)
     return tag;
 }
 
-inline Tag gCompound(const std::string& name = std::string())
+inline Tag gCompound(const std::string& name = "")
 {
     return Tag(COMPOUND, name);
 }
