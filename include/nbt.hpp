@@ -30,11 +30,12 @@
 #define NBT_NOGZIP
 
 #include <cstring>      // memcpy()
-#include <cstdint>      // size_t
-#include <vector>       // vector
-#include <string>       // string
-#include <fstream>      // istream, ostream, fstream
-#include <sstream>      // stringstream
+#include <cstdint>
+#include <string>
+#include <vector>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 #include <stdexcept>
 
 // Whether to use GZip to un/compress NBT.
@@ -44,29 +45,15 @@
 #include <gzip/decompress.h>
 #endif // !NBT_NOGZIP
 
+// Just for code can be fold.
 #ifndef NBT_MACRO
 #define NBT_MACRO
 
-#define NBT_CHAR_SPACE ' '
-#define NBT_CHAR_COMMA ','
-#define NBT_CHAR_COLON ':'
-#define NBT_CHAR_QUOTA '"'
-#define NBT_CHAR_NEWLINE '\n'
-
-#define NBT_SUFFIX_BYTE "b"
-#define NBT_SUFFIX_SHORT "s"
-#define NBT_SUFFIX_LONG "l"
-#define NBT_SUFFIX_FLOAT "f"
-#define NBT_SUFFIX_DOUBLE "d"
-#define NBT_ARRAYFLAG_BYTE "B;"
-#define NBT_ARRAYFLAG_INT "I;"
-#define NBT_ARRAYFLAG_LONG "L;"
-
-#define NBT_ERR_TAGTYPE "The error tag type."
-#define NBT_ERR_OVER_RANGE "The index is out of range."
-#define NBT_ERR_NOT_FIND "Not find the specify member."
-#define NBT_ERR_OTHER  "The other error occured."
-#define NBT_ERR_UNDEFINED_TAGTYPE  "The tag type is undefined."
+#define NBT_ERR_INCORRECT_TAGTYPE   "The error tag type."
+#define NBT_ERR_OVER_RANGE          "The index is out of range."
+#define NBT_ERR_NOT_FIND            "Not find the specify member."
+#define NBT_ERR_OTHER               "The other error occured."
+#define NBT_ERR_UNDEFINED_TAGTYPE   "The tag type is undefined."
 
 #endif // !NBT_MACRO
 
@@ -75,8 +62,10 @@ namespace nbt
 
 // The core of read and write.
 
-// @brief Reverse a C string.
-// @param size The size of range that need reversed, and reverser all if the size is 0.
+// @brief
+// Reverse a C style string.
+// @param
+// size The size of range that need reversed, and reverser all if the size is 0.
 inline void _reverse(char* str, size_t size = 0)
 {
     if (size == 0)
@@ -88,11 +77,12 @@ inline void _reverse(char* str, size_t size = 0)
         str[i] = str[size - 1 - i];
         str[size - 1 - i] = ch;
 
-        ++i;
+        i++;
     }
 }
 
-// @brief Check whther the system is big endian.
+// @brief
+// Check whther the system is big endian.
 inline bool _isBigEndian()
 {
     static bool isInited = false;
@@ -110,9 +100,12 @@ inline bool _isBigEndian()
     return isBigEndian;
 }
 
-// @brief Obtain bytes from input stream, and convert it to number.
-// @param resumeCursor Whether to resume the input stream cursor position after read.
-// @return A number.
+// @brief
+// Obtain bytes from input stream, and convert it to number.
+// @param
+// resumeCursor Whether to resume the input stream cursor position after read.
+// @return
+// A number.
 template<typename T>
 T _bytes2num(std::istream& is, bool isBigEndian = false, bool resumeCursor = false)
 {
@@ -137,7 +130,8 @@ T _bytes2num(std::istream& is, bool isBigEndian = false, bool resumeCursor = fal
     return result;
 }
 
-// @brief Convert the number to bytes, and output it to output stream.
+// @brief
+// Convert the number to bytes, and output it to output stream.
 template<typename T>
 void _num2bytes(T num, std::ostream& os, bool isBigEndian = false)
 {
@@ -176,7 +170,7 @@ enum TagType : unsigned char
     LONG_ARRAY = 12
 };
 
-const char* getTypeString(TagType type)
+std::string getTypeString(TagType type)
 {
     switch (type) {
         case END:
@@ -213,12 +207,12 @@ const char* getTypeString(TagType type)
 class Tag
 {
 public:
-    typedef unsigned char uchar;
-    typedef char byte;
-    typedef char int8;
-    typedef short int16;
-    typedef int int32;
-    typedef long long int64;
+    typedef uint8_t uchar;
+    typedef int8_t byte;
+    typedef int8_t int8;
+    typedef int16_t int16;
+    typedef int32_t int32;
+    typedef int64_t int64;
     typedef float fp32;
     typedef double fp64;
 
@@ -437,26 +431,31 @@ public:
         return type_ == BYTE_ARRAY || type_ == INT_ARRAY || type_ == LONG_ARRAY;
     }
 
-    // @brief Whether the object is a List and Compound.
-    // @return Return true if the object is a List or Compound if not return false.
+    // @brief
+    // Whether the object is a List and Compound.
+    // @return
+    // Return true if the object is a List or Compound if not return false.
     bool isComplex() const
     {
         return type_ == COMPOUND || type_ == LIST;
     }
 
-    // @brief Whether the Compound has member with specify name, only valid when tag type is Compound.
-    // @return Return true if the object is a Compound and conatins a specify member else return false.
+    // @brief
+    // Whether the Compound has member with specify name, only valid when tag type is Compound.
+    // @return
+    // Return true if the object is a Compound and conatins a specify member else return false.
     bool hasMember(const std::string& name) const
     {
         if (!isCompound())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.d == nullptr)
             return false;
 
-        for (auto& var : *data_.d) {
+        for (const auto& var : *data_.d) {
             if (var.name_ == nullptr)
                 continue;
+
             if (*var.name_ == name)
                 return true;
         }
@@ -464,7 +463,8 @@ public:
         return false;
     }
 
-    // @return Return a empty string if the object is not named or it is "pure data".
+    // @return
+    // Return a empty string if the object is not named or it is "pure data".
     std::string name() const
     {
         if (pureData_ || name_ == nullptr)
@@ -478,16 +478,18 @@ public:
         return type_;
     }
 
-    // @brief Get the element type of List, only valid when tag type is List.
+    // @brief
+    // Get the element type of List, only valid when tag type is List.
     TagType dtype() const
     {
         if (!isList())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         return dtype_;
     }
 
-    // @return Return 0 if the object is not named or it is "pure data".
+    // @return
+    // Return 0 if the object is not named or it is "pure data".
     int16 nameLen() const
     {
         if (pureData_ || name_ == nullptr)
@@ -496,11 +498,12 @@ public:
         return static_cast<int16>(name_->size());
     }
 
-    // @brief Get the string length, only valid when tag type is String.
+    // @brief
+    // Get the string length, only valid when tag type is String.
     int32 stringLen() const
     {
         if (!isString())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.s == nullptr)
             return 0;
@@ -508,11 +511,12 @@ public:
         return static_cast<int32>(data_.s->size());
     }
 
-    // @brief Get the size of the container, only valid when tag type not is Number.
+    // @brief
+    // Get the size of the container, only valid when tag type not is Number.
     size_t size() const
     {
         if (!isString() && !isArray() && !isComplex())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         switch (type_) {
             case BYTE_ARRAY:
@@ -535,7 +539,7 @@ public:
     byte getByte() const
     {
         if (!isByte())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         return data_.n.i8;
     }
@@ -543,7 +547,7 @@ public:
     int16 getShort() const
     {
         if (!isShort())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         return data_.n.i16;
     }
@@ -551,7 +555,7 @@ public:
     int32 getInt() const
     {
         if (!isInt())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         return data_.n.i32;
     }
@@ -559,7 +563,7 @@ public:
     int64 getLong() const
     {
         if (!isLong())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         return data_.n.i64;
     }
@@ -567,7 +571,7 @@ public:
     fp32 getFloat() const
     {
         if (!isFloat())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         return data_.n.f32;
     }
@@ -575,7 +579,7 @@ public:
     fp64 getDouble() const
     {
         if (!isDouble())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         return data_.n.f64;
     }
@@ -583,7 +587,7 @@ public:
     std::string getString() const
     {
         if (!isString())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.s == nullptr)
             return "";
@@ -594,7 +598,7 @@ public:
     std::vector<byte>* getByteArray() const
     {
         if (!isByteArray())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         return data_.bs;
     }
@@ -602,7 +606,7 @@ public:
     std::vector<int32>* getIntArray() const
     {
         if (!isIntArray())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         return data_.is;
     }
@@ -610,7 +614,7 @@ public:
     std::vector<int64>* getLongArray() const
     {
         if (!isLongArray())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         return data_.ls;
     }
@@ -618,7 +622,7 @@ public:
     Tag& getMember(size_t pos)
     {
         if (!isComplex())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.d == nullptr || pos >= data_.d->size())
             throw std::range_error(NBT_ERR_OVER_RANGE);
@@ -629,7 +633,7 @@ public:
     Tag& getMember(const std::string& name)
     {
         if (!isCompound())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.d == nullptr)
             throw std::logic_error(NBT_ERR_NOT_FIND);
@@ -648,7 +652,7 @@ public:
     Tag& front()
     {
         if (!isComplex())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.d == nullptr)
             throw std::range_error(NBT_ERR_OVER_RANGE);
@@ -659,7 +663,7 @@ public:
     Tag& back()
     {
         if (!isComplex())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.d == nullptr)
             throw std::range_error(NBT_ERR_OVER_RANGE);
@@ -667,7 +671,8 @@ public:
         return data_.d->back();
     }
 
-    // @note If the tag is "pure data" it do nothing.
+    // @note
+    // If the tag is "pure data" it do nothing.
     void setName(const std::string& name)
     {
         if (pureData_)
@@ -684,7 +689,7 @@ public:
     void setByte(byte value)
     {
         if (!isByte())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         data_.n.i8 = value;
     }
@@ -692,7 +697,7 @@ public:
     void setShort(int16 value)
     {
         if (!isShort())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         data_.n.i16 = value;
     }
@@ -700,7 +705,7 @@ public:
     void setInt(int32 value)
     {
         if (!isInt())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         data_.n.i32 = value;
     }
@@ -708,7 +713,7 @@ public:
     void setLong(int64 value)
     {
         if (!isLong())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         data_.n.i64 = value;
     }
@@ -716,7 +721,7 @@ public:
     void setFloat(fp32 value)
     {
         if (!isFloat())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         data_.n.f32 = value;
     }
@@ -724,7 +729,7 @@ public:
     void setDouble(fp64 value)
     {
         if (!isDouble())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         data_.n.f64 = value;
     }
@@ -732,7 +737,7 @@ public:
     void setString(const std::string& value)
     {
         if (!isString())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.s) {
             *data_.s = value;
@@ -745,7 +750,7 @@ public:
     void setByteArray(const std::vector<byte>& value)
     {
         if (!isByteArray())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.bs) {
             *data_.bs = value;
@@ -758,7 +763,7 @@ public:
     void setIntArray(const std::vector<int32>& value)
     {
         if (!isIntArray())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.is) {
             *data_.is = value;
@@ -771,7 +776,7 @@ public:
     void setLongArray(const std::vector<int64>& value)
     {
         if (!isLongArray())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.ls) {
             *data_.ls = value;
@@ -784,7 +789,7 @@ public:
     void addByte(byte value)
     {
         if (!isByteArray())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.bs == nullptr)
             data_.bs = new std::vector<byte>();
@@ -795,7 +800,7 @@ public:
     void addInt(int32 value)
     {
         if (!isIntArray())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.is == nullptr)
             data_.is = new std::vector<int32>();
@@ -806,7 +811,7 @@ public:
     void addLong(int64 value)
     {
         if (!isLongArray())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.ls == nullptr)
             data_.ls = new std::vector<int64>();
@@ -817,7 +822,7 @@ public:
     void addMember(Tag& tag)
     {
         if (!isComplex() || (isList() && tag.type() != dtype()))
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.d == nullptr)
             data_.d = new std::vector<Tag>();
@@ -830,11 +835,12 @@ public:
             data_.d->back().pureData_ = false;
     }
 
-    // @overload The rigth value overloaded version of the function addMember()
+    // @overload
+    // The rigth value overloaded version of the function addMember()
     void addMember(Tag&& tag)
     {
         if (!isComplex() || (isList() && tag.type() != dtype()))
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.d == nullptr)
             data_.d = new std::vector<Tag>();
@@ -850,7 +856,7 @@ public:
     void removeByte(size_t pos)
     {
         if (!isByteArray())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.bs == nullptr || pos >= data_.bs->size())
             throw std::range_error(NBT_ERR_OVER_RANGE);
@@ -861,7 +867,7 @@ public:
     void removeInt(size_t pos)
     {
         if (!isIntArray())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.is == nullptr || pos >= data_.is->size())
             throw std::range_error(NBT_ERR_OVER_RANGE);
@@ -872,7 +878,7 @@ public:
     void removeLong(size_t pos)
     {
         if (!isLongArray())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.ls == nullptr || pos >= data_.ls->size())
             throw std::range_error(NBT_ERR_OVER_RANGE);
@@ -883,7 +889,7 @@ public:
     void removeMember(size_t pos)
     {
         if (!isComplex())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.d == nullptr || pos >= data_.d->size())
             throw std::range_error(NBT_ERR_OVER_RANGE);
@@ -894,7 +900,7 @@ public:
     void removeMember(const std::string& name)
     {
         if (!isCompound())
-            throw std::logic_error(NBT_ERR_TAGTYPE);
+            throw std::logic_error(NBT_ERR_INCORRECT_TAGTYPE);
 
         if (data_.d == nullptr)
             return;
@@ -911,7 +917,8 @@ public:
     }
 
 #ifndef NBT_NOGZIP
-    // @brief Output the binay NBT tag to output stream.
+    // @brief
+    // Output the binay NBT tag to output stream.
     void write(std::ostream& os, bool isBigEndian = false, bool isCompressed = false) const
     {
         if (isCompressed) {
@@ -923,7 +930,8 @@ public:
         }
     }
 
-    void write(const std::string& filename, bool isBigEndian = false, bool isCompressed = false) const
+    void write(const std::string& filename,
+               bool isBigEndian = false, bool isCompressed = false) const
     {
         std::ofstream ofs(filename, std::ios_base::binary);
 
@@ -934,7 +942,8 @@ public:
         }
     }
 #else
-    // @brief Output the binay NBT tag to output stream.
+    // @brief
+    // Output the binay NBT tag to output stream.
     void write(std::ostream& os, bool isBigEndian = false) const
     {
         write_(os, isBigEndian);
@@ -952,7 +961,8 @@ public:
     }
 #endif // !NBT_NOGZIP
 
-    // @brief Get the SNBT. (The string representation of NBT)
+    // @brief
+    // Get the SNBT. (The string representation of NBT)
     std::string toSnbt(bool isIndented = true) const
     {
         const int indentStep = 4;
@@ -960,24 +970,24 @@ public:
         std::string result;
 
         if (!pureData_ && name_ && !name_->empty())
-            result += *name_ + NBT_CHAR_COLON;
+            result += *name_ + ':';
 
         if (isIndented)
-            result += NBT_CHAR_SPACE;
+            result += ' ';
 
         auto getNumString = [&] () ->std::string {
             if (type_ == BYTE)
-                return std::to_string(static_cast<int>(data_.n.i8)) + NBT_SUFFIX_BYTE;
+                return std::to_string(static_cast<int>(data_.n.i8)) + 'b';
             else if (type_ == SHORT)
-                return std::to_string(static_cast<int>(data_.n.i16)) + NBT_SUFFIX_SHORT;
+                return std::to_string(static_cast<int>(data_.n.i16)) + 's';
             else if (type_ == INT)
                 return std::to_string(data_.n.i32);
             else if (type_ == LONG)
-                return std::to_string(data_.n.i64) + NBT_SUFFIX_LONG;
+                return std::to_string(data_.n.i64) + 'l';
             else if (type_ == FLOAT)
-                return std::to_string(data_.n.f32) + NBT_SUFFIX_FLOAT;
+                return std::to_string(data_.n.f32) + 'f';
             else if (type_ == DOUBLE)
-                return std::to_string(data_.n.f64) + NBT_SUFFIX_DOUBLE;
+                return std::to_string(data_.n.f64) + 'd';
             else
                 return "";
         };
@@ -989,12 +999,12 @@ public:
             return result += getNumString();
 
         if (isString()) {
-            result += NBT_CHAR_QUOTA;
+            result += '"';
 
             if (data_.s)
                 result += *data_.s;
 
-            result += NBT_CHAR_QUOTA;
+            result += '"';
 
             return result;
         }
@@ -1005,44 +1015,44 @@ public:
             indentSize += indentStep;
 
             if (isIndented)
-                result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+                result += '\n' + std::string(indentSize, ' ');
 
             if (isByteArray())
-                result += NBT_ARRAYFLAG_BYTE;
+                result += "B;";
             else if (isIntArray())
-                result += NBT_ARRAYFLAG_INT;
+                result += "I;";
             else if (isLongArray())
-                result += NBT_ARRAYFLAG_LONG;
+                result += "L;";
 
             if (isByteArray() && data_.bs) {
-                for (int i = 0; i < data_.bs->size(); ++i) {
+                for (int i = 0; i < data_.bs->size(); i++) {
                     if (isIndented)
-                        result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+                        result += '\n' + std::string(indentSize, ' ');
 
-                    result += std::to_string(static_cast<int>((*data_.bs)[i])) + NBT_SUFFIX_BYTE;
+                    result += std::to_string(static_cast<int>((*data_.bs)[i])) + 'b';
 
                     if (i != data_.bs->size() - 1)
-                        result += NBT_CHAR_COMMA;
+                        result += ',';
                 }
             } else if (isIntArray() && data_.is) {
-                for (int i = 0; i < data_.is->size(); ++i) {
+                for (int i = 0; i < data_.is->size(); i++) {
                     if (isIndented)
-                        result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+                        result += '\n' + std::string(indentSize, ' ');
 
                     result += std::to_string(static_cast<int>((*data_.is)[i]));
 
                     if (i != data_.is->size() - 1)
-                        result += NBT_CHAR_COMMA;
+                        result += ',';
                 }
             } else if (isLongArray() && data_.ls) {
-                for (int i = 0; i < data_.ls->size(); ++i) {
+                for (int i = 0; i < data_.ls->size(); i++) {
                     if (isIndented)
-                        result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+                        result += '\n' + std::string(indentSize, ' ');
 
-                    result += std::to_string(static_cast<int>((*data_.ls)[i])) + NBT_SUFFIX_LONG;
+                    result += std::to_string(static_cast<int>((*data_.ls)[i])) + 'l';
 
                     if (i != data_.ls->size() - 1)
-                        result += NBT_CHAR_COMMA;
+                        result += ',';
                 }
             }
 
@@ -1052,7 +1062,7 @@ public:
                 indentSize = 0;
 
             if (isIndented)
-                result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+                result += '\n' + std::string(indentSize, ' ');
 
             result += "]";
 
@@ -1067,21 +1077,21 @@ public:
 
             indentSize += indentStep;
 
-            for (int i = 0; i < data_.d->size(); ++i) {
+            for (int i = 0; i < data_.d->size(); i++) {
                 if (isIndented)
-                    result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+                    result += '\n' + std::string(indentSize, ' ');
 
                 result += (*data_.d)[i].toSnbt(isIndented);
 
                 if (i != data_.d->size() - 1)
-                    result += NBT_CHAR_COMMA;
+                    result += ',';
             }
             indentSize = indentSize -= indentStep;
             if (indentSize < 0)
                 indentSize = 0;
 
             if (isIndented)
-                result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+                result += '\n' + std::string(indentSize, ' ');
 
             result += "]";
 
@@ -1096,14 +1106,14 @@ public:
 
             indentSize += indentStep;
 
-            for (int i = 0; i < data_.d->size(); ++i) {
+            for (int i = 0; i < data_.d->size(); i++) {
                 if (isIndented)
-                    result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+                    result += '\n' + std::string(indentSize, ' ');
 
                 result += (*data_.d)[i].toSnbt(isIndented);
 
                 if (i != data_.d->size() - 1)
-                    result += NBT_CHAR_COMMA;
+                    result += ',';
             }
 
             indentSize = indentSize -= indentStep;
@@ -1112,7 +1122,7 @@ public:
                 indentSize = 0;
 
             if (isIndented)
-                result += NBT_CHAR_NEWLINE + std::string(indentSize, NBT_CHAR_SPACE);
+                result += '\n' + std::string(indentSize, ' ');
 
             result += "}";
 
@@ -1203,7 +1213,8 @@ private:
         loadFromStream_(is, isBigEndian);
     }
 
-    // @brief Get a NBT tag from binary input stream.
+    // @brief
+    // Get a NBT tag from binary input stream.
     void loadFromStream_(std::istream& is, bool isBigEndian)
     {
         construcPrework_(is, isBigEndian);
@@ -1226,7 +1237,8 @@ private:
     }
 
     // TODO
-    // @brief Get a NBT tag from SNBT.
+    // @brief
+    // Get a NBT tag from SNBT.
     void loadFromSnbt_(const std::string& snbt) {};
 
     void construcPrework_(std::istream& is, bool isBigEndian)
@@ -1392,7 +1404,8 @@ private:
             TagType type = static_cast<TagType>(is.peek());
 
             if (type == END) {
-                is.get();         // Give up End tag and move stream point to next byte.
+                // Give up End tag and move stream point to next byte.
+                is.get();
                 break;
             }
 
@@ -1468,7 +1481,7 @@ private:
 
             _num2bytes<int32>(static_cast<int32>(data_.bs->size()), os, isBigEndian);
 
-            for (auto& var : *data_.bs)
+            for (const auto& var : *data_.bs)
                 os.put(var);
 
             return;
@@ -1482,7 +1495,7 @@ private:
 
             _num2bytes<int32>(static_cast<int32>(data_.is->size()), os, isBigEndian);
 
-            for (auto& var : *data_.is)
+            for (const auto& var : *data_.is)
                 _num2bytes<int32>(var, os, isBigEndian);
 
             return;
@@ -1496,7 +1509,7 @@ private:
 
             _num2bytes<int32>(static_cast<int32>(data_.ls->size()), os, isBigEndian);
 
-            for (auto& var : *data_.ls)
+            for (const auto& var : *data_.ls)
                 _num2bytes<int64>(var, os, isBigEndian);
 
             return;
@@ -1512,7 +1525,7 @@ private:
             os.put(static_cast<int8>(dtype_));
             _num2bytes<int32>(static_cast<int32>(data_.d->size()), os, isBigEndian);
 
-            for (auto& var : *data_.d)
+            for (const auto& var : *data_.d)
                 var.write_(os, isBigEndian);
 
             return;
@@ -1524,7 +1537,7 @@ private:
                 return;
             }
 
-            for (auto& var : *data_.d)
+            for (const auto& var : *data_.d)
                 var.write_(os, isBigEndian);
 
             os.put(END);
@@ -1534,7 +1547,8 @@ private:
     }
 
 private:
-    // Whether to the object  is a "Base Tag", and the Base Tag has not description prefix. (e.g. name, name length)
+    // Whether to the object  is a "Base Tag", and the Base Tag has not description prefix.
+    // (e.g. name, name length)
     // The all members of List is a "Base Tag".
     bool pureData_ = false;
     // The tag type.

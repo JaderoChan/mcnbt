@@ -36,7 +36,8 @@ struct BlockEntityData
     // (May not exist) The custom name of the block entity.
     std::string customName;
     int pos[3] = { 0, 0, 0 };
-    // 1 or 0 (true/false) - true if the block entity is movable with a piston.
+    // 1 or 0 (true/false)
+    // true if the block entity is movable with a piston.
     bool isMovable = true;
 
 protected:
@@ -54,22 +55,30 @@ struct CommandBlockED final : BlockEntityData
         lastOuTut(std::string())
     {}
 
-// The command entered into the command block.
+    // The command entered into the command block.
     std::string command;
     // The custom name or hover text of this command block.
     std::string lastOuTut;
-    // 1 or 0 (true/false) - true if it executes on the first tick once saved or activated.
+    // 1 or 0 (true/false)
+    // true if it executes on the first tick once saved or activated.
     bool executeOnFirstTick = true;
-    // 1 or 0 (true/false) - true if the LastOuTut is stored. Can be toggled in the GUI by clicking a button near the "Previous OuTut" textbox.
+    // 1 or 0 (true/false)
+    // true if the LastOuTut is stored.
+    // Can be toggled in the GUI by clicking a button near the "Previous ouTut" textbox.
     bool trackOuTut = true;
-    // 1 or 0 (true/false) - Allows to activate the command without the requirement of a redstone signal.
+    // 1 or 0 (true/false)
+    // Allows to activate the command without the requirement of a redstone signal.
     bool isAuto = false;
-    // 1 or 0 (true/false) - true if the command block is powered by redstone.
+    // 1 or 0 (true/false)
+    // true if the command block is powered by redstone.
     bool isPowered = true;
-    // 1 or 0 (true/false) - if a conditional command block had its condition met when last activated. True if not a conditional command block.
+    // 1 or 0 (true/false)
+    // if a conditional command block had its condition met when last activated.
+    // True if not a conditional command block.
     bool conditionMet = false;
     char conditionalMode = 1;
-    // Represents the strength of the analog signal ouTut by redstone comparators attached to this command block.
+    // Represents the strength of the analog signal ouTut by
+    // redstone comparators attached to this command block.
     int successCount = 0;
     // The delay between each execution.
     int tickDelay = 0;
@@ -143,8 +152,12 @@ struct StructureBlockED final : BlockEntityData
 
     StructureBlockED() : BlockEntityData("StructureBlock") {}
 
-    StructureBlockED(const std::string& structureName, Mode mode = LOAD, bool ignoreEntities = false) :
-        BlockEntityData("StructureBlock"), structureName(structureName), ignoreEntities(ignoreEntities)
+    StructureBlockED(const std::string& structureName,
+                     Mode mode = LOAD,
+                     bool ignoreEntities = false) :
+        BlockEntityData("StructureBlock"),
+        structureName(structureName),
+        ignoreEntities(ignoreEntities)
     {}
 
     std::string structureName;
