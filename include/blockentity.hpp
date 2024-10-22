@@ -152,9 +152,7 @@ struct StructureBlockED final : BlockEntityData
 
     StructureBlockED() : BlockEntityData("StructureBlock") {}
 
-    StructureBlockED(const std::string& structureName,
-                     Mode mode = LOAD,
-                     bool ignoreEntities = false) :
+    StructureBlockED(const std::string& structureName, Mode mode = LOAD, bool ignoreEntities = false) :
         BlockEntityData("StructureBlock"),
         structureName(structureName),
         ignoreEntities(ignoreEntities)

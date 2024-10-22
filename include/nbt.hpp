@@ -1,6 +1,7 @@
 // The "mcnbt" library written in c++.
 //
 // Webs: https://github.com/JaderoChan/mcnbt
+// You can contact me at: c_dl_cn@outlook.com
 //
 // MIT License
 //
@@ -24,11 +25,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// Prevents multiple inclusion.
 #ifndef NBT_HPP
 #define NBT_HPP
 
+// Whether to use GZip to un/compress NBT.
 #define NBT_NOGZIP
 
+// Includes.
 #include <cstring>      // memcpy()
 #include <cstdint>
 #include <string>
@@ -45,27 +49,45 @@
 #include <gzip/decompress.h>
 #endif // !NBT_NOGZIP
 
-// Just for code can be fold.
-#ifndef NBT_MACRO
-#define NBT_MACRO
-
+// Error messages.
+#ifndef NBT_ERR_INFO    // Just for the code block can be foldable.
+#define NBT_ERR_INFO
 #define NBT_ERR_INCORRECT_TAGTYPE   "The error tag type."
 #define NBT_ERR_OVER_RANGE          "The index is out of range."
 #define NBT_ERR_NOT_FIND            "Not find the specify member."
 #define NBT_ERR_OTHER               "The other error occured."
 #define NBT_ERR_UNDEFINED_TAGTYPE   "The tag type is undefined."
+#endif // !NBT_ERR_INFO
 
-#endif // !NBT_MACRO
-
+// McNbt namespace.
 namespace nbt
 {
 
-// The core of read and write.
+    // Just for the "namespace tooltip" not show "Type alias" and so on.
 
-// @brief
-// Reverse a C style string.
-// @param
-// size The size of range that need reversed, and reverser all if the size is 0.
+}
+
+// Type alias.
+namespace nbt
+{
+
+typedef uint8_t uchar;
+typedef int8_t byte;
+typedef int8_t int8;
+typedef int16_t int16;
+typedef int32_t int32;
+typedef int64_t int64;
+typedef float fp32;
+typedef double fp64;
+
+}
+
+// Core of read and write binary data.
+namespace nbt
+{
+
+// @brief Reverse a C style string.
+// @param size The size of range that need reversed, and reverser all if the size is 0.
 inline void _reverse(char* str, size_t size = 0)
 {
     if (size == 0)
@@ -81,8 +103,7 @@ inline void _reverse(char* str, size_t size = 0)
     }
 }
 
-// @brief
-// Check whther the system is big endian.
+// @brief Check whther the system is big endian.
 inline bool _isBigEndian()
 {
     static bool isInited = false;
@@ -100,12 +121,9 @@ inline bool _isBigEndian()
     return isBigEndian;
 }
 
-// @brief
-// Obtain bytes from input stream, and convert it to number.
-// @param
-// resumeCursor Whether to resume the input stream cursor position after read.
-// @return
-// A number.
+// @brief Obtain bytes from input stream, and convert it to number.
+// @param resumeCursor Whether to resume the input stream cursor position after read.
+// @return A number.
 template<typename T>
 T _bytes2num(std::istream& is, bool isBigEndian = false, bool resumeCursor = false)
 {
@@ -130,8 +148,7 @@ T _bytes2num(std::istream& is, bool isBigEndian = false, bool resumeCursor = fal
     return result;
 }
 
-// @brief
-// Convert the number to bytes, and output it to output stream.
+// @brief Convert the number to bytes, and output it to output stream.
 template<typename T>
 void _num2bytes(T num, std::ostream& os, bool isBigEndian = false)
 {
@@ -149,10 +166,11 @@ void _num2bytes(T num, std::ostream& os, bool isBigEndian = false)
 
 }
 
+// Constants and aux functions.
 namespace nbt
 {
 
-// NBT tag types
+// NBT tag types.
 enum TagType : unsigned char
 {
     END = 0,
@@ -204,18 +222,15 @@ std::string getTypeString(TagType type)
     }
 }
 
+}
+
+// Main.
+namespace nbt
+{
+
 class Tag
 {
 public:
-    typedef uint8_t uchar;
-    typedef int8_t byte;
-    typedef int8_t int8;
-    typedef int16_t int16;
-    typedef int32_t int32;
-    typedef int64_t int64;
-    typedef float fp32;
-    typedef double fp64;
-
     // Num union contain interger and float point number.
     union Num
     {
@@ -431,19 +446,15 @@ public:
         return type_ == BYTE_ARRAY || type_ == INT_ARRAY || type_ == LONG_ARRAY;
     }
 
-    // @brief
-    // Whether the object is a List and Compound.
-    // @return
-    // Return true if the object is a List or Compound if not return false.
+    // @brief Whether the object is a List and Compound.
+    // @return Return true if the object is a List or Compound if not return false.
     bool isComplex() const
     {
         return type_ == COMPOUND || type_ == LIST;
     }
 
-    // @brief
-    // Whether the Compound has member with specify name, only valid when tag type is Compound.
-    // @return
-    // Return true if the object is a Compound and conatins a specify member else return false.
+    // @brief Whether the Compound has member with specify name, only valid when tag type is Compound.
+    // @return Return true if the object is a Compound and conatins a specify member else return false.
     bool hasMember(const std::string& name) const
     {
         if (!isCompound())
@@ -463,8 +474,7 @@ public:
         return false;
     }
 
-    // @return
-    // Return a empty string if the object is not named or it is "pure data".
+    // @return Return a empty string if the object is not named or it is "pure data".
     std::string name() const
     {
         if (pureData_ || name_ == nullptr)
@@ -478,8 +488,7 @@ public:
         return type_;
     }
 
-    // @brief
-    // Get the element type of List, only valid when tag type is List.
+    // @brief Get the element type of List, only valid when tag type is List.
     TagType dtype() const
     {
         if (!isList())
@@ -488,8 +497,7 @@ public:
         return dtype_;
     }
 
-    // @return
-    // Return 0 if the object is not named or it is "pure data".
+    // @return Return 0 if the object is not named or it is "pure data".
     int16 nameLen() const
     {
         if (pureData_ || name_ == nullptr)
@@ -498,8 +506,7 @@ public:
         return static_cast<int16>(name_->size());
     }
 
-    // @brief
-    // Get the string length, only valid when tag type is String.
+    // @brief Get the string length, only valid when tag type is String.
     int32 stringLen() const
     {
         if (!isString())
@@ -511,8 +518,7 @@ public:
         return static_cast<int32>(data_.s->size());
     }
 
-    // @brief
-    // Get the size of the container, only valid when tag type not is Number.
+    // @brief Get the size of the container, only valid when tag type not is Number.
     size_t size() const
     {
         if (!isString() && !isArray() && !isComplex())
@@ -671,8 +677,7 @@ public:
         return data_.d->back();
     }
 
-    // @note
-    // If the tag is "pure data" it do nothing.
+    // @note If the tag is "pure data" it do nothing.
     void setName(const std::string& name)
     {
         if (pureData_)
@@ -917,8 +922,7 @@ public:
     }
 
 #ifndef NBT_NOGZIP
-    // @brief
-    // Output the binay NBT tag to output stream.
+    // @brief Output the binay NBT tag to output stream.
     void write(std::ostream& os, bool isBigEndian = false, bool isCompressed = false) const
     {
         if (isCompressed) {
@@ -942,8 +946,7 @@ public:
         }
     }
 #else
-    // @brief
-    // Output the binay NBT tag to output stream.
+    // @brief Output the binay NBT tag to output stream.
     void write(std::ostream& os, bool isBigEndian = false) const
     {
         write_(os, isBigEndian);
@@ -961,8 +964,7 @@ public:
     }
 #endif // !NBT_NOGZIP
 
-    // @brief
-    // Get the SNBT. (The string representation of NBT)
+    // @brief Get the SNBT. (The string representation of NBT)
     std::string toSnbt(bool isIndented = true) const
     {
         const int indentStep = 4;
@@ -1213,8 +1215,7 @@ private:
         loadFromStream_(is, isBigEndian);
     }
 
-    // @brief
-    // Get a NBT tag from binary input stream.
+    // @brief Get a NBT tag from binary input stream.
     void loadFromStream_(std::istream& is, bool isBigEndian)
     {
         construcPrework_(is, isBigEndian);
@@ -1237,8 +1238,7 @@ private:
     }
 
     // TODO
-    // @brief
-    // Get a NBT tag from SNBT.
+    // @brief Get a NBT tag from SNBT.
     void loadFromSnbt_(const std::string& snbt) {};
 
     void construcPrework_(std::istream& is, bool isBigEndian)
@@ -1563,10 +1563,9 @@ private:
 
 }
 
+// Faster way.
 namespace nbt
 {
-
-// The utility functions.
 
 inline Tag gByte(const std::string& name, char value)
 {
