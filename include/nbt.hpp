@@ -71,14 +71,14 @@ namespace nbt
 namespace nbt
 {
 
-typedef uint8_t uchar;
-typedef int8_t byte;
-typedef int8_t int8;
-typedef int16_t int16;
-typedef int32_t int32;
-typedef int64_t int64;
-typedef float fp32;
-typedef double fp64;
+using uchar = uint8_t;
+using byte = int8_t;
+using int8 = int8_t;
+using int16 = int16_t;
+using int32 = int32_t;
+using int64 = int64_t;
+using fp32 = float;
+using fp64 = double;
 
 }
 
