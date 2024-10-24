@@ -33,12 +33,12 @@
 #define NBT_NOGZIP
 
 // Includes.
-#include <cstring>      // memcpy()
 #include <cstdint>
+#include <cstring>      // memcpy()
 #include <string>
 #include <vector>
-#include <fstream>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <stdexcept>
 
