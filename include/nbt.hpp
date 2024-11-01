@@ -29,7 +29,7 @@
 #define NBT_HPP
 
 // Whether to use GZip to un/compress NBT.
-#define NBT_NOGZIP
+// #define NBT_USE_GZIP
 
 #include <cstdint>  // int16_t, int32_t, int64_t
 #include <cstddef>  // size_t
@@ -41,11 +41,11 @@
 #include <sstream>
 #include <stdexcept>
 
-#ifndef NBT_NOGZIP
-#include <gzip/utils.h>
-#include <gzip/compress.h>
-#include <gzip/decompress.h>
-#endif // !NBT_NOGZIP
+#ifdef NBT_USE_GZIP
+#include <gzip/utils.hpp>
+#include <gzip/compress.hpp>
+#include <gzip/decompress.hpp>
+#endif // NBT_USE_GZIP
 
 // Error messages.
 #ifndef NBT_ERR_INFO    // Just for the code block can be collapsed.
@@ -284,10 +284,10 @@ public:
         std::string content = std::string(buffer, size);
 
         delete[] buffer;
-    #ifndef NBT_NOGZIP
+    #ifdef NBT_USE_GZIP
         if (gzip::is_compressed(content.c_str(), size))
             content = gzip::decompress(content.c_str(), content.size());
-    #endif // !NBT_NOGZIP
+    #endif // NBT_USE_GZIP
         ss << content;
 
         if (headerSize != 0) {
@@ -918,7 +918,7 @@ public:
         }
     }
 
-#ifndef NBT_NOGZIP
+#ifdef NBT_USE_GZIP
     // @brief Output the binay NBT tag to output stream.
     void write(std::ostream& os, bool isBigEndian = false, bool isCompressed = false) const
     {
@@ -959,7 +959,7 @@ public:
             throw std::runtime_error("Failed to open file: " + filename);
         }
     }
-#endif // !NBT_NOGZIP
+#endif // NBT_USE_GZIP
 
     // @brief Get the SNBT. (The string representation of NBT)
     std::string toSnbt(bool isIndented = true) const
