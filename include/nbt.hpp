@@ -25,14 +25,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Prevents multiple inclusion.
 #ifndef NBT_HPP
 #define NBT_HPP
 
 // Whether to use GZip to un/compress NBT.
 #define NBT_NOGZIP
 
-// Includes.
 #include <cstdint>  // int16_t, int32_t, int64_t
 #include <cstddef>  // size_t
 #include <cstring>  // strlen(), memcpy()
@@ -43,7 +41,6 @@
 #include <sstream>
 #include <stdexcept>
 
-// Whether to use GZip to un/compress NBT.
 #ifndef NBT_NOGZIP
 #include <gzip/utils.h>
 #include <gzip/compress.h>
@@ -51,7 +48,7 @@
 #endif // !NBT_NOGZIP
 
 // Error messages.
-#ifndef NBT_ERR_INFO    // Just for the code block can be fold.
+#ifndef NBT_ERR_INFO    // Just for the code block can be collapsed.
 #define NBT_ERR_INFO
 #define NBT_ERR_INCORRECT_TAGTYPE   "The error tag type."
 #define NBT_ERR_OVER_RANGE          "The index is out of range."
