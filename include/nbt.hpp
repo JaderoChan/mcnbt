@@ -61,7 +61,7 @@
 namespace nbt
 {
 
-// Just for the "namespace tooltip" not show "Type alias" and so on.
+// Just for the intellisense better show "tip about namespace". :)
 
 }
 
@@ -227,7 +227,6 @@ namespace nbt
 
 class Tag
 {
-public:
     // Num union contain interger and float point number.
     union Num
     {
