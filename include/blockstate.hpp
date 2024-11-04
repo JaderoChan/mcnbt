@@ -32,8 +32,8 @@ struct CommandBlockSD final : BlockStateData
     // Block facing direction.
     enum FacingDirection : uchar
     {
-        UP,
         DOWN,
+        UP,
         NORTH,
         SOUTH,
         WEST,
@@ -41,8 +41,7 @@ struct CommandBlockSD final : BlockStateData
     };
 
     CommandBlockSD(bool isConditional = false, FacingDirection fd = UP) :
-        isConditional(isConditional), fd(fd)
-    {}
+        isConditional(isConditional), fd(fd) {}
 
     bool isConditional;
     FacingDirection fd = UP;

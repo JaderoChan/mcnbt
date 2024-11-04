@@ -13,8 +13,7 @@ struct BlockEntityData
     BlockEntityData() {}
 
     BlockEntityData(const std::string& id, const std::string& customeName = "") :
-        id(id), customName(customeName)
-    {}
+        id(id), customName(customeName) {}
 
     virtual ~BlockEntityData() {}
 
@@ -52,8 +51,7 @@ struct CommandBlockED final : BlockEntityData
                    bool isAuto = false, bool isPowered = true, bool conditionMet = false) :
         BlockEntityData("CommandBlock"), command(command), tickDelay(0),
         isAuto(isAuto), isPowered(isPowered), conditionMet(conditionMet),
-        lastOuTut(std::string())
-    {}
+        lastOuTut(std::string()) {}
 
     // The command entered into the command block.
     std::string command;
@@ -155,8 +153,7 @@ struct StructureBlockED final : BlockEntityData
     StructureBlockED(const std::string& structureName, Mode mode = LOAD, bool ignoreEntities = false) :
         BlockEntityData("StructureBlock"),
         structureName(structureName),
-        ignoreEntities(ignoreEntities)
-    {}
+        ignoreEntities(ignoreEntities) {}
 
     std::string structureName;
     Mode data = LOAD;

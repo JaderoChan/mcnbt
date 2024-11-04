@@ -261,12 +261,10 @@ public:
     Tag() = default;
 
     explicit Tag(TagType type, bool isPuredata = false) :
-        type_(type), pureData_(isPuredata)
-    {}
+        type_(type), pureData_(isPuredata) {}
 
     Tag(TagType type, const std::string& name) :
-        type_(type), name_(new std::string(name))
-    {}
+        type_(type), name_(new std::string(name)) {}
 
     Tag(TagType type, std::istream& is, bool isBigEndian = false, size_t headerSize = 0) :
         type_(type)
@@ -352,102 +350,45 @@ public:
         data_.s = nullptr;
     }
 
-    Tag copy()
-    {
-        return Tag(*this);
-    }
+    Tag copy() { return Tag(*this); }
 
-    bool isEnd() const
-    {
-        return type_ == END;
-    }
+    bool isEnd() const { return type_ == END; }
 
-    bool isByte() const
-    {
-        return type_ == BYTE;
-    }
+    bool isByte() const { return type_ == BYTE; }
 
-    bool isShort() const
-    {
-        return type_ == SHORT;
-    }
+    bool isShort() const { return type_ == SHORT; }
 
-    bool isInt() const
-    {
-        return type_ == INT;
-    }
+    bool isInt() const { return type_ == INT; }
 
-    bool isLong() const
-    {
-        return type_ == LONG;
-    }
+    bool isLong() const { return type_ == LONG; }
 
-    bool isFloat() const
-    {
-        return type_ == FLOAT;
-    }
+    bool isFloat() const { return type_ == FLOAT; }
 
-    bool isDouble() const
-    {
-        return type_ == DOUBLE;
-    }
+    bool isDouble() const { return type_ == DOUBLE; }
 
-    bool isString() const
-    {
-        return type_ == STRING;
-    }
+    bool isString() const { return type_ == STRING; }
 
-    bool isByteArray() const
-    {
-        return type_ == BYTE_ARRAY;
-    }
+    bool isByteArray() const { return type_ == BYTE_ARRAY; }
 
-    bool isIntArray() const
-    {
-        return type_ == INT_ARRAY;
-    }
+    bool isIntArray() const { return type_ == INT_ARRAY; }
 
-    bool isLongArray() const
-    {
-        return type_ == LONG_ARRAY;
-    }
+    bool isLongArray() const { return type_ == LONG_ARRAY; }
 
-    bool isList() const
-    {
-        return type_ == LIST;
-    }
+    bool isList() const { return type_ == LIST; }
 
-    bool isCompound() const
-    {
-        return type_ == COMPOUND;
-    }
+    bool isCompound() const { return type_ == COMPOUND; }
 
-    bool isInteger() const
-    {
-        return type_ == BYTE || type_ == SHORT || type_ == INT || type_ == LONG;
-    }
+    bool isInteger() const { return type_ == BYTE || type_ == SHORT || type_ == INT || type_ == LONG; }
 
-    bool isFloatPoint() const
-    {
-        return type_ == FLOAT || type_ == DOUBLE;
-    }
+    bool isFloatPoint() const { return type_ == FLOAT || type_ == DOUBLE; }
 
-    bool isNum() const
-    {
-        return isInteger() || isFloatPoint();
-    }
+    bool isNum() const { return isInteger() || isFloatPoint(); }
 
-    bool isArray() const
-    {
-        return type_ == BYTE_ARRAY || type_ == INT_ARRAY || type_ == LONG_ARRAY;
-    }
+    bool isArray() const { return type_ == BYTE_ARRAY || type_ == INT_ARRAY || type_ == LONG_ARRAY; }
 
     // @brief Whether the object is a List and Compound.
     // @return Return true if the object is a List or Compound if not return false.
-    bool isComplex() const
-    {
-        return type_ == COMPOUND || type_ == LIST;
-    }
+    bool isComplex() const { return type_ == COMPOUND || type_ == LIST; }
 
     // @brief Whether the Compound has member with specify name, only valid when tag type is Compound.
     // @return Return true if the object is a Compound and conatins a specify member else return false.
@@ -479,10 +420,7 @@ public:
         return *name_;
     }
 
-    TagType type() const
-    {
-        return type_;
-    }
+    TagType type() const { return type_; }
 
     // @brief Get the element type of List, only valid when tag type is List.
     TagType dtype() const
@@ -1177,27 +1115,19 @@ public:
         return *this;
     }
 
-    Tag& operator[](size_t pos)
-    {
-        return getMember(pos);
-    }
+    Tag& operator[](size_t pos) { return getMember(pos); }
 
-    Tag& operator[](const std::string& name)
-    {
-        return getMember(name);
-    }
+    Tag& operator[](const std::string& name) { return getMember(name); }
 
     Tag& operator<<(Tag& tag)
     {
         addMember(tag);
-
         return *this;
     }
 
     Tag& operator<<(Tag&& tag)
     {
         addMember(std::move(tag));
-
         return *this;
     }
 
