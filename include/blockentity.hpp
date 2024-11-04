@@ -1,11 +1,11 @@
-#ifndef BLOCKENTITY_HPP
-#define BLOCKENTITY_HPP
+#ifndef MCNBT_BLOCKENTITY_HPP
+#define MCNBT_BLOCKENTITY_HPP
 
-#include "nbt.hpp"
+#include "mcnbt.hpp"
 
 #include <string>
 
-namespace nbt
+namespace mcnbt
 {
 
 struct BlockEntityData
@@ -202,4 +202,4 @@ private:
 
 }
 
-#endif // !BLOCKENTITY_HPP
+#endif // !MCNBT_BLOCKENTITY_HPP

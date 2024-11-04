@@ -1,10 +1,10 @@
-#ifndef MCSTRUCTURE_HPP
-#define MCSTRUCTURE_HPP
+#ifndef MCNBT_MCSTRUCTURE_HPP
+#define MCNBT_MCSTRUCTURE_HPP
 
 #include "blockentity.hpp"
 #include "blockstate.hpp"
 
-namespace nbt
+namespace mcnbt
 {
 
 struct MCStructure
@@ -91,4 +91,4 @@ inline Tag createSingleBlockStructure(const std::string& blockId,
 
 }
 
-#endif // !MCSTRUCTURE_HPP
+#endif // !MCNBT_MCSTRUCTURE_HPP

@@ -1,11 +1,11 @@
-#ifndef BLOCKSTATE_HPP
-#define BLOCKSTATE_HPP
+#ifndef MCNBT_BLOCKSTATE_HPP
+#define MCNBT_BLOCKSTATE_HPP
 
-#include "nbt.hpp"
+#include "mcnbt.hpp"
 
 #include <string>
 
-namespace nbt
+namespace mcnbt
 {
 
 struct BlockStateData
@@ -90,4 +90,4 @@ private:
 
 }
 
-#endif // !BLOCKSTATE_HPP
+#endif // !MCNBT_BLOCKSTATE_HPP
