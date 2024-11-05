@@ -2,15 +2,13 @@
 
  一个使用C++编写的易用NBT读写Header-Only库。
 
-## :earth_africa: 依赖库
+## :earth_africa: 依赖
 
-**gzip-hpp:** 用于解压缩使用GZIP的NBT标签。若不需要使用，可通过在*nbt.hpp*文件中加入以下宏进行禁用。
+**gzip-hpp:** 用于解压缩使用GZIP的NBT标签。若需要使用，可通过在*mcnbt.hpp*文件中加入以下宏进行启用。
 
 ```cpp
-#define NBT_NOGZIP
+#define MCNBT_USE_GZIP
 ```
-
-跳转：https://github.com/mapbox/gzip-hpp
 
 ## :rocket: 特点
 
@@ -34,7 +32,7 @@
 ### 1、从文件中读取NBT
 
 ```cpp
-#include <nbt.hpp>
+#include <mcnbt.hpp>
 
 int main(){
     //...
@@ -56,7 +54,7 @@ int main(){
 ### 2、构造NBT
 
 ```cpp
-#include <nbt.hpp>
+#include <mcnbt.hpp>
 
 int main(){
     // 方法一
