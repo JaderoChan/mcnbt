@@ -1,16 +1,16 @@
+[中文文档](./README_CN.md)
+
 # MCNBT
 
 An easy-to-use NBT read and write Header-Only library in C++.
 
 ## :earth_africa: Dependency
 
-**gzip-hpp:** Used to extract NBT tags that use GZIP compressed. If you do not need to use it, you can disable it by adding the following macros to the *nbt.hpp* file.
+**gzip-hpp:** Used to extract NBT tags that use GZIP compressed. If you need to use it, you can enable it by adding the following macros to the *mcnbt.hpp* file.
 
 ```cpp
-#define NBT_NOGZIP
+#define MCNBT_USE_GZIP
 ```
-
-Goto: https://github.com/mapbox/gzip-hpp
 
 ## :rocket: Feature
 
@@ -34,7 +34,7 @@ For standard NBT operations, you only need to include the *nbt.hpp* header file 
 ### 1. Read the NBT from the file
 
 ```cpp
-#include "nbt.hpp"
+#include "mcnbt.hpp"
 
 int main(){
     //...
@@ -56,7 +56,7 @@ The *Nbt::Tag()* function in the code is a constructor of the Nbt::Tag class, wh
 ### 2、Construct NBT
 
 ```cpp
-#include <nbt.hpp>
+#include <mcnbt.hpp>
 
 int main(){
     // Method 1
