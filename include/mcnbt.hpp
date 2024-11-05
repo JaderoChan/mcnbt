@@ -48,7 +48,7 @@
 #endif // MCNBT_USE_GZIP
 
 // McNbt namespace.
-namespace mcnbt
+namespace nbt
 {
 
 // Just for the intellisense better show "tip about namespace". :)
@@ -56,7 +56,7 @@ namespace mcnbt
 }
 
 // Type alias.
-namespace mcnbt
+namespace nbt
 {
 
 using uchar = unsigned char;
@@ -70,7 +70,7 @@ using fp64 = double;
 }
 
 // Enum, constants and aux functions.
-namespace mcnbt
+namespace nbt
 {
 
 // NBT tag types.
@@ -135,7 +135,7 @@ constexpr const char* _ERR_UNDEFINED_TAGTYPE = "The tag type is undefined.";
 }
 
 // Core of read and write binary data.
-namespace mcnbt
+namespace nbt
 {
 
 // @brief Reverse a C style string.
@@ -219,7 +219,7 @@ void _num2bytes(T num, std::ostream& os, bool isBigEndian = false)
 }
 
 // Main.
-namespace mcnbt
+namespace nbt
 {
 
 class Tag
@@ -1487,7 +1487,7 @@ private:
 }
 
 // Faster way.
-namespace mcnbt
+namespace nbt
 {
 
 inline Tag gByte(const std::string& name, byte value)

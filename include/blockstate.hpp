@@ -5,7 +5,7 @@
 
 #include <string>
 
-namespace mcnbt
+namespace nbt
 {
 
 struct BlockStateData
