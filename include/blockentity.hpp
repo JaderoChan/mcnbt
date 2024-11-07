@@ -20,10 +20,10 @@ struct BlockEntityData
     Tag getTag() const
     {
         Tag tag = gCompound("block_entity_data");
-        tag << gString("id", id);
-        tag << gString("CustomName", customName);
-        tag << gByte("isMovable", static_cast<byte>(isMovable));
-        tag << gInt("x", pos[0]) << gInt("y", pos[1]) << gInt("z", pos[2]);
+        tag << gString(id, "id");
+        tag << gString(customName, "CustomName");
+        tag << gByte(static_cast<byte>(isMovable), "isMovable");
+        tag << gInt(pos[0], "x") << gInt(pos[1], "y") << gInt(pos[2], "z");
 
         write_(tag);
 
@@ -49,9 +49,8 @@ struct CommandBlockED final : BlockEntityData
 
     CommandBlockED(const std::string& command, int32 tickDelay = 0,
                    bool isAuto = false, bool isPowered = true, bool conditionMet = false) :
-        BlockEntityData("CommandBlock"), command(command), tickDelay(0),
-        isAuto(isAuto), isPowered(isPowered), conditionMet(conditionMet),
-        lastOuTut(std::string()) {}
+        BlockEntityData("CommandBlock"), command(command), tickDelay(tickDelay),
+        isAuto(isAuto), isPowered(isPowered), conditionMet(conditionMet) {}
 
     // The command entered into the command block.
     std::string command;
@@ -88,22 +87,22 @@ struct CommandBlockED final : BlockEntityData
 private:
     void write_(Tag& tag) const override
     {
-        tag << gString("Command", command);
-        tag << gByte("ExecuteOnFirstTick", static_cast<byte>(executeOnFirstTick));
-        tag << gInt("LPCommandMode", 0);
-        tag << gByte("LPCondionalMode", 0);
-        tag << gByte("LPRedstoneMode", 0);
-        tag << gLong("LastExecution", lastExecution);
-        tag << gString("LastOuTut", lastOuTut);
-        tag << gList("LastOuTuTarams", END);
-        tag << gInt("SuccessCount", successCount);
-        tag << gInt("TickDelay", tickDelay);
-        tag << gByte("TrackOuTut", static_cast<byte>(trackOuTut));
-        tag << gInt("Version", version);
-        tag << gByte("auto", static_cast<byte>(isAuto));
-        tag << gByte("conditionMet", static_cast<byte>(conditionMet));
-        tag << gByte("conditionalMode", conditionalMode);
-        tag << gByte("powered", static_cast<byte>(isPowered));
+        tag << gString(command, "Command");
+        tag << gByte(static_cast<byte>(executeOnFirstTick), "ExecuteOnFirstTick");
+        tag << gInt(0, "LPCommandMode");
+        tag << gByte(0, "LPCondionalMode");
+        tag << gByte(0, "LPRedstoneMode");
+        tag << gLong(lastExecution, "LastExecution");
+        tag << gString(lastOuTut, "LastOuTut");
+        tag << gList(END, "LastOuTuTarams");
+        tag << gInt(successCount, "SuccessCount");
+        tag << gInt(tickDelay, "TickDelay");
+        tag << gByte(static_cast<byte>(trackOuTut), "TrackOuTut");
+        tag << gInt(version, "Version");
+        tag << gByte(static_cast<byte>(isAuto), "auto");
+        tag << gByte(static_cast<byte>(conditionMet), "conditionMet");
+        tag << gByte(conditionalMode, "conditionalMode");
+        tag << gByte(static_cast<byte>(isPowered), "powered");
     };
 };
 
@@ -174,29 +173,29 @@ struct StructureBlockED final : BlockEntityData
 private:
     void write_(Tag& tag) const override
     {
-        tag << gByte("animationMode", static_cast<byte>(animationMode));
-        tag << gFloat("animationSeconds", animationSeconds);
-        tag << gInt("data", static_cast<int32>(data));
-        tag << gString("dataField", std::string());
-        tag << gString("id", id);
-        tag << gByte("ignoreEntities", static_cast<byte>(ignoreEntities));
-        tag << gByte("includePlayers", 0);
-        tag << gFloat("integrity", integrity);
-        tag << gByte("isMovable", static_cast<byte>(isMovable));
-        tag << gByte("isPowered", static_cast<byte>(isPowered));
-        tag << gByte("mirror", static_cast<byte>(mirror));
-        tag << gInt("redstoneSaveMode", static_cast<int32>(redstoneSaveMode));
-        tag << gByte("removeBlcoks", static_cast<byte>(removeBlocks));
-        tag << gByte("rotation", static_cast<byte>(rotation));
-        tag << gByte("seed", static_cast<byte>(seed));
-        tag << gByte("showBoundingBox", static_cast<byte>(showBoundingBox));
-        tag << gString("structureName", structureName);
-        tag << gInt("xStructureOffset", offset[0]);
-        tag << gInt("yStructureOffset", offset[1]);
-        tag << gInt("zStructureOffset", offset[2]);
-        tag << gInt("xStructureSize", size[0]);
-        tag << gInt("yStructureSize", size[1]);
-        tag << gInt("zStructureSize", size[2]);
+        tag << gByte(static_cast<byte>(animationMode), "animationMode");
+        tag << gFloat(animationSeconds, "animationSeconds");
+        tag << gInt(static_cast<int32>(data), "data");
+        tag << gString(std::string(), "dataField");
+        tag << gString(id, "id");
+        tag << gByte(static_cast<byte>(ignoreEntities), "ignoreEntities");
+        tag << gByte(0, "includePlayers");
+        tag << gFloat(integrity, "integrity");
+        tag << gByte(static_cast<byte>(isMovable), "isMovable");
+        tag << gByte(static_cast<byte>(isPowered), "isPowered");
+        tag << gByte(static_cast<byte>(mirror), "mirror");
+        tag << gInt(static_cast<int32>(redstoneSaveMode), "redstoneSaveMode");
+        tag << gByte(static_cast<byte>(removeBlocks), "removeBlcoks");
+        tag << gByte(static_cast<byte>(rotation), "rotation");
+        tag << gByte(static_cast<byte>(seed), "seed");
+        tag << gByte(static_cast<byte>(showBoundingBox), "showBoundingBox");
+        tag << gString(structureName, "structureName");
+        tag << gInt(offset[0], "xStructureOffset");
+        tag << gInt(offset[1], "yStructureOffset");
+        tag << gInt(offset[2], "zStructureOffset");
+        tag << gInt(size[0], "xStructureSize");
+        tag << gInt(size[1], "yStructureSize");
+        tag << gInt(size[2], "zStructureSize");
     };
 };
 

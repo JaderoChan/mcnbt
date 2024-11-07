@@ -13,31 +13,31 @@ struct MCStructure
         root(gCompound())
     {
         // Write format version.
-        root << gInt("format_version", formatVersion);
+        root << gInt(formatVersion, "format_version");
 
         // Write size.
-        Tag size = gList("size", INT);
-        size << gpInt(sizeX) << gpInt(sizeY) << gpInt(sizeZ);
+        Tag size = gList(INT, "size");
+        size << gInt(sizeX) << gInt(sizeY) << gInt(sizeZ);
         root << size;
 
         // Write structure world origin.
-        Tag swo = gList("structure_world_origin", INT);
-        swo << gpInt(0) << gpInt(0) << gpInt(0);
+        Tag swo = gList(INT, "structure_world_origin");
+        swo << gInt(0) << gInt(0) << gInt(0);
         root << swo;
 
         // Create structure tag.
         Tag structure = gCompound("structure");
 
         // Create block indices.
-        Tag blockIndices = gList("block_indices", LIST);
-        blockIndices << gpList(INT) << gpList(INT);
+        Tag blockIndices = gList(LIST, "block_indices");
+        blockIndices << gList(INT) << gList(INT);
 
         // Create entities tag.
-        Tag entities = gList("entities", COMPOUND);
+        Tag entities = gList(COMPOUND, "entities");
 
         // Create palette tag.
         Tag palette = gCompound("palette");
-        Tag blockPalette = gList("block_palette", COMPOUND);
+        Tag blockPalette = gList(COMPOUND, "block_palette");
 
         // Create block position data tag.
         Tag blockPositionData = gCompound("block_position_data");
@@ -75,11 +75,11 @@ inline Tag createSingleBlockStructure(const std::string& blockId,
                                    int32 version = 18105860)
 {
     MCStructure mcs;
-    mcs.blockIndices1() << gpInt(0);
-    mcs.blockIndices2() << gpInt(-1);
+    mcs.blockIndices1() << gInt(0);
+    mcs.blockIndices2() << gInt(-1);
 
-    Tag block = gpCompound();
-    block << gString("name", blockId) << bsd.getTag() << gInt("version", version);
+    Tag block = gCompound();
+    block << gString(blockId, "name") << bsd.getTag() << gInt(version, "version");
     mcs.blockPalette() << block;
 
     Tag bpd = gCompound("0");

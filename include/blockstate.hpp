@@ -49,8 +49,8 @@ struct CommandBlockSD final : BlockStateData
 private:
     void write_(Tag& tag) const override
     {
-        tag << gByte("conditional_bit", static_cast<byte>(isConditional));
-        tag << gInt("facing_direction", static_cast<int32>(fd));
+        tag << gByte(static_cast<byte>(isConditional), "conditional_bit");
+        tag << gInt(static_cast<int32>(fd), "facing_direction");
     };
 };
 
@@ -84,7 +84,7 @@ private:
 
     void write_(Tag& tag) const override
     {
-        tag << gString("structure_block_type", modestr_());
+        tag << gString(modestr_(), "structure_block_type");
     };
 };
 
