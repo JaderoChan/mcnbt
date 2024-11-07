@@ -30,7 +30,7 @@ struct BlockEntityData
         return tag;
     };
 
-    // The savegame Id of the block entity.
+    // The savegame id of the block entity.
     std::string id;
     // (May not exist) The custom name of the block entity.
     std::string customName;
