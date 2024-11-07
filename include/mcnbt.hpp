@@ -494,6 +494,9 @@ public:
         if (!isString())
             throw std::logic_error(_ERR_INCORRECT_TAGTYPE);
 
+        if (value.empty())
+            return *this;
+
         if (data_.s)
             *data_.s = value;
         else
@@ -507,6 +510,9 @@ public:
     {
         if (!isByteArray())
             throw std::logic_error(_ERR_INCORRECT_TAGTYPE);
+
+        if (value.empty())
+            return *this;
 
         if (data_.bs)
             *data_.bs = value;
@@ -522,6 +528,9 @@ public:
         if (!isIntArray())
             throw std::logic_error(_ERR_INCORRECT_TAGTYPE);
 
+        if (value.empty())
+            return *this;
+
         if (data_.is)
             *data_.is = value;
         else
@@ -535,6 +544,9 @@ public:
     {
         if (!isLongArray())
             throw std::logic_error(_ERR_INCORRECT_TAGTYPE);
+
+        if (value.empty())
+            return *this;
 
         if (data_.ls)
             *data_.ls = value;
@@ -1050,6 +1062,9 @@ public:
     {
         if (isListElement_)
             throw std::logic_error(_ERR_INCORRECT_TAGTYPE);
+
+        if (name.empty())
+            return *this;
 
         if (name_)
             *name_ = name;
