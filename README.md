@@ -2,162 +2,141 @@
 
 # MCNBT
 
-An easy-to-use NBT read and write Header-Only library in C++.
+An NBT read-write library written in C++ (header-only library).
 
 ## :earth_africa: Dependency
 
-**gzip-hpp:** Used to extract NBT tags that use GZIP compressed. If you need to use it, you can enable it by adding the following macros to the *mcnbt.hpp* file.
+**zlib:** Used to decompress or compress NBT tags that use gzip. If needed, it can be enabled by adding the following macros before including the *mcnbt.hpp* header file.
 
 ```cpp
 #define MCNBT_USE_GZIP
 ```
 
-## :rocket: Feature
+e.g.
 
-- Simple and easy to use
-- Fast speed and high-performance
-- Support for different byte orders (large endian order is usually used for numeric Tag for Java, while small endian order is used for bedrock)
-- Support convert NBT to SNBT
-- Can generate a single block entity structure (bedrock only) for importing special entities (currently only structure block and command block are supported)
+```cpp
+#define MCNBT_USE_GZIP
+#include <mcnbt/mcnbt>
 
-## :robot: Files supported
+// Others.
+```
+
+
+
+## :rocket: Features 
+
+- Easy to use
+- Header-only library, easy to add to project
+- Fast speed, high performance 
+- In addition to the *zlib* library required for decompress and compress, there are no other dependencies, and C++11 standard and above can be used
+- Support bedrock edition and java edition (bedrock edition nbt byte order is little endian, java is big endian)
+- Support gzip decompress and compress by *zlib* library
+- Support SNBT
+- Can be generate single block entity block structure for import entity block (Currently only structure blocks and command blocks are supported) (Only bedrock edition)
+
+## :robot: File supported
 
 .dat
 .nbt
 .mcstructure
 .schematic
+and so on
 
 ## :triangular_flag_on_post: Usage
 
-For standard NBT operations, you only need to include the *nbt.hpp* header file in your project (if the GZIP library is not disabled with the NBT_NOGZIP macro, the project will also need to configure the *cpp-gzip* library)
+You only need to include the *mcnbt.hpp* header file in your project（In cases where gzip decompression and compression is enabled using the MCNBT_USE_GZIP macro, the project will also need to configure the *zlib* library）
 
-### 1. Read the NBT from the file
-
-```cpp
-#include "mcnbt.hpp"
-
-int main(){
-    //...
-    Nbt::Tag nbt = Nbt::Tag(Nbt::Compound, is, false);
-    //...
-    
-    return 0;
-}
-```
-
-The *Nbt::Tag()* function in the code is a constructor of the Nbt::Tag class, which takes an Nbt::TagTypes, input stream, and Boolean value as arguments.
-
-**Argument1 (Nbt::TagType enum)**: Used to indicate the type of the root tag (which can be both List and Compound), Nbt::Compound is usually chosen as the first parameter.
-
-**Argument2 (std::istream)**: If reading from a file (the file must be read in binary form), the ifstream object of the file should be passed to represent reading the NBT from the file input stream.
-
-**Argument3 (bool)**: Used to indicate the byte order of the current input stream, the default is small endian order, that is, the default support for reading bedrock NBT files.
-
-### 2、Construct NBT
-
-```cpp
-#include <mcnbt.hpp>
-
-int main(){
-    // Method 1
-    Nbt::Tag nbt = Nbt::Tag(Nbt::Compound, "root");
-    // Method 2
-    Nbt::Tag list = Nbt::gList("version");
-    
-    return 0;
-}
-```
-
-**Method 1** Constructs a NBT of Compound named *root*.
-
-**Method 2** Is a "convenience function" for quickly creating a particular object, which in this case constructs a List named *version*.
-
-All convenience functions:
-
-- Nbt::gByte()
-- Nbt::gShort()
-- Nbt::gInt()
-- Nbt::gLong()
-- Nbt::gFloat()
-- Nbt::gDouble()
-- Nbt::gByteArray()
-- Nbt::gIntArray()
-- Nbt::gLongArray()
-- Nbt::gList()
-- Nbt::gCompound()
-
-And the PureData version of the above convenience function:
-
-- Nbt::gpByte()
-- Nbt::gpShort()
-- Nbt::gpInt()
-- Nbt::gpLong()
-- Nbt::gpFloat()
-- Nbt::gpDouble()
-- Nbt::gpByteArray()
-- Nbt::gpIntArray()
-- Nbt::gpLongArray()
-- Nbt::gpList()
-- Nbt::gpCompound()
-
-The PureData version differs from the normal version in that the PureData version constructs tags that apply to elements that are lists. (The Tag obtained by the normal version can also be used as a List element, but when added to the List, the Tag name is deleted and converted to PureData.)
-
-The above function can also be implemented through the constructor of Nbt::Tag, such as Nbt::Tag(Nbt::Int, false) is equivalent to Nbt::gInt(), and Nbt::Tag(Nbt::Int, true) is equivalent to Nbt::gpInt().
-
-### 3. Read and modify Tag values
-
-For the basic data type Tag, call the corresponding get or set function directly.
-
-For example, for a Tag of type Nbt::Int
+### 1. Load a NBT from file
 
 ```cpp
 //...
-Nbt::Tag num = Nbt::gInt("Num", 1);
+std::string filename = "C:/nbt.nbt";	// NBT filename.
+bool isBigEndian = true;	// Specifies the byte order of the NBT file to be read (small endian order is used for bedrock edition NBT, large endian order is used for java edition)
+nbt::Tag nbt = nbt::fromFile(filename, isBigEndian);
+//...
+```
+
+### 2. Construct a NBT
+
+```cpp
+// ...
+// Method 1 (Construct by specifies Tag type of tag)
+nbt::Tag tag1 = nbt::Tag(nbt::INT);
+tag1.setInt(1);
+tag1.setName("Tag1");
+
+nbt::Tag tag2 = nbt::Tag(nbt::INT).setInt(1).setName("Tag2");
+// Method 2 (Construct by fast way functions)
+nbt::Tag tag3 = nbt::gInt(1, "Tag3");
+// ...
+```
+
+**Method 2** use the fast way functions for speed construct specify object. In this case it construct a NBT that tag type is INT.
+
+All fast way functions:
+
+- nbt::gByte(nbt::byte value, const std::string& name)
+- nbt::gShort(nbt::int16 value, const std::string& name)
+- nbt::gInt(nbt::int32 value, const std::string& name)
+- nbt::gLong(nbt::int64 value, const std::string& name)
+- nbt::gFloat(nbt::fp32 value, const std::string& name)
+- nbt::gDouble(nbt::fp64 value, const std::string& name)
+- nbt::gByteArray(const std::vector\<nbt::byte\>& value, const std::string& name)
+- nbt::gIntArray(const std::vector\<nbt::int32\>& value, const std::string& name)
+- nbt::gLongArray(const std::vector\<nbt::int64\>& value, const std::string& name)
+- nbt::gList(const std::vector\<nbt::Tag\>& value, const std::string& name)
+- nbt::gCompound(const std::string& name)
+
+### 3. Read and modify tag value.
+
+For nums Tag, direct call the corresponding getter/setter.
+e.g.
+
+```cpp
+//...
+Nbt::Tag num = Nbt::gInt(1, "Num");
 num.getInt();	// return 1.
 num.setInt(10);
 num.getInt();	// return 10.
 //...
 ```
 
-For the array type Tag (ByteArray, IntArray, LongArray), you can use the corresponding get function to get the entire data object (wrapped in std::vector) and manipulate it directly, and for simple add and delete elements you can use the corresponding add and remove functions.
-
-For example, for an Nbt::IntArray Tag
+For arrays Tag (ByteArray, IntArray, LongArray), use getter to obtain a std::vector\<T\> point (maybe it is nullptr, you should call the empty to check whether it is empty or not exists) to operate element, for simple add or erase, you can use corresponding add and remove functions.
+e.g.
 
 ```cpp
 //...
-Nbt::Tag intArray = Nbt::gIntArray("Nums");
-intArray.addInt(1);			// add element.
+// Initialize a int array by empty std::vector<nbt::int32> value.
+nbt::Tag intArray = nbt::gIntArray({}, "Nums");
+intArray.addInt(1);			// Add a value.
 intArray.addInt(2);
 intArray.addInt(3);
-intArray.remove(0);			// remove element by index.
-std::vector<int32> *data = intArray.getIntArray();
-int first = (*data)[0];		// first = 2.
+intArray.remove(0);			// Remove a value by index.
+int first = (*intArray.getIntArray())[0];		// first == 2.
 //...
 ```
 
-For Compound data types (List, Compound), addMember can be used for add and delete operations with removeMember and << operator overloads, and getMember or [] operator overloads can be used for read operations.
+For complex Tag (List，Compound), use addTag and removeTag functions and << operator to add or ease, use getTag function or [] operator to read element.
 
-For Compound tags, the [] operator overloading function can take the Tag's location index in Compound and the Tag's name as arguments (if there is a Tag with the same name, return the Tag with the smallest index value, If not found, an error will be reported, so you should use a function such as HasMember() to determine before obtaining the element).
+For compound Tag，[] operator can use element's name or index as parameter (if have both of element them is same name) (in general，A Tag with the same name should not exist in the same scope), return the Tag with the smallest index value, if not find specify element throw exception, therefore, the hasTag() function should be called before obtaining the element).
 
-The [] operator overload function of the List tag can only take an index as an argument.
+For list Tag, only get element by index.
 
 ```cpp
 //...
-Nbt::Tag root = Nbt::gCompound("compound");
-root.addMember(gInt("Num1", 1));		 // add elementn by addMember().
-root << gInt("Num2", 2);				// add elementn by << operation overload.
-root.removeMember("Num1");				// remove element by name.
-root.removeMember(0);			    	// remove element by index.
-root.addMember(gString("str", "text"));
-root["str"].setString("text2");			// get element by name.
-std::string str = root[0].getString();	 // get element by index. str = "text2".
+nbt::Tag root = nbt::gCompound("Compound");
+root.addTag(gInt(1, "Num1"));		 // add element by addTag function.
+root << gInt(2, "Num2");			// add element by << operator.
+root.removeTag("Num1");				// earse element by element's name.
+root.removeTag(0);			    	// earse element by element's index.
+root.addTag(gString("text", "str"));
+root["str"].setString("text2");			// get element by it's name.
+std::string str1 = root[0].getString();	 // get element by it's index str1 == "text2"
+std::string str2 = root.front().getString();	// get element by front and back function. str2 == "tex2"
 
-Nbt::Tag list = Nbt::gList("list", Nbt::Int);	// In addition to the name, you also need to specify the data type of the elements in the List to construct List Tag.
-list.addMember(gpInt(1));			// add elementn by addMember(), It is recommended to use the gp family of functions to construct elements within a List.
-list << gpInt(2);				   // add elementn by << operation overload.
-int num = list[0].getInt();		    // num = 1
+nbt::Tag list = nbt::gList(Nbt::INT, "List");	// gList function's first parameter used for specifies the tag type of element.
+list.addTagr(gInt(1));
+list << gInt(2);
+int num = list[0].getInt();		    // num == 1
 //...
 ```
-
-
-
