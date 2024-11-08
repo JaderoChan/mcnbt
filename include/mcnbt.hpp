@@ -129,7 +129,7 @@ constexpr const char* _ERR_INCORRECT_TAGTYPE = "Incorrect tag type.";
 constexpr const char* _ERR_OVER_RANGE = "The index or position is out of range.";
 constexpr const char* _ERR_NO_SPECIFY_MEMBER = "No specify member.";
 constexpr const char* _ERR_READ_WRITE_UNINIT_LIST = "Read/Write an uninitialized list.";
-constexpr const char* _ERR_REPEAT_INIT_LIST = "Repeat initialize a list.";
+constexpr const char* _ERR_REPEAT_INIT_LIST = "Repeat initialize list.";
 constexpr const char* _ERR_OTHER = "Other error.";
 
 // About of the indent of snbt.
@@ -369,13 +369,10 @@ public:
         if (!is.is_open())
             throw std::runtime_error("Failed to open file: " + filename);
 
-        return fromBinStream(is, isBigEndian, headerSize);
-    }
+        Tag rslt = fromBinStream(is, isBigEndian, headerSize);
+        is.close();
 
-    // @brief Load the tag from a string of snbt.
-    static Tag fromSnbt(const std::string& snbt)
-    {
-        return fromSnbt_(snbt);
+        return rslt;
     }
 
     /*
@@ -556,6 +553,7 @@ public:
         return *this;
     }
 
+    // @brief Add a value to the byte array.
     // @attention Only be called by #BYTE_ARRAY tag.
     Tag& addByte(byte value)
     {
@@ -570,6 +568,7 @@ public:
         return *this;
     }
 
+    // @brief Add a value to the int array.
     // @attention Only be called by #INT_ARRAY tag.
     Tag& addInt(int32 value)
     {
@@ -584,6 +583,7 @@ public:
         return *this;
     }
 
+    // @brief Add a value to the long array.
     // @attention Only be called by #LONG_ARRAY tag.
     Tag& addLong(int64 value)
     {
@@ -598,6 +598,9 @@ public:
         return *this;
     }
 
+    // @brief Add a tag to the initialized list or compound.
+    // @note Original tag will be moved to the new tag whether left-value or right-value reference,
+    // and the original tag will invlid after this operation, but you can call #copy function to avoid this.
     // @attention Only be called by #LIST, #COMPOUND tag.
     Tag& addTag(Tag& tag)
     {
@@ -628,7 +631,10 @@ public:
         return *this;
     }
 
-    // @overload The rigth value overload version, use move semantic.
+    // @overload The rigth value overload version.
+    // @brief Add a tag to the initialized list or compound.
+    // @note Original tag will be moved to the new tag whether left-value or right-value reference,
+    // and the original tag will invlid after this operation, but you can call #copy function to avoid this.
     // @attention Only be called by #LIST, #COMPOUND tag.
     Tag& addTag(Tag&& tag)
     {
@@ -740,7 +746,7 @@ public:
     }
 
     // @overload
-    // @brief Get the value of byte array by position.
+    // @brief Get a value from the byte array by index.
     // @attention Only be called by #BYTE_ARRAY tag.
     byte getByte(size_t pos) const
     {
@@ -787,7 +793,7 @@ public:
     }
 
     // @overload
-    // @brief Get the value of int array by position.
+    // @brief Get a value from the int array by index.
     // @attention Only be called by #INT_ARRAY tag.
     int32 getInt(size_t pos) const
     {
@@ -834,7 +840,7 @@ public:
     }
 
     // @overload
-    // @brief Get the value of long array by position.
+    // @brief Get a value from long array by index.
     // @attention Only be called by #LONG_ARRAY tag.
     int64 getLong(size_t pos) const
     {
@@ -880,7 +886,7 @@ public:
         return data_.d;
     }
 
-    // @brief Get the tag by position.
+    // @brief Get the tag by index.
     // @attention Only be called by #LIST, #COMPOUND tag.
     Tag& getTag(size_t pos)
     {
@@ -956,6 +962,7 @@ public:
     TagType type() const { return type_; }
 
     // @brief Get the name of tag.
+    // @attention Only be called by non-ListElement tag.
     std::string name() const
     {
         if (isListElement_)
@@ -1109,7 +1116,7 @@ public:
         return *this;
     }
 
-    // @brief Remove the element of container (string, array, list, compound) by position.
+    // @brief Remove the element of container (string, array, list, compound) by index.
     // @attention Only be called by #STRING, #BYTE_ARRAY, #INT_ARRAY, #LONG_ARRAY, #LIST, #COMPOUND tag.
     Tag& remove(size_t pos)
     {
@@ -1288,7 +1295,7 @@ public:
     Tag copy() { return Tag(*this); }
 
 #ifdef MCNBT_USE_GZIP
-    // @brief Write the NBT to output stream.
+    // @brief Write the tag to output stream.
     void write(std::ostream& os, bool isBigEndian, bool isCompressed = false) const
     {
         if (isCompressed) {
@@ -1314,7 +1321,7 @@ public:
         ofs.close();
     }
 #else
-    // @brief Write the NBT to output stream.
+    // @brief Write the tag to output stream.
     void write(std::ostream& os, bool isBigEndian) const
     {
         write_(os, isBigEndian);
@@ -1540,23 +1547,21 @@ public:
         return *this;
     }
 
-    // @brief Fast way of #getTag by position.
+    // @brief Fast way of #getTag by index.
     Tag& operator[](size_t pos) { return getTag(pos); }
 
     // @overload
     // @brief Fast way of #getTag by name;
     Tag& operator[](const std::string& name) { return getTag(name); }
 
-    // @brief Fast way of addTag.
+    // @brief Fast way of #addTag.
     Tag& operator<<(Tag& tag) { return addTag(tag); }
 
     // @overload
-    // @brief Fast way of addTag with move semantic.
+    // @brief Fast way of right-value reference version of #addTag.
     Tag& operator<<(Tag&& tag) { return addTag(std::move(tag)); }
 
 private:
-    friend Tag gList(TagType dtype, const std::string& name);
-
     // @param tagType If the param isListElement is false, ignore it.
     // If the param isListElement is true, the tagType must be set to the same as the parent tag.
     static Tag fromBinStream_(std::istream& is, bool isBigEndian, bool isListElement, int tagType = -1)
@@ -1571,7 +1576,7 @@ private:
         if (tagType == END)
             return tag;
 
-        // If the nbt tag is not a list elment read it's name.
+        // If the tag is not a list elment read it's name.
         if (!isListElement) {
             int16 nameLen = _bytes2num<int16>(is, isBigEndian);
             if (nameLen != 0) {
@@ -1681,12 +1686,6 @@ private:
 
         return tag;
     }
-
-    // TODO
-    // @brief Get a NBT tag from SNBT.
-    static Tag fromSnbt_(const std::string& snbt) {
-        return Tag();
-    };
 
     void write_(std::ostream& os, bool isBigEndian) const
     {
@@ -1942,7 +1941,7 @@ inline Tag gLongArray(const std::vector<int64>& value, const std::string& name =
 inline Tag gList(TagType dtype, const std::string& name = "")
 {
     Tag tag(TagType::LIST);
-    tag.dtype_ = dtype;
+    tag.initListElementType(dtype);
 
     if (!name.empty())
         tag.setName(name);

@@ -1,6 +1,8 @@
 #ifndef MCNBT_MCSTRUCTURE_HPP
 #define MCNBT_MCSTRUCTURE_HPP
 
+// Only usable for Minecraft bedrock edition.
+
 #include "blockentity.hpp"
 #include "blockstate.hpp"
 

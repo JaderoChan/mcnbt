@@ -1,6 +1,8 @@
 #ifndef MCNBT_BLOCKSTATE_HPP
 #define MCNBT_BLOCKSTATE_HPP
 
+// Only usable for Minecraft bedrock edition.
+
 #include "mcnbt.hpp"
 
 #include <string>

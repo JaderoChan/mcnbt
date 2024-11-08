@@ -1,6 +1,8 @@
 #ifndef MCNBT_BLOCKENTITY_HPP
 #define MCNBT_BLOCKENTITY_HPP
 
+// Only usable for Minecraft bedrock edition.
+
 #include "mcnbt.hpp"
 
 #include <string>
