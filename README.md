@@ -21,8 +21,6 @@ e.g.
 // Others.
 ```
 
-
-
 ## :rocket: Features 
 
 - Easy to use
