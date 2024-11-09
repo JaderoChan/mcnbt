@@ -163,18 +163,16 @@ inline void _reverse(char* str, size_t size = 0)
 inline bool _isBigEndian()
 {
     static bool isInited = false;
-    static bool isBigEndian = false;
+    static bool rslt = false;
 
     if (isInited)
-        return isBigEndian;
+        return rslt;
 
-    int32 num = 1;
-    char* numPtr = reinterpret_cast<char*>(&num);
-    isBigEndian = numPtr[0] == 0 ? true : false;
-
+    int num = 1;
+    rslt = reinterpret_cast<char*>(&num)[0] == 0 ? true : false;
     isInited = true;
 
-    return isBigEndian;
+    return rslt;
 }
 
 // @brief Obtain bytes from input stream, and convert it to number.
