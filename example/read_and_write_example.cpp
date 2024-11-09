@@ -11,7 +11,7 @@ std::pair<std::string, bool> inputHint()
     bool isBigEndian = false;
 
     std::cout << "Enter filename: ";
-    std::cin >> filename;
+    std::getline(std::cin, filename);
 
     while (true) {
         std::cout << "Is the file big-endian? (y/n): ";
