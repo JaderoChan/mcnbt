@@ -1292,7 +1292,7 @@ public:
 
     // @brief Make a copy. usually used for add tag to list or compound.
     // (because default add tag to list or compound is move.)
-    Tag copy() { return Tag(*this); }
+    Tag copy() const { return Tag(*this); }
 
 #ifdef MCNBT_USE_GZIP
     // @brief Write the tag to output stream.
