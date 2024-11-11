@@ -15,7 +15,8 @@ struct BlockEntityData
     BlockEntityData() {}
 
     BlockEntityData(const std::string& id, const std::string& customeName = "") :
-        id(id), customName(customeName) {}
+        id(id), customName(customeName)
+    {}
 
     virtual ~BlockEntityData() {}
 
@@ -27,7 +28,7 @@ struct BlockEntityData
         tag << gByte(static_cast<byte>(isMovable), "isMovable");
         tag << gInt(pos[0], "x") << gInt(pos[1], "y") << gInt(pos[2], "z");
 
-        write_(tag);
+        assemble(tag);
 
         return tag;
     };
@@ -42,7 +43,7 @@ struct BlockEntityData
     bool isMovable = true;
 
 protected:
-    virtual void write_(Tag& tag) const = 0;
+    virtual void assemble(Tag& tag) const = 0;
 };
 
 struct CommandBlockED final : BlockEntityData
@@ -52,7 +53,8 @@ struct CommandBlockED final : BlockEntityData
     CommandBlockED(const std::string& command, int32 tickDelay = 0,
                    bool isAuto = false, bool isPowered = true, bool conditionMet = false) :
         BlockEntityData("CommandBlock"), command(command), tickDelay(tickDelay),
-        isAuto(isAuto), isPowered(isPowered), conditionMet(conditionMet) {}
+        isAuto(isAuto), isPowered(isPowered), conditionMet(conditionMet)
+    {}
 
     // The command entered into the command block.
     std::string command;
@@ -86,8 +88,8 @@ struct CommandBlockED final : BlockEntityData
     // tores the time when a command block was last executed.
     int64 lastExecution = 0;
 
-private:
-    void write_(Tag& tag) const override
+protected:
+    void assemble(Tag& tag) const override
     {
         tag << gString(command, "Command");
         tag << gByte(static_cast<byte>(executeOnFirstTick), "ExecuteOnFirstTick");
@@ -154,7 +156,8 @@ struct StructureBlockED final : BlockEntityData
     StructureBlockED(const std::string& structureName, Mode mode = LOAD, bool ignoreEntities = false) :
         BlockEntityData("StructureBlock"),
         structureName(structureName),
-        ignoreEntities(ignoreEntities) {}
+        ignoreEntities(ignoreEntities)
+    {}
 
     std::string structureName;
     Mode data = LOAD;
@@ -172,8 +175,8 @@ struct StructureBlockED final : BlockEntityData
     int32 offset[3] = { 0, 0, 0 };
     int32 size[3] = { 1, 1, 1 };
 
-private:
-    void write_(Tag& tag) const override
+protected:
+    void assemble(Tag& tag) const override
     {
         tag << gByte(static_cast<byte>(animationMode), "animationMode");
         tag << gFloat(animationSeconds, "animationSeconds");

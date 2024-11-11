@@ -30,7 +30,7 @@ std::pair<std::string, bool> inputHint()
         }
     }
 
-    return {filename, isBigEndian};
+    return { filename, isBigEndian };
 }
 
 Tag getTestNbt()

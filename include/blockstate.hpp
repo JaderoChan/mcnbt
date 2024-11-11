@@ -20,13 +20,13 @@ struct BlockStateData
     {
         Tag tag = gCompound("states");
 
-        write_(tag);
+        assemble(tag);
 
         return tag;
     };
 
 protected:
-    virtual void write_(Tag& tag) const = 0;
+    virtual void assemble(Tag& tag) const = 0;
 };
 
 struct CommandBlockSD final : BlockStateData
@@ -43,13 +43,14 @@ struct CommandBlockSD final : BlockStateData
     };
 
     CommandBlockSD(bool isConditional = false, FacingDirection fd = UP) :
-        isConditional(isConditional), fd(fd) {}
+        isConditional(isConditional), fd(fd)
+    {}
 
     bool isConditional;
     FacingDirection fd = UP;
 
-private:
-    void write_(Tag& tag) const override
+protected:
+    void assemble(Tag& tag) const override
     {
         tag << gByte(static_cast<byte>(isConditional), "conditional_bit");
         tag << gInt(static_cast<int32>(fd), "facing_direction");
@@ -69,7 +70,7 @@ struct StructureBlockSD final : BlockStateData
 
     Mode mode = LOAD;
 
-private:
+protected:
     std::string modestr_() const
     {
         switch (mode) {
@@ -84,7 +85,7 @@ private:
         }
     };
 
-    void write_(Tag& tag) const override
+    void assemble(Tag& tag) const override
     {
         tag << gString(modestr_(), "structure_block_type");
     };

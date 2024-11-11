@@ -29,7 +29,7 @@ std::pair<std::string, bool> inputHint()
         }
     }
 
-    return {filename, isBigEndian};
+    return { filename, isBigEndian };
 }
 
 void wrieExample(const std::string& filename, bool isBigEndian)
@@ -49,9 +49,9 @@ void wrieExample(const std::string& filename, bool isBigEndian)
                 gInt(26, "age") <<
                 gByte(1, "gender (0=male, 1=female)"));
     friends << (gCompound("Person") <<
-            gString("Charlie", "name") <<
-            gInt(30, "age") <<
-            gByte(1, "gender (0=male, 1=female)"));
+                gString("Charlie", "name") <<
+                gInt(30, "age") <<
+                gByte(1, "gender (0=male, 1=female)"));
     root << friends;
 
     root.write(filename, isBigEndian);

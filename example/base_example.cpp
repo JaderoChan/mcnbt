@@ -67,12 +67,10 @@ void printList(const Tag& lst)
         else if (var.isArray()) {
             printArray(var);
             std::cout << ", ";
-        }
-        else if (var.isList()) {
+        } else if (var.isList()) {
             printList(var);
             std::cout << ", ";
-        }
-        else if (var.isCompound()) {
+        } else if (var.isCompound()) {
             printCompound(var);
             std::cout << ", ";
         }
@@ -112,12 +110,10 @@ void printCompound(const Tag& cmp)
         else if (var.isArray()) {
             printArray(var);
             std::cout << ", ";
-        }
-        else if (var.isList()) {
+        } else if (var.isList()) {
             printList(var);
             std::cout << ", ";
-        }
-        else if (var.isCompound()) {
+        } else if (var.isCompound()) {
             printCompound(var);
             std::cout << ", ";
         }
@@ -231,13 +227,13 @@ void arrayExample()
     std::cout << "#byteArr value before set: ";
     printArray(byteArr);
     std::cout << "#byteArr value after set {1, 2, 3, 4, 5}: ";
-    byteArr.setByteArray({1, 2, 3, 4, 5});
+    byteArr.setByteArray({ 1, 2, 3, 4, 5 });
     printArray(byteArr);
     std::cout << '\n';
 
     // Test get size.
     std::cout << "--Test get size--" << std::endl;
-    intArr.setIntArray({-1, -2, -3, -4, -5});
+    intArr.setIntArray({ -1, -2, -3, -4, -5 });
     std::cout << "#intArr value: ";
     printArray(intArr);
     std::cout << "#intArr size: " << intArr.size() << std::endl;
@@ -270,7 +266,7 @@ void arrayExample()
 
     // Test remove element by index.
     std::cout << "--Test remove element by index--" << std::endl;
-    longArr.setLongArray({100000000, 20000000, 30000000, 40000000, 50000000});
+    longArr.setLongArray({ 100000000, 20000000, 30000000, 40000000, 50000000 });
     std::cout << "#longArr value before remove: ";
     printArray(longArr);
     std::cout << "#longArr value after remove 3rd element: ";
@@ -428,7 +424,7 @@ void compoundExample()
     root.addTag(Tag(FLOAT).setFloat(3.14159f).setName("pi"));
     root.addTag(Tag(DOUBLE).setDouble(2.718281828459045).setName("e"));
     root.addTag(Tag(STRING).setString("Hello, World!").setName("greeting"));
-    root.addTag(Tag(BYTE_ARRAY).setByteArray({1, 2, 3, 4, 5}).setName("byte array"));
+    root.addTag(Tag(BYTE_ARRAY).setByteArray({ 1, 2, 3, 4, 5 }).setName("byte array"));
 
     // Add some list to list for test nested list.
     Tag lst = Tag(LIST).initListElementType(LIST);

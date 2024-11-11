@@ -25,9 +25,9 @@ Tag fastWayExample()
     pack << gFloat(3.1415926, "FloatValue_Pi");
     pack << gDouble(2.718281828459045, "DoubleValue_E");
     pack << gString("Hello, World!", "StringValue");
-    pack << gByteArray({1, 2, 3, 4, 5}, "ByteArrayValue");
-    pack << gIntArray({1, 2, 3, 4, 5}, "IntArrayValue");
-    pack << gLongArray({1, 2, 3, 4, 5}, "LongArrayValue");
+    pack << gByteArray({ 1, 2, 3, 4, 5 }, "ByteArrayValue");
+    pack << gIntArray({ 1, 2, 3, 4, 5 }, "IntArrayValue");
+    pack << gLongArray({ 1, 2, 3, 4, 5 }, "LongArrayValue");
     // Add a nested list.
     pack << (gList(LIST, "ListValue") <<
              emptyList.copy().setName("EmptyList1") <<
@@ -38,7 +38,7 @@ Tag fastWayExample()
     // Nested list example.
     auto box = gList(LIST, "Box");
     box << (gList(COMPOUND) << pack.copy()) <<
-           (gList(COMPOUND) << pack.copy() << pack.copy());
+        (gList(COMPOUND) << pack.copy() << pack.copy());
 
     // Create the root compound and add tags.
     auto root = gCompound("Root");
@@ -49,15 +49,15 @@ Tag fastWayExample()
 
 int main()
 {
-    try{
+    try {
         auto root = fastWayExample();
         // Fast way for get tag (#getTag) by name or index: operator[](name or index).
         std::cout << "EmptyList Size: " << root["EmptyList"].size() << std::endl;
         std::cout << "EmptyList Element Tag Type: " <<
-                     getTagTypeString(root["EmptyList"].listElementType()) << std::endl;
+            getTagTypeString(root["EmptyList"].listElementType()) << std::endl;
         std::cout << "Root Size: " << root.size() << std::endl;
-        std::cout << "Root[Box][0][0] Type: " << 
-                     getTagTypeString(root["Box"][0][0].type()) << std::endl;
+        std::cout << "Root[Box][0][0] Type: " <<
+            getTagTypeString(root["Box"][0][0].type()) << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;

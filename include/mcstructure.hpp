@@ -73,8 +73,8 @@ struct MCStructure
 };
 
 inline Tag createSingleBlockStructure(const std::string& blockId,
-                                   const BlockEntityData& bed, const BlockStateData& bsd,
-                                   int32 version = 18105860)
+                                      const BlockEntityData& bed, const BlockStateData& bsd,
+                                      int32 version = 18105860)
 {
     MCStructure mcs;
     mcs.blockIndices1() << gInt(0);

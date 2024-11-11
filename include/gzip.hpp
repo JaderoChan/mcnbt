@@ -144,7 +144,7 @@ inline std::string decompress(const std::string& data)
 
 inline std::string decompress(const char* data, size_t size)
 {
-    return decompress(std::string(data, size)); 
+    return decompress(std::string(data, size));
 }
 
 }

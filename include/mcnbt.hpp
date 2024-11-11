@@ -265,7 +265,8 @@ public:
 
     // @brief Construct a tag with tag type.
     Tag(TagType type) :
-        type_(type) {}
+        type_(type)
+    {}
 
     Tag(const Tag& other) :
         isListElement_(other.isListElement_), type_(other.type_), dtype_(other.dtype_)
@@ -1359,7 +1360,7 @@ public:
             return key + std::to_string(static_cast<int>(data_.n.i8)) + 'b';
 
         if (isShort())
-            return key + std::to_string(static_cast<int>(data_.n.i16)) +'s';
+            return key + std::to_string(static_cast<int>(data_.n.i16)) + 's';
 
         if (isInt())
             return key + std::to_string(data_.n.i32);
@@ -1467,7 +1468,7 @@ public:
             return result;
         }
 
-         if (isCompound()) {
+        if (isCompound()) {
             if (!data_.d)
                 return key + "{}";
 
