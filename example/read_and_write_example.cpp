@@ -15,12 +15,12 @@ std::pair<std::string, bool> inputHint()
 
     while (true) {
         std::cout << "Is the file big-endian? (y/n): ";
-        std::cin.ignore();
-        int key = std::cin.get();
-        if (key == 'y' || key == 'Y') {
+        std::string input;
+        std::getline(std::cin, input);
+        if (input == "y" || input == "Y") {
             isBigEndian = true;
             break;
-        } else if (key == 'n' || key == 'N') {
+        } else if (input == "n" || input == "N") {
             isBigEndian = false;
             break;
         } else {
