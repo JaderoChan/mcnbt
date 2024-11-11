@@ -601,40 +601,6 @@ public:
     // @note Original tag will be moved to the new tag whether left-value or right-value reference,
     // and the original tag will invlid after this operation, but you can call #copy function to avoid this.
     // @attention Only be called by #LIST, #COMPOUND tag.
-    Tag& addTag(Tag& tag)
-    {
-        if (!isComplex())
-            throw std::logic_error(_ERR_INCORRECT_TAGTYPE);
-
-        if (isList() && tag.type() != dtype_)
-            throw std::logic_error(_ERR_INCORRECT_TAGTYPE);
-
-        if (isList() && dtype_ == END)
-            throw std::logic_error(_ERR_READ_WRITE_UNINIT_LIST);
-
-        if (!data_.d)
-            data_.d = new std::vector<Tag>();
-
-        data_.d->emplace_back(std::move(tag));
-
-        if (isList()) {
-            data_.d->back().isListElement_ = true;
-            if (data_.d->back().name_) {
-                delete data_.d->back().name_;
-                data_.d->back().name_ = nullptr;
-            }
-        } else {
-            data_.d->back().isListElement_ = false;
-        }
-
-        return *this;
-    }
-
-    // @overload The rigth value overload version.
-    // @brief Add a tag to the initialized list or compound.
-    // @note Original tag will be moved to the new tag whether left-value or right-value reference,
-    // and the original tag will invlid after this operation, but you can call #copy function to avoid this.
-    // @attention Only be called by #LIST, #COMPOUND tag.
     Tag& addTag(Tag&& tag)
     {
         if (!isComplex())
@@ -649,20 +615,31 @@ public:
         if (!data_.d)
             data_.d = new std::vector<Tag>();
 
-        data_.d->emplace_back(std::move(tag));
-
         if (isList()) {
+            data_.d->emplace_back(std::move(tag));
             data_.d->back().isListElement_ = true;
+
             if (data_.d->back().name_) {
                 delete data_.d->back().name_;
                 data_.d->back().name_ = nullptr;
             }
         } else {
-            data_.d->back().isListElement_ = false;
+            try {
+                // If the tag is already exist, replace it.
+                auto& t = getTag(tag.name());
+                t = std::move(tag);
+                t.isListElement_ = false;
+            } catch (...) {
+                data_.d->emplace_back(std::move(tag));
+                data_.d->back().isListElement_ = false;
+            }
         }
 
         return *this;
     }
+
+    // @overload
+    Tag& addTag(Tag& tag) { return addTag(std::move(tag)); }
 
     /*
     * Functions for get value. Only be called by corresponding tag.
@@ -961,12 +938,8 @@ public:
     TagType type() const { return type_; }
 
     // @brief Get the name of tag.
-    // @attention Only be called by non-ListElement tag.
     std::string name() const
     {
-        if (isListElement_)
-            throw std::logic_error(_ERR_INCORRECT_TAGTYPE);
-
         if (!name_)
             return "";
 
@@ -974,12 +947,8 @@ public:
     }
 
     // @brief Get the name length of tag.
-    // @attention Only be called by non-ListElement tag.
     int16 nameLen() const
     {
-        if (isListElement_)
-            throw std::logic_error(_ERR_INCORRECT_TAGTYPE);
-
         if (!name_)
             return 0;
 
@@ -1538,6 +1507,7 @@ public:
         other.name_ = nullptr;
         other.data_.s = nullptr;
 
+        // Following code is forever not execute, but i have OCD.
         if (isListElement_ && name_) {
             delete name_;
             name_ = nullptr;
@@ -1554,11 +1524,10 @@ public:
     Tag& operator[](const std::string& name) { return getTag(name); }
 
     // @brief Fast way of #addTag.
-    Tag& operator<<(Tag& tag) { return addTag(tag); }
+    Tag& operator<<(Tag&& tag) { return addTag(std::move(tag)); }
 
     // @overload
-    // @brief Fast way of right-value reference version of #addTag.
-    Tag& operator<<(Tag&& tag) { return addTag(std::move(tag)); }
+    Tag& operator<<(Tag& tag) { return addTag(std::move(tag)); }
 
 private:
     // @param tagType If the param isListElement is false, ignore it.

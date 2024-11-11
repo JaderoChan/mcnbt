@@ -116,7 +116,7 @@ int first = (*intArray.getIntArray())[0];		// first == 2.
 
 For complex Tag (List，Compound), use addTag and removeTag functions and << operator to add or ease, use getTag function or [] operator to read element.
 
-For compound Tag，[] operator can use element's name or index as parameter (if have both of element them is same name) (in general，A Tag with the same name should not exist in the same scope), return the Tag with the smallest index value, if not find specify element throw exception, therefore, the hasTag() function should be called before obtaining the element).
+For compound Tag，[] operator can use element's name or index as parameter, return the Tag with the smallest index value, if not find specify element throw exception, therefore, the hasTag() function should be called before obtaining the element.
 
 For list Tag, only get element by index.
 

@@ -113,7 +113,7 @@ int first = (*intArray.getIntArray())[0];		// first == 2.
 ```
 
 对于复合数据类型（List，Compound），可以使用addTag与removeTag和<<运算符重载函数进行增删操作，使用getTag或[]运算符重载函数进行读取操作。
-对于Compound标签，[]运算符重载函数可以使用Tag在Compound中的位置索引与Tag的名称作为参数（若有同名Tag（通常来讲，不应该使同一作用域下存在同名Tag），则返回索引值最小的Tag，若未找到会引发报错，所以在获取元属前应该使用hasTag()函数进行判断）。
+对于Compound标签，[]运算符重载函数可以使用Tag在Compound中的位置索引与Tag的名称作为参数，若未找到会引发报错，所以在获取元属前应该使用hasTag()函数进行判断。
 而List标签的[]运算符重载函数只能使用索引作为参数。
 
 ```cpp
