@@ -34,20 +34,20 @@ struct CommandBlockSD final : BlockStateData
     // Block facing direction.
     enum FacingDirection : uchar
     {
-        DOWN,
-        UP,
-        NORTH,
-        SOUTH,
-        WEST,
-        EAST
+        FD_DOWN,
+        FD_UP,
+        FD_NORTH,
+        FD_SOUTH,
+        FD_WEST,
+        FD_EAST
     };
 
-    CommandBlockSD(bool isConditional = false, FacingDirection fd = UP) :
+    CommandBlockSD(bool isConditional = false, FacingDirection fd = FD_UP) :
         isConditional(isConditional), fd(fd)
     {}
 
     bool isConditional;
-    FacingDirection fd = UP;
+    FacingDirection fd = FD_UP;
 
 protected:
     void assemble(Tag& tag) const override
@@ -61,24 +61,24 @@ struct StructureBlockSD final : BlockStateData
 {
     enum Mode : uchar
     {
-        SAVE,
-        LOAD,
-        CORNER
+        MODE_SAVE,
+        MODE_LOAD,
+        MODE_CORNER
     };
 
-    StructureBlockSD(Mode mode = LOAD) : mode(mode) {}
+    StructureBlockSD(Mode mode = MODE_LOAD) : mode(mode) {}
 
-    Mode mode = LOAD;
+    Mode mode = MODE_LOAD;
 
 protected:
     std::string modestr_() const
     {
         switch (mode) {
-            case SAVE:
+            case MODE_SAVE:
                 return "save";
-            case LOAD:
+            case MODE_LOAD:
                 return "load";
-            case CORNER:
+            case MODE_CORNER:
                 return "corner";
             default:
                 return "";

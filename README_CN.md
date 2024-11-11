@@ -57,11 +57,11 @@ nbt::Tag nbt = nbt::fromFile(filename, isBigEndian);
 ```cpp
 // ...
 // 方法一（指定Tag的Tag type进行构造）
-nbt::Tag tag1 = nbt::Tag(nbt::INT);
+nbt::Tag tag1 = nbt::Tag(nbt::TT_INT);
 tag1.setInt(1);
 tag1.setName("Tag1");
 
-nbt::Tag tag2 = nbt::Tag(nbt::INT).setInt(1).setName("Tag2");
+nbt::Tag tag2 = nbt::Tag(nbt::TT_INT).setInt(1).setName("Tag2");
 // 方法二（使用Fast way方法进行带值，名称（可选）构造）
 nbt::Tag tag3 = nbt::gInt(1, "Tag3");
 // ...
@@ -128,7 +128,7 @@ root["str"].setString("text2");			// 使用元素名称获取元素。
 std::string str1 = root[0].getString();	 // 使用元素索引获取元素。str1 == "text2"
 std::string str2 = root.front().getString();	// 使用front或back函数获取元素。str2 == "tex2"
 
-nbt::Tag list = nbt::gList(Nbt::INT, "List");	// gList函数的第一个参数用于指定List内部Tag的类型
+nbt::Tag list = nbt::gList(Nbt::TT_INT, "List");	// gList函数的第一个参数用于指定List内部Tag的类型
 list.addTagr(gInt(1));			// 使用addTag()函数添加元素。
 list << gInt(2);				   // 使用<<运算符添加元素。
 int num = list[0].getInt();		    // num == 1

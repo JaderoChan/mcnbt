@@ -18,12 +18,12 @@ struct MCStructure
         root << gInt(formatVersion, "format_version");
 
         // Write size.
-        Tag size = gList(INT, "size");
+        Tag size = gList(TT_INT, "size");
         size << gInt(sizeX) << gInt(sizeY) << gInt(sizeZ);
         root << size;
 
         // Write structure world origin.
-        Tag swo = gList(INT, "structure_world_origin");
+        Tag swo = gList(TT_INT, "structure_world_origin");
         swo << gInt(0) << gInt(0) << gInt(0);
         root << swo;
 
@@ -31,15 +31,15 @@ struct MCStructure
         Tag structure = gCompound("structure");
 
         // Create block indices.
-        Tag blockIndices = gList(LIST, "block_indices");
-        blockIndices << gList(INT) << gList(INT);
+        Tag blockIndices = gList(TT_LIST, "block_indices");
+        blockIndices << gList(TT_INT) << gList(TT_INT);
 
         // Create entities tag.
-        Tag entities = gList(COMPOUND, "entities");
+        Tag entities = gList(TT_COMPOUND, "entities");
 
         // Create palette tag.
         Tag palette = gCompound("palette");
-        Tag blockPalette = gList(COMPOUND, "block_palette");
+        Tag blockPalette = gList(TT_COMPOUND, "block_palette");
 
         // Create block position data tag.
         Tag blockPositionData = gCompound("block_position_data");

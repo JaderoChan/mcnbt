@@ -37,7 +37,7 @@ Tag getTestNbt()
 {
     auto root = gCompound("Root");
 
-    auto list = gList(INT, "Fibonacci");
+    auto list = gList(TT_INT, "Fibonacci");
     int a = 0, b = 1;
     for (size_t i = 0; i < 100; ++i) {
         int c = a + b;

@@ -124,12 +124,12 @@ void printCompound(const Tag& cmp)
 
 void numExample()
 {
-    Tag byteNum(BYTE);
-    Tag shortNum(SHORT);
-    Tag intNum(INT);
-    Tag longNum(LONG);
-    Tag floatNum(FLOAT);
-    Tag doubleNum(DOUBLE);
+    Tag byteNum(TT_BYTE);
+    Tag shortNum(TT_SHORT);
+    Tag intNum(TT_INT);
+    Tag longNum(TT_LONG);
+    Tag floatNum(TT_FLOAT);
+    Tag doubleNum(TT_DOUBLE);
 
     // Test set value.
     std::cout << "--Test set value--" << std::endl;
@@ -176,7 +176,7 @@ void numExample()
 
 void stringExample()
 {
-    Tag str(STRING);
+    Tag str(TT_STRING);
 
     // Test set and get value.
     std::cout << "--Test set and get value--" << std::endl;
@@ -209,9 +209,9 @@ void stringExample()
 
 void arrayExample()
 {
-    Tag byteArr(BYTE_ARRAY);
-    Tag intArr(INT_ARRAY);
-    Tag longArr(LONG_ARRAY);
+    Tag byteArr(TT_BYTE_ARRAY);
+    Tag intArr(TT_INT_ARRAY);
+    Tag longArr(TT_LONG_ARRAY);
 
     // Test error handling when remove front element from empty array.
     std::cout << "--Test error handling--" << std::endl;
@@ -294,21 +294,22 @@ void arrayExample()
 
 void listExample()
 {
-    Tag lst(LIST);
+    Tag lst(TT_LIST);
 
     // Test init list element type.
     std::cout << "--Test init list element type--" << std::endl;
     std::cout << "#lst element type before init: " << getTagTypeString(lst.listElementType()) << std::endl;
-    lst.initListElementType(STRING);
+    lst.initListElementType(TT_STRING);
     std::cout << "#lst element type after init: " << getTagTypeString(lst.listElementType()) << std::endl;
     std::cout << '\n';
 
     // Test error handling when init list element type twice.
     std::cout << "--Test error handling--" << std::endl;
     try {
-        lst.initListElementType(INT);
+        lst.initListElementType(TT_INT);
     } catch (std::exception& e) {
-        std::cout << "Error, init list element type twice (#lst.initListElementType(INT)): " << e.what() << std::endl;
+        std::cout << "Error, init list element type twice (#lst.initListElementType(TT_INT)): " <<
+            e.what() << std::endl;
     }
     std::cout << '\n';
 
@@ -317,9 +318,9 @@ void listExample()
     std::cout << "#lst value before add strings: ";
     printList(lst);
     std::cout << "#lst value after add strings ('Hello', 'World', '!!!'): ";
-    Tag str1 = Tag(STRING).setString("Hello");
-    Tag str2 = Tag(STRING).setString("World");
-    Tag str3 = Tag(STRING).setString("!!!");
+    Tag str1 = Tag(TT_STRING).setString("Hello");
+    Tag str2 = Tag(TT_STRING).setString("World");
+    Tag str3 = Tag(TT_STRING).setString("!!!");
     lst.addTag(str1).addTag(str2).addTag(str3);
     printList(lst);
     std::cout << '\n';
@@ -334,9 +335,9 @@ void listExample()
     std::cout << "#lst value before add strings: ";
     printList(lst);
     std::cout << "#lst value after add strings ('  ', 'Bye', '...') with << operator: ";
-    Tag str4 = Tag(STRING).setString("  ");
-    Tag str5 = Tag(STRING).setString("Bye");
-    Tag str6 = Tag(STRING).setString("...");
+    Tag str4 = Tag(TT_STRING).setString("  ");
+    Tag str5 = Tag(TT_STRING).setString("Bye");
+    Tag str6 = Tag(TT_STRING).setString("...");
     lst << str4 << str5 << str6;
     printList(lst);
     std::cout << '\n';
@@ -389,7 +390,7 @@ void listExample()
     // Test init list element type again.
     std::cout << "--Test init list element type again--" << std::endl;
     std::cout << "#lst element type before init again: " << getTagTypeString(lst.listElementType()) << std::endl;
-    lst.initListElementType(LIST);
+    lst.initListElementType(TT_LIST);
     std::cout << "#lst element type after init again: " << getTagTypeString(lst.listElementType()) << std::endl;
     std::cout << '\n';
 
@@ -398,8 +399,8 @@ void listExample()
     std::cout << "#lst value before add list: ";
     printList(lst);
     std::cout << "#lst1 value: ";
-    Tag lst1 = Tag(LIST).initListElementType(INT);
-    lst1 << Tag(INT).setInt(1) << Tag(INT).setInt(2) << Tag(INT).setInt(3);
+    Tag lst1 = Tag(TT_LIST).initListElementType(TT_INT);
+    lst1 << Tag(TT_INT).setInt(1) << Tag(TT_INT).setInt(2) << Tag(TT_INT).setInt(3);
     printList(lst1);
     lst.addTag(lst1);           // default move constructor. (lst1 is invalid after this operation)
     lst.addTag(lst2.copy());    // copy constructor. (lst2 is still valid after this operation)
@@ -414,26 +415,27 @@ void listExample()
 
 void compoundExample()
 {
-    Tag root(COMPOUND);
+    Tag root(TT_COMPOUND);
 
     // Add some tags to root.
-    root.addTag(Tag(BYTE).setByte(127).setName("max byte"));
-    root.addTag(Tag(SHORT).setShort(32767).setName("max short"));
-    root.addTag(Tag(INT).setInt(2147483647).setName("max int"));
-    root.addTag(Tag(LONG).setLong(9223372036854775807).setName("max long"));
-    root.addTag(Tag(FLOAT).setFloat(3.14159f).setName("pi"));
-    root.addTag(Tag(DOUBLE).setDouble(2.718281828459045).setName("e"));
-    root.addTag(Tag(STRING).setString("Hello, World!").setName("greeting"));
-    root.addTag(Tag(BYTE_ARRAY).setByteArray({ 1, 2, 3, 4, 5 }).setName("byte array"));
+    root.addTag(Tag(TT_BYTE).setByte(127).setName("max byte"));
+    root.addTag(Tag(TT_SHORT).setShort(32767).setName("max short"));
+    root.addTag(Tag(TT_INT).setInt(2147483647).setName("max int"));
+    root.addTag(Tag(TT_LONG).setLong(9223372036854775807).setName("max long"));
+    root.addTag(Tag(TT_FLOAT).setFloat(3.14159f).setName("pi"));
+    root.addTag(Tag(TT_DOUBLE).setDouble(2.718281828459045).setName("e"));
+    root.addTag(Tag(TT_STRING).setString("Hello, World!").setName("greeting"));
+    root.addTag(Tag(TT_BYTE_ARRAY).setByteArray({ 1, 2, 3, 4, 5 }).setName("byte array"));
 
     // Add some list to list for test nested list.
-    Tag lst = Tag(LIST).initListElementType(LIST);
-    lst << (Tag(LIST).initListElementType(INT) << Tag(INT).setInt(1) << Tag(INT).setInt(2) << Tag(INT).setInt(3));
-    lst << (Tag(LIST).initListElementType(STRING) <<
-            Tag(STRING).setString("NiHao") << Tag(STRING).setString("ShiJie!"));
-    Tag tmpLst = Tag(LIST).initListElementType(DOUBLE);
-    tmpLst << Tag(DOUBLE).setDouble(1.1) << Tag(DOUBLE).setDouble(2.2) << Tag(DOUBLE).setDouble(3.3);
-    lst << (Tag(LIST).initListElementType(LIST) << tmpLst.copy() << tmpLst);
+    Tag lst = Tag(TT_LIST).initListElementType(TT_LIST);
+    lst << (Tag(TT_LIST).initListElementType(TT_INT) <<
+            Tag(TT_INT).setInt(1) << Tag(TT_INT).setInt(2) << Tag(TT_INT).setInt(3));
+    lst << (Tag(TT_LIST).initListElementType(TT_STRING) <<
+            Tag(TT_STRING).setString("NiHao") << Tag(TT_STRING).setString("ShiJie!"));
+    Tag tmpLst = Tag(TT_LIST).initListElementType(TT_DOUBLE);
+    tmpLst << Tag(TT_DOUBLE).setDouble(1.1) << Tag(TT_DOUBLE).setDouble(2.2) << Tag(TT_DOUBLE).setDouble(3.3);
+    lst << (Tag(TT_LIST).initListElementType(TT_LIST) << tmpLst.copy() << tmpLst);
 
     root << lst;
 

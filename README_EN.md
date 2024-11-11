@@ -57,11 +57,11 @@ nbt::Tag nbt = nbt::fromFile(filename, isBigEndian);
 ```cpp
 // ...
 // Method 1 (Construct by specifies Tag type of tag)
-nbt::Tag tag1 = nbt::Tag(nbt::INT);
+nbt::Tag tag1 = nbt::Tag(nbt::TT_INT);
 tag1.setInt(1);
 tag1.setName("Tag1");
 
-nbt::Tag tag2 = nbt::Tag(nbt::INT).setInt(1).setName("Tag2");
+nbt::Tag tag2 = nbt::Tag(nbt::TT_INT).setInt(1).setName("Tag2");
 // Method 2 (Construct by fast way functions)
 nbt::Tag tag3 = nbt::gInt(1, "Tag3");
 // ...
@@ -130,7 +130,7 @@ root["str"].setString("text2");			// get element by it's name.
 std::string str1 = root[0].getString();	 // get element by it's index str1 == "text2"
 std::string str2 = root.front().getString();	// get element by front and back function. str2 == "tex2"
 
-nbt::Tag list = nbt::gList(Nbt::INT, "List");	// gList function's first parameter used for specifies the tag type of element.
+nbt::Tag list = nbt::gList(Nbt::TT_INT, "List");	// gList function's first parameter used for specifies the tag type of element.
 list.addTagr(gInt(1));
 list << gInt(2);
 int num = list[0].getInt();		    // num == 1

@@ -43,7 +43,7 @@ void wrieExample(const std::string& filename, bool isBigEndian)
     birthday << gInt(1990, "year") << gInt(1, "month") << gInt(1, "day");
     root << birthday;
 
-    auto friends = gList(COMPOUND, "friends");
+    auto friends = gList(TT_COMPOUND, "friends");
     friends << (gCompound("Person") <<
                 gString("Bob", "name") <<
                 gInt(26, "age") <<

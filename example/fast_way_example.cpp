@@ -9,7 +9,7 @@ using namespace nbt;
 // Fast way for add tag (#addTag) to list or compound: operator<<(tag).
 Tag fastWayExample()
 {
-    auto emptyList = gList(END, "EmptyList");
+    auto emptyList = gList(TT_END, "EmptyList");
     auto emptyCompound = gCompound("EmptyCompound");
 
     // Create a compound with all the different types of values.
@@ -29,16 +29,16 @@ Tag fastWayExample()
     pack << gIntArray({ 1, 2, 3, 4, 5 }, "IntArrayValue");
     pack << gLongArray({ 1, 2, 3, 4, 5 }, "LongArrayValue");
     // Add a nested list.
-    pack << (gList(LIST, "ListValue") <<
+    pack << (gList(TT_LIST, "ListValue") <<
              emptyList.copy().setName("EmptyList1") <<
              emptyList.copy().setName("EmptyList2"));   // Invalid #setName, #addTag process will delete them name.
     // Nested self.
     pack << pack.copy();
 
     // Nested list example.
-    auto box = gList(LIST, "Box");
-    box << (gList(COMPOUND) << pack.copy()) <<
-        (gList(COMPOUND) << pack.copy() << pack.copy());
+    auto box = gList(TT_LIST, "Box");
+    box << (gList(TT_COMPOUND) << pack.copy()) <<
+        (gList(TT_COMPOUND) << pack.copy() << pack.copy());
 
     // Create the root compound and add tags.
     auto root = gCompound("Root");

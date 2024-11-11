@@ -98,7 +98,7 @@ protected:
         tag << gByte(0, "LPRedstoneMode");
         tag << gLong(lastExecution, "LastExecution");
         tag << gString(lastOuTut, "LastOuTut");
-        tag << gList(END, "LastOuTuTarams");
+        tag << gList(TT_END, "LastOuTuTarams");
         tag << gInt(successCount, "SuccessCount");
         tag << gInt(tickDelay, "TickDelay");
         tag << gByte(static_cast<byte>(trackOuTut), "TrackOuTut");
@@ -114,57 +114,57 @@ struct StructureBlockED final : BlockEntityData
 {
     enum Mode : uchar
     {
-        DATA,
-        SAVE,
-        LOAD,
-        CORNER,
-        INVENTORY,
-        EXPORT
+        MODE_DATA,
+        MODE_SAVE,
+        MODE_LOAD,
+        MODE_CORNER,
+        MODE_INVENTORY,
+        MODE_EXPORT
     };
 
     enum Mirror : uchar
     {
-        NO_MIRROR = 0x00,
-        X = 0x01,
-        Y = 0x02,
-        XY = 0x03
+        MIRROR_NO = 0x00,
+        MIRROR_X = 0x01,
+        MIRROR_Y = 0x02,
+        MIRROR_XY = 0x03
     };
 
     enum Rotation : uchar
     {
-        R0,
-        R90,
-        R180,
-        R270
+        ROT_0,
+        ROT_90,
+        ROT_180,
+        ROT_270
     };
 
     enum Animation : uchar
     {
-        NO_ANIMATION,
-        BY_LAYER,
-        BY_BLOCK
+        ANIMATION_NO,
+        ANIMATION_BY_LAYER,
+        ANIMATION_BY_BLOCK
     };
 
     enum RedstoneSaveMode : uchar
     {
-        MEMORY,
-        DISK
+        RSM_MEMORY,
+        RSM_DISK
     };
 
     StructureBlockED() : BlockEntityData("StructureBlock") {}
 
-    StructureBlockED(const std::string& structureName, Mode mode = LOAD, bool ignoreEntities = false) :
+    StructureBlockED(const std::string& structureName, Mode mode = MODE_LOAD, bool ignoreEntities = false) :
         BlockEntityData("StructureBlock"),
         structureName(structureName),
         ignoreEntities(ignoreEntities)
     {}
 
     std::string structureName;
-    Mode data = LOAD;
-    Animation animationMode = NO_ANIMATION;
-    Rotation rotation = R0;
-    Mirror mirror = NO_MIRROR;
-    RedstoneSaveMode redstoneSaveMode = MEMORY;
+    Mode data = MODE_LOAD;
+    Animation animationMode = ANIMATION_NO;
+    Rotation rotation = ROT_0;
+    Mirror mirror = MIRROR_NO;
+    RedstoneSaveMode redstoneSaveMode = RSM_MEMORY;
     bool ignoreEntities = false;
     bool removeBlocks = false;
     bool isPowered = true;

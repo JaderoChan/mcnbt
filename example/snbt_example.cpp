@@ -33,12 +33,12 @@ int main()
 
     // Lists example.
     auto lists = gCompound("Lists");
-    auto list1 = gList(INT, "IntList");
+    auto list1 = gList(TT_INT, "IntList");
     list1 << gInt(1) << gInt(2) << gInt(3);
-    auto list2 = gList(LIST, "NestedList");
+    auto list2 = gList(TT_LIST, "NestedList");
     list2 << list1.copy() << list1.copy();
-    auto list3 = gList(END, "EmptyEndList");
-    auto list4 = gList(BYTE, "EmptyByteList");
+    auto list3 = gList(TT_END, "EmptyEndList");
+    auto list4 = gList(TT_BYTE, "EmptyByteList");
     lists << list1 << list2 << list3 << list4;
 
     // Compounds example.
