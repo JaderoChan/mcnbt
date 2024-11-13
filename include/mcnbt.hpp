@@ -36,6 +36,7 @@
 #include <cstring>  // strlen(), memcpy()
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -65,6 +66,14 @@ using int64 = int64_t;
 using fp32 = float;
 using fp64 = double;
 
+using Str = std::string;
+
+template<typename T>
+using Vec = std::vector<T>;
+
+template<typename K, typename V, typename Hash, typename KEqual>
+using Map = std::unordered_map<K, V, Hash, KEqual>;
+
 }
 
 // Enum, constants and aux functions.
@@ -89,7 +98,7 @@ enum TagType : uchar
     TT_LONG_ARRAY = 12
 };
 
-inline std::string getTagTypeString(TagType type)
+inline Str getTagTypeString(TagType type)
 {
     switch (type) {
         case TT_END:
@@ -123,18 +132,63 @@ inline std::string getTagTypeString(TagType type)
     }
 }
 
+inline bool isEnd(TagType type) { return type == TT_END; }
+
+inline bool isByte(TagType type) { return type == TT_BYTE; }
+
+inline bool isShort(TagType type) { return type == TT_SHORT; }
+
+inline bool isInt(TagType type) { return type == TT_INT; }
+
+inline bool isLong(TagType type) { return type == TT_LONG; }
+
+inline bool isFloat(TagType type) { return type == TT_FLOAT; }
+
+inline bool isDouble(TagType type) { return type == TT_DOUBLE; }
+
+inline bool isString(TagType type) { return type == TT_STRING; }
+
+inline bool isByteArray(TagType type) { return type == TT_BYTE_ARRAY; }
+
+inline bool isIntArray(TagType type) { return type == TT_INT_ARRAY; }
+
+inline bool isLongArray(TagType type) { return type == TT_LONG_ARRAY; }
+
+inline bool isList(TagType type) { return type == TT_LIST; }
+
+inline bool isCompound(TagType type) { return type == TT_COMPOUND; }
+
+inline bool isInteger(TagType type) { return isByte(type) || isShort(type) || isInt(type) || isLong(type); }
+
+inline bool isFloatPoint(TagType type) { return isFloat(type) || isDouble(type); }
+
+inline bool isNum(TagType type) { return isInteger(type) || isFloatPoint(type); }
+
+inline bool isArray(TagType type) { return isByteArray(type) || isIntArray(type) || isLongArray(type); }
+
+inline bool isContainer(TagType type) { return isList(type) || isCompound(type); }
+
 // Error messages.
-constexpr const char* _ERR_UNDEFINED_TT = "Undefined tag type.";
-constexpr const char* _ERR_INCORRECT_TT = "Incorrect tag type.";
-constexpr const char* _ERR_OVER_RANGE = "The index or position is out of range.";
-constexpr const char* _ERR_NO_SPECIFY_MEMBER = "No specify member.";
-constexpr const char* _ERR_READ_WRITE_UNINIT_TT_LIST = "Read/Write an uninitialized list.";
-constexpr const char* _ERR_REPEAT_INIT_TT_LIST = "Repeat initialize list.";
-constexpr const char* _ERR_OTHER = "Other error.";
+constexpr const char* _ERR_UNDEFINED_TT =
+"Undefined tag type. (Usually caused by read a invalid tag type from input stream.)";
+constexpr const char* _ERR_INCORRECT_TT =
+"Incorrect tag type. (Usually caused by call a function that is not support the current tag type.)";
+constexpr const char* _ERR_OUT_OF_RANGE =
+"The specified index is out of range.";
+constexpr const char* _ERR_EMPTY_CONTAINER =
+"The container is empty and #front()/#back() etc. can not be call.";
+constexpr const char* _ERR_NO_SPECIFY_MEMBER =
+"No member of the specified name.";
+constexpr const char* _ERR_READ_WRITE_UNINIT_LIST =
+"Read/Write an uninitialized list.";
+constexpr const char* _ERR_REPEAT_INIT_TT_LIST =
+"Repeat initialize list.";
+constexpr const char* _ERR_OTHER =
+"Other error.";
 
 // About of the indent of snbt.
-constexpr unsigned int _INDENT_SIZE = 2;
-static const std::string _INDENT_STR(_INDENT_SIZE, ' ');
+constexpr size_t _INDENT_SIZE = 2;
+static const Str _INDENT_STR(_INDENT_SIZE, ' ');
 
 }
 
@@ -226,67 +280,296 @@ namespace nbt
 
 class Tag
 {
-    // Nums.
-    // Contains interger and float point number.
-    union Num
-    {
-        Num() : i64(0) {}
-        byte i8;
-        int16 i16;
-        int32 i32;
-        int64 i64;
-        fp32 f32;
-        fp64 f64;
-    };
-
-    // Value of tag.
-    // Individual tag is like key-value pair.
-    // The key is the name of tag (can be empty, and all list element not has name.).
-    // The value is stored in the following union.
-    union Data
-    {
-        Data() : s(nullptr) {}
-        // Number data
-        Num n;
-        // String data
-        std::string* s;
-        // Byte Array data
-        std::vector<byte>* bs;
-        // Int Array data
-        std::vector<int32>* is;
-        // Long Array data
-        std::vector<int64>* ls;
-        // List data and Compound data
-        std::vector<Tag>* d;
-    };
-
 public:
+    class ListData
+    {
+    public:
+        ListData() = default;
+
+        size_t size() const { return data_.size(); }
+
+        bool empty() const { return data_.empty(); }
+
+        void reserve(size_t size) { data_.reserve(size); }
+
+        void pushBack(Tag&& tag)
+        {
+            data_.emplace_back(std::move(tag));
+
+            data_.back().isListElement_ = true;
+            if (data_.back().name_) {
+                delete data_.back().name_;
+                data_.back().name_ = nullptr;
+            }
+        }
+
+        void pushBack(Tag& value) { pushBack(std::move(value)); }
+
+        void erase(size_t idx)
+        {
+            if (idx >= data_.size())
+                throw std::out_of_range(_ERR_OUT_OF_RANGE);
+
+            data_.erase(data_.begin() + idx);
+        }
+
+        void erase(Vec<Tag>::iterator it)
+        {
+            if (it >= data_.end())
+                throw std::out_of_range(_ERR_OUT_OF_RANGE);
+
+            data_.erase(it);
+        }
+
+        void popFront()
+        {
+            if (data_.empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
+
+            data_.erase(data_.begin());
+        }
+
+        void popBack()
+        {
+            if (data_.empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
+
+            data_.pop_back();
+        }
+
+        void clear() { data_.clear(); }
+
+        Tag& front()
+        {
+            if (data_.empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
+
+            return data_.front();
+        }
+
+        const Tag& front() const
+        {
+            if (data_.empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
+
+            return data_.front();
+        }
+
+        Tag& back()
+        {
+            if (data_.empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
+
+            return data_.back();
+        }
+
+        const Tag& back() const
+        {
+            if (data_.empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
+
+            return data_.back();
+        }
+
+        Vec<Tag>::iterator begin() { return data_.begin(); }
+
+        Vec<Tag>::const_iterator begin() const { return data_.begin(); }
+
+        Vec<Tag>::iterator end() { return data_.end(); }
+
+        Vec<Tag>::const_iterator end() const { return data_.end(); }
+
+        Tag& operator[](size_t idx)
+        {
+            if (idx >= data_.size())
+                throw std::out_of_range(_ERR_OUT_OF_RANGE);
+
+            return data_[idx];
+        }
+
+        const Tag& operator[](size_t idx) const
+        {
+            if (idx >= data_.size())
+                throw std::out_of_range(_ERR_OUT_OF_RANGE);
+
+            return data_[idx];
+        }
+
+    private:
+        Vec<Tag> data_;
+    };
+
+    class CompoundData
+    {
+        struct TagpHash
+        {
+            size_t operator()(const Tag* tag) const
+            {
+                // std::cout << "Hash tag name:" << tag->name() << std::endl;
+                return std::hash<Str>()(tag->name());
+            }
+        };
+        
+        struct TagpEqual
+        {
+            bool operator()(const Tag* tag1, const Tag* tag2) const
+            {
+                // std::cout << "Equal tag name:" << tag1->name() << " " << tag2->name() << std::endl;
+                return tag1->name() == tag2->name();
+            }
+        };
+
+    public:
+        CompoundData() = default;
+
+        size_t size() const { return data_.size(); }
+
+        bool empty() const { return data_.empty(); }
+
+        void reserve(size_t size) { data_.reserve(size); }
+
+        void pushBack(Tag&& tag)
+        {
+            data_.emplace_back(std::move(tag));
+            idxs_.insert( { &data_.back(), data_.size() - 1 } );
+
+            data_.back().isListElement_ = false;
+        }
+
+        void pushBack(Tag& tag) { pushBack(std::move(tag)); }
+
+        void erase(size_t idx)
+        {
+            if (idx >= data_.size())
+                throw std::out_of_range(_ERR_OUT_OF_RANGE);
+
+            idxs_.erase(&data_[idx]);
+            data_.erase(data_.begin() + idx);
+        }
+
+        void erase(Vec<Tag>::iterator it)
+        {
+            if (it >= data_.end())
+                throw std::out_of_range(_ERR_OUT_OF_RANGE);
+
+            idxs_.erase(&(*it));
+            data_.erase(it);
+        }
+
+        void erase(const Str& name)
+        {
+            Tag tmp = Tag().setName(name);
+
+            if (idxs_.find(&tmp) == idxs_.end())
+                throw std::out_of_range(_ERR_NO_SPECIFY_MEMBER);
+
+            data_.erase(data_.begin() + idxs_[&tmp]);
+        }
+
+        void popFront()
+        {
+            if (data_.empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
+
+            idxs_.erase(&data_.front());
+            data_.erase(data_.begin());
+        }
+
+        void popBack()
+        {
+            if (data_.empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
+
+            idxs_.erase(&data_.back());
+            data_.pop_back();
+        }
+
+        void clear()
+        {
+            data_.clear();
+            idxs_.clear();
+        }
+
+        Tag& front()
+        {
+            if (data_.empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
+
+            return data_.front();
+        }
+
+        const Tag& front() const
+        {
+            if (data_.empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
+
+            return data_.front();
+        }
+
+        Tag& back()
+        {
+            if (data_.empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
+
+            return data_.back();
+        }
+
+        const Tag& back() const
+        {
+            if (data_.empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
+
+            return data_.back();
+        }
+
+        Vec<Tag>::iterator begin() { return data_.begin(); }
+
+        Vec<Tag>::const_iterator begin() const { return data_.begin(); }
+
+        Vec<Tag>::iterator end() { return data_.end(); }
+
+        const Vec<Tag>::iterator end() const { return data_.end(); }
+
+        bool hasTag(const Str& name) const
+        {
+            Tag tmp = Tag().setName(name);
+
+            for (const auto& var : name2idx_) {
+                std::cout << "Address: " << var.first << " " << var.second << std::endl;
+            }
+
+            return name2idx_.find(&tmp) != name2idx_.end();
+        }
+
+        Tag& operator[](size_t idx)
+        {
+            if (idx >= size())
+                throw std::out_of_range(_ERR_OUT_OF_RANGE);
+
+            return data_.operator[](idx);
+        }
+
+        Tag& operator[](const Str& name)
+        {
+            Tag tmp = Tag().setName(name);
+
+            if (name2idx_.find(&tmp) == name2idx_.end())
+                throw std::out_of_range(_ERR_NO_SPECIFY_MEMBER);
+
+            return data_.operator[](name2idx_[&tmp]);
+        }
+        
+    private:
+        Vec<Tag> data_;
+        Map<Tag*, size_t, std::hash<Tag*>, TagpEqual> idxs_;
+    };
+
     Tag() = default;
 
     // @brief Construct a tag with tag type.
     Tag(TagType type) :
         type_(type)
     {}
-
-    Tag(const Tag& other) :
-        isListElement_(other.isListElement_), type_(other.type_), dtype_(other.dtype_)
-    {
-        if (!isListElement_ && other.name_)
-            name_ = new std::string(*other.name_);
-
-        if (other.isNum())
-            data_.n = other.data_.n;
-        else if (other.isString() && other.data_.s)
-            data_.s = new std::string(*other.data_.s);
-        else if (other.isArray() && other.data_.bs)
-            data_.bs = new std::vector<byte>(*other.data_.bs);
-        else if (other.isIntArray() && other.data_.is)
-            data_.is = new std::vector<int32>(*other.data_.is);
-        else if (other.isLongArray() && other.data_.ls)
-            data_.ls = new std::vector<int64>(*other.data_.ls);
-        else if (other.isComplex() && other.data_.d)
-            data_.d = new std::vector<Tag>(*other.data_.d);
-    }
 
     // @note If the other tag is a list element and it's name is exist, delete the name.
     // @note You can ignore following content, it's just about details of implementation.
@@ -307,6 +590,28 @@ public:
         }
     }
 
+    Tag(const Tag& other) :
+        isListElement_(other.isListElement_), type_(other.type_), dtype_(other.dtype_)
+    {
+        if (!isListElement_ && other.name_)
+            name_ = new Str(*other.name_);
+
+        if (other.isNum())
+            data_.n = other.data_.n;
+        else if (other.isString() && other.data_.s)
+            data_.s = new Str(*other.data_.s);
+        else if (other.isArray() && other.data_.bad)
+            data_.bad = new Vec<byte>(*other.data_.bad);
+        else if (other.isIntArray() && other.data_.iad)
+            data_.iad = new Vec<int32>(*other.data_.iad);
+        else if (other.isLongArray() && other.data_.lad)
+            data_.lad = new Vec<int64>(*other.data_.lad);
+        else if (other.isList() && other.data_.ld)
+            data_.ld = new ListData(*other.data_.ld);
+        else if (other.isCompound() && other.data_.cd)
+            data_.cd = new CompoundData(*other.data_.cd);
+    }
+
     ~Tag()
     {
         if (name_) {
@@ -316,14 +621,16 @@ public:
 
         if (isString() && data_.s)
             delete data_.s;
-        else if (isByteArray() && data_.bs)
-            delete data_.bs;
-        else if (isIntArray() && data_.is)
-            delete data_.is;
-        else if (isLongArray() && data_.ls)
-            delete data_.ls;
-        else if (isComplex() && data_.d)
-            delete data_.d;
+        else if (isByteArray() && data_.bad)
+            delete data_.bad;
+        else if (isIntArray() && data_.iad)
+            delete data_.iad;
+        else if (isLongArray() && data_.lad)
+            delete data_.lad;
+        else if (isList() && data_.ld)
+            delete data_.ld;
+        else if (isCompound() && data_.cd)
+            delete data_.cd;
 
         data_.s = nullptr;
     }
@@ -338,7 +645,7 @@ public:
     #ifdef MCNBT_USE_GZIP
         std::stringstream buf;
         buf << is.rdbuf();
-        std::string content = buf.str();
+        Str content = buf.str();
         buf.clear();
 
         std::stringstream ss;
@@ -361,7 +668,7 @@ public:
     }
 
     // @brief Load the tag from a nbt file. (Fast way version of #fromBinStream.)
-    static Tag fromFile(const std::string& filename, bool isBigEndian, size_t headerSize = 0)
+    static Tag fromFile(const Str& filename, bool isBigEndian, size_t headerSize = 0)
     {
         std::ifstream is(filename, std::ios::binary);
 
@@ -378,52 +685,41 @@ public:
     * Functions for check tag type.
     */
 
-    bool isEnd() const { return type_ == TT_END; }
+    bool isEnd() const { return nbt::isEnd(type_); }
 
-    bool isByte() const { return type_ == TT_BYTE; }
+    bool isByte() const { return nbt::isByte(type_); }
 
-    bool isShort() const { return type_ == TT_SHORT; }
+    bool isShort() const { return nbt::isShort(type_); }
 
-    bool isInt() const { return type_ == TT_INT; }
+    bool isInt() const { return nbt::isInt(type_); }
 
-    bool isLong() const { return type_ == TT_LONG; }
+    bool isLong() const { return nbt::isLong(type_); }
 
-    bool isFloat() const { return type_ == TT_FLOAT; }
+    bool isFloat() const { return nbt::isFloat(type_); }
 
-    bool isDouble() const { return type_ == TT_DOUBLE; }
+    bool isDouble() const { return nbt::isDouble(type_); }
 
-    bool isString() const { return type_ == TT_STRING; }
+    bool isString() const { return nbt::isString(type_); }
 
-    bool isByteArray() const { return type_ == TT_BYTE_ARRAY; }
+    bool isByteArray() const { return nbt::isByteArray(type_); }
 
-    bool isIntArray() const { return type_ == TT_INT_ARRAY; }
+    bool isIntArray() const { return nbt::isIntArray(type_); }
 
-    bool isLongArray() const { return type_ == TT_LONG_ARRAY; }
+    bool isLongArray() const { return nbt::isLongArray(type_); }
 
-    bool isList() const { return type_ == TT_LIST; }
+    bool isList() const { return nbt::isList(type_); }
 
-    bool isCompound() const { return type_ == TT_COMPOUND; }
+    bool isCompound() const { return nbt::isCompound(type_); }
 
-    bool isInteger() const
-    {
-        return type_ == TT_BYTE ||
-               type_ == TT_SHORT ||
-               type_ == TT_INT ||
-               type_ == TT_LONG;
-    }
+    bool isInteger() const { return nbt::isInteger(type_); }
 
-    bool isFloatPoint() const { return type_ == TT_FLOAT || type_ == TT_DOUBLE; }
+    bool isFloatPoint() const { return nbt::isFloatPoint(type_); }
 
-    bool isNum() const { return isInteger() || isFloatPoint(); }
+    bool isNum() const { return nbt::isNum(type_); }
 
-    bool isArray() const
-    {
-        return type_ == TT_BYTE_ARRAY ||
-               type_ == TT_INT_ARRAY ||
-               type_ == TT_LONG_ARRAY;
-    }
+    bool isArray() const { return nbt::isArray(type_); }
 
-    bool isComplex() const { return type_ == TT_LIST || type_ == TT_COMPOUND; }
+    bool isContainer() const { return nbt::isContainer(type_); }
 
     /*
     * Functions for set tag's value. Only be called by corresponding tag.
@@ -473,6 +769,22 @@ public:
         return *this;
     }
 
+    Tag& setInteger(int64 value)
+    {
+        if (isByte())
+            setByte(static_cast<byte>(value));
+        else if (isShort())
+            setShort(static_cast<int16>(value));
+        else if (isInt())
+            setInt(static_cast<int32>(value));
+        else if (isLong())
+            setLong(value);
+        else
+            throw std::logic_error(_ERR_INCORRECT_TT);
+
+        return *this;
+    }
+
     // @attention Only be called by #TT_FLOAT tag.
     Tag& setFloat(fp32 value)
     {
@@ -495,8 +807,20 @@ public:
         return *this;
     }
 
+    Tag& setFloatPoint(fp64 value)
+    {
+        if (isFloat())
+            setFloat(static_cast<fp32>(value));
+        else if (isDouble())
+            setDouble(value);
+        else
+            throw std::logic_error(_ERR_INCORRECT_TT);
+
+        return *this;
+    }
+
     // @attention Only be called by #TT_STRING tag.
-    Tag& setString(const std::string& value)
+    Tag& setString(const Str& value)
     {
         if (!isString())
             throw std::logic_error(_ERR_INCORRECT_TT);
@@ -507,13 +831,13 @@ public:
         if (data_.s)
             *data_.s = value;
         else
-            data_.s = new std::string(value);
+            data_.s = new Str(value);
 
         return *this;
     }
 
     // @attention Only be called by #TT_BYTE_ARRAY tag.
-    Tag& setByteArray(const std::vector<byte>& value)
+    Tag& setArray(const Vec<byte>& value)
     {
         if (!isByteArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
@@ -521,16 +845,16 @@ public:
         if (value.empty())
             return *this;
 
-        if (data_.bs)
-            *data_.bs = value;
+        if (data_.bad)
+            *data_.bad = value;
         else
-            data_.bs = new std::vector<byte>(value);
+            data_.bad = new Vec<byte>(value);
 
         return *this;
     }
 
     // @attention Only be called by #TT_INT_ARRAY tag.
-    Tag& setIntArray(const std::vector<int32>& value)
+    Tag& setArray(const Vec<int32>& value)
     {
         if (!isIntArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
@@ -538,16 +862,16 @@ public:
         if (value.empty())
             return *this;
 
-        if (data_.is)
-            *data_.is = value;
+        if (data_.iad)
+            *data_.iad = value;
         else
-            data_.is = new std::vector<int32>(value);
+            data_.iad = new Vec<int32>(value);
 
         return *this;
     }
 
     // @attention Only be called by #TT_LONG_ARRAY tag.
-    Tag& setLongArray(const std::vector<int64>& value)
+    Tag& setArray(const Vec<int64>& value)
     {
         if (!isLongArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
@@ -555,55 +879,88 @@ public:
         if (value.empty())
             return *this;
 
-        if (data_.ls)
-            *data_.ls = value;
+        if (data_.lad)
+            *data_.lad = value;
         else
-            data_.ls = new std::vector<int64>(value);
+            data_.lad = new Vec<int64>(value);
 
         return *this;
     }
 
-    // @brief Add a value to the byte array.
-    // @attention Only be called by #TT_BYTE_ARRAY tag.
     Tag& addByte(byte value)
     {
         if (!isByteArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        if (!data_.bs)
-            data_.bs = new std::vector<byte>();
+        if (!data_.bad)
+            data_.bad = new Vec<byte>();
 
-        data_.bs->push_back(value);
+        data_.bad->push_back(value);
 
         return *this;
     }
 
-    // @brief Add a value to the int array.
-    // @attention Only be called by #TT_INT_ARRAY tag.
     Tag& addInt(int32 value)
     {
         if (!isIntArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        if (!data_.is)
-            data_.is = new std::vector<int32>();
+        if (!data_.iad)
+            data_.iad = new Vec<int32>();
 
-        data_.is->push_back(value);
+        data_.iad->push_back(value);
 
         return *this;
     }
 
-    // @brief Add a value to the long array.
-    // @attention Only be called by #TT_LONG_ARRAY tag.
     Tag& addLong(int64 value)
     {
         if (!isLongArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        if (!data_.ls)
-            data_.ls = new std::vector<int64>();
+        if (!data_.lad)
+            data_.lad = new Vec<int64>();
 
-        data_.ls->push_back(value);
+        data_.lad->push_back(value);
+
+        return *this;
+    }
+
+    Tag& append(const Vec<byte>& value)
+    {
+        if (!isByteArray())
+            throw std::logic_error(_ERR_INCORRECT_TT);
+
+        if (!data_.bad)
+            data_.bad = new Vec<byte>();
+
+        data_.bad->insert(data_.bad->end(), value.begin(), value.end());
+
+        return *this;
+    }
+
+    Tag& append(const Vec<int32>& value)
+    {
+        if (!isIntArray())
+            throw std::logic_error(_ERR_INCORRECT_TT);
+
+        if (!data_.iad)
+            data_.iad = new Vec<int32>();
+
+        data_.iad->insert(data_.iad->end(), value.begin(), value.end());
+
+        return *this;
+    }
+
+    Tag& append(const Vec<int64>& value)
+    {
+        if (!isLongArray())
+            throw std::logic_error(_ERR_INCORRECT_TT);
+
+        if (!data_.lad)
+            data_.lad = new Vec<int64>();
+
+        data_.lad->insert(data_.lad->end(), value.begin(), value.end());
 
         return *this;
     }
@@ -614,36 +971,36 @@ public:
     // @attention Only be called by #TT_LIST, #TT_COMPOUND tag.
     Tag& addTag(Tag&& tag)
     {
-        if (!isComplex())
-            throw std::logic_error(_ERR_INCORRECT_TT);
-
-        if (isList() && tag.type() != dtype_)
-            throw std::logic_error(_ERR_INCORRECT_TT);
-
-        if (isList() && dtype_ == TT_END)
-            throw std::logic_error(_ERR_READ_WRITE_UNINIT_TT_LIST);
-
-        if (!data_.d)
-            data_.d = new std::vector<Tag>();
-
         if (isList()) {
-            data_.d->emplace_back(std::move(tag));
-            data_.d->back().isListElement_ = true;
+            if (tag.type() != dtype_)
+                throw std::logic_error(_ERR_INCORRECT_TT);
 
-            if (data_.d->back().name_) {
-                delete data_.d->back().name_;
-                data_.d->back().name_ = nullptr;
+            if (dtype_ == TT_END)
+                throw std::logic_error(_ERR_READ_WRITE_UNINIT_LIST);
+            
+            if (!data_.ld)
+                data_.ld = new ListData();
+            
+            data_.ld->pushBack(std::move(tag));
+            data_.ld->back().isListElement_ = true;
+
+            if (data_.ld->back().name_) {
+                delete data_.ld->back().name_;
+                data_.ld->back().name_ = nullptr;
+            }
+        } else if (isCompound()) {
+            if (!data_.cd)
+                data_.cd = new CompoundData();
+
+            // If the tag is already exist, replace it.
+            if (data_.cd->hasTag(tag.name())) {
+                (*data_.cd)[tag.name()] = std::move(tag);
+                (*data_.cd)[tag.name()].isListElement_ = false;
+            } else {
+                data_.cd->pushBack(std::move(tag));
             }
         } else {
-            try {
-                // If the tag is already exist, replace it.
-                auto& t = getTag(tag.name());
-                t = std::move(tag);
-                t.isListElement_ = false;
-            } catch (...) {
-                data_.d->emplace_back(std::move(tag));
-                data_.d->back().isListElement_ = false;
-            }
+            throw std::logic_error(_ERR_INCORRECT_TT);
         }
 
         return *this;
@@ -712,7 +1069,7 @@ public:
 
     // @brief Get the value of string.
     // @attention Only be called by #TT_STRING tag.
-    std::string getString() const
+    Str getString() const
     {
         if (!isString())
             throw std::logic_error(_ERR_INCORRECT_TT);
@@ -724,221 +1081,225 @@ public:
     }
 
     // @attention Only be called by #TT_BYTE_ARRAY tag.
-    std::vector<byte>* getByteArray() const
+    Vec<byte> getByteArray() const
     {
         if (!isByteArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        return data_.bs;
+        if (!data_.bad)
+            return Vec<byte>();
+
+        return *data_.bad;
     }
 
-    // @overload
-    // @brief Get a value from the byte array by index.
-    // @attention Only be called by #TT_BYTE_ARRAY tag.
-    byte getByte(size_t pos) const
+    byte getByte(size_t idx) const
     {
         if (!isByteArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        if (!data_.bs || pos >= data_.bs->size())
-            throw std::range_error(_ERR_OVER_RANGE);
+        if (!data_.bad || idx >= data_.bad->size())
+            throw std::out_of_range(_ERR_OUT_OF_RANGE);
 
-        return (*data_.bs)[pos];
+        return (*data_.bad)[idx];
     }
 
-    // @attention Only be called by #TT_BYTE_ARRAY tag.
-    byte frontByte() const
+    byte getFrontByte() const
     {
         if (!isByteArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        if (!data_.bs || data_.bs->empty())
-            throw std::range_error(_ERR_OVER_RANGE);
+        if (!data_.bad || data_.bad->empty())
+            throw std::out_of_range(_ERR_EMPTY_CONTAINER);
 
-        return data_.bs->front();
+        return data_.bad->front();
     }
 
-    // @attention Only be called by #TT_BYTE_ARRAY tag.
-    byte backByte() const
+    byte getBackByte() const
     {
         if (!isByteArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        if (!data_.bs || data_.bs->empty())
-            throw std::range_error(_ERR_OVER_RANGE);
+        if (!data_.bad || data_.bad->empty())
+            throw std::out_of_range(_ERR_EMPTY_CONTAINER);
 
-        return data_.bs->back();
+        return data_.bad->back();
     }
 
     // @attention Only be called by #TT_INT_ARRAY tag.
-    std::vector<int32>* getIntArray() const
+    Vec<int32> getIntArray() const
     {
         if (!isIntArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        return data_.is;
+        if (!data_.iad)
+            return Vec<int32>();
+
+        return *data_.iad;
     }
 
-    // @overload
-    // @brief Get a value from the int array by index.
-    // @attention Only be called by #TT_INT_ARRAY tag.
-    int32 getInt(size_t pos) const
+    int32 getInt(size_t idx) const
     {
         if (!isIntArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        if (!data_.is || pos >= data_.is->size())
-            throw std::range_error(_ERR_OVER_RANGE);
+        if (!data_.iad || idx >= data_.iad->size())
+            throw std::out_of_range(_ERR_OUT_OF_RANGE);
 
-        return (*data_.is)[pos];
+        return (*data_.iad)[idx];
     }
 
-    // @attention Only be called by #TT_INT_ARRAY tag.
-    int32 frontInt() const
+    int32 getFrontInt() const
     {
         if (!isIntArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        if (!data_.is || data_.is->empty())
-            throw std::range_error(_ERR_OVER_RANGE);
+        if (!data_.iad || data_.iad->empty())
+            throw std::out_of_range(_ERR_EMPTY_CONTAINER);
 
-        return data_.is->front();
+        return data_.iad->front();
     }
 
-    // @attention Only be called by #TT_INT_ARRAY tag.
-    int32 backInt() const
+    int32 getBackInt() const
     {
         if (!isIntArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        if (!data_.is || data_.is->empty())
-            throw std::range_error(_ERR_OVER_RANGE);
+        if (!data_.iad || data_.iad->empty())
+            throw std::out_of_range(_ERR_EMPTY_CONTAINER);
 
-        return data_.is->back();
+        return data_.iad->back();
     }
 
     // @attention Only be called by #TT_LONG_ARRAY tag.
-    std::vector<int64>* getLongArray() const
+    Vec<int64> getLongArray() const
     {
         if (!isLongArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        return data_.ls;
+        if (!data_.lad)
+            return Vec<int64>();
+
+        return *data_.lad;
     }
 
-    // @overload
-    // @brief Get a value from long array by index.
-    // @attention Only be called by #TT_LONG_ARRAY tag.
-    int64 getLong(size_t pos) const
+    int64 getLong(size_t idx) const
     {
         if (!isLongArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        if (!data_.ls || pos >= data_.ls->size())
-            throw std::range_error(_ERR_OVER_RANGE);
+        if (!data_.lad || idx >= data_.lad->size())
+            throw std::out_of_range(_ERR_OUT_OF_RANGE);
 
-        return (*data_.ls)[pos];
+        return (*data_.lad)[idx];
     }
 
-    // @attention Only be called by #TT_LONG_ARRAY tag.
-    int64 frontLong() const
+    int64 getFrontLong() const
     {
         if (!isLongArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        if (!data_.ls || data_.ls->empty())
-            throw std::range_error(_ERR_OVER_RANGE);
+        if (!data_.lad || data_.lad->empty())
+            throw std::out_of_range(_ERR_EMPTY_CONTAINER);
 
-        return data_.ls->front();
+        return data_.lad->front();
     }
 
-    // @attention Only be called by #TT_LONG_ARRAY tag.
-    int64 backLong() const
+    int64 getBackLong() const
     {
         if (!isLongArray())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        if (!data_.ls || data_.ls->empty())
-            throw std::range_error(_ERR_OVER_RANGE);
+        if (!data_.lad || data_.lad->empty())
+            throw std::out_of_range(_ERR_EMPTY_CONTAINER);
 
-        return data_.ls->back();
+        return data_.lad->back();
     }
 
-    // @attention Only be called by #TT_LIST, #TT_COMPOUND tag.
-    std::vector<Tag>* getTags() const
+    // @attention Only be called by #TT_LIST.
+    ListData getList() const
     {
-        if (!isComplex())
+        if (!isList())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        return data_.d;
+        if (dtype_ == TT_END)
+            throw std::logic_error(_ERR_READ_WRITE_UNINIT_LIST);
+
+        if (!data_.ld)
+            return ListData();
+
+        return *data_.ld;
+    }
+
+    // @attention Only be called by #TT_COMPOUND.
+    CompoundData getCompound() const
+    {
+        if (!isCompound())
+            throw std::logic_error(_ERR_INCORRECT_TT);
+
+        if (!data_.cd)
+            return CompoundData();
+
+        return *data_.cd;
     }
 
     // @brief Get the tag by index.
     // @attention Only be called by #TT_LIST, #TT_COMPOUND tag.
-    Tag& getTag(size_t pos)
+    Tag& getTag(size_t idx)
     {
-        if (!isComplex())
+        if (isList()) {
+            if (dtype_ == TT_END)
+                throw std::logic_error(_ERR_READ_WRITE_UNINIT_LIST);
+
+            return (*data_.ld)[idx];
+        } else if (isCompound()) {
+            return (*data_.cd)[idx];
+        } else {
             throw std::logic_error(_ERR_INCORRECT_TT);
-
-        if (isList() && dtype_ == TT_END)
-            throw std::logic_error(_ERR_READ_WRITE_UNINIT_TT_LIST);
-
-        if (!data_.d || pos >= data_.d->size())
-            throw std::range_error(_ERR_OVER_RANGE);
-
-        return (*data_.d)[pos];
+        }
     }
 
     // @overload
     // @brief Get the tag by name.
     // @attention Only be called by #TT_COMPOUND tag.
-    Tag& getTag(const std::string& name)
+    Tag& getTag(const Str& name)
     {
         if (!isCompound())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        if (!data_.d)
-            throw std::logic_error(_ERR_NO_SPECIFY_MEMBER);
+        if (!data_.cd)
+            throw std::out_of_range(_ERR_NO_SPECIFY_MEMBER);
 
-        for (auto& var : *data_.d) {
-            if (!var.name_)
-                continue;
+        return (*data_.cd)[name];
+    }
 
-            if (*var.name_ == name)
-                return var;
+    // @attention Only be called by #TT_LIST, #TT_COMPOUND tag.
+    Tag& getFrontTag()
+    {
+        if (isList()) {
+            if (dtype_ == TT_END)
+                throw std::logic_error(_ERR_READ_WRITE_UNINIT_LIST);
+
+            return data_.ld->front();
+        } else if (isCompound()) {
+            return data_.cd->front();
+        } else {
+            throw std::logic_error(_ERR_INCORRECT_TT);
         }
-
-        throw std::logic_error(_ERR_NO_SPECIFY_MEMBER);
     }
 
     // @attention Only be called by #TT_LIST, #TT_COMPOUND tag.
-    Tag& frontTag()
+    Tag& getBackTag()
     {
-        if (!isComplex())
+        if (isList()) {
+            if (dtype_ == TT_END)
+                throw std::logic_error(_ERR_READ_WRITE_UNINIT_LIST);
+
+            return data_.ld->back();
+        } else if (isCompound()) {
+            return data_.cd->back();
+        } else {
             throw std::logic_error(_ERR_INCORRECT_TT);
-
-        if (isList() && dtype_ == TT_END)
-            throw std::logic_error(_ERR_READ_WRITE_UNINIT_TT_LIST);
-
-        if (!data_.d || data_.d->empty())
-            throw std::range_error(_ERR_OVER_RANGE);
-
-        return data_.d->front();
-    }
-
-    // @attention Only be called by #TT_LIST, #TT_COMPOUND tag.
-    Tag& backTag()
-    {
-        if (!isComplex())
-            throw std::logic_error(_ERR_INCORRECT_TT);
-
-        if (isList() && dtype_ == TT_END)
-            throw std::logic_error(_ERR_READ_WRITE_UNINIT_TT_LIST);
-
-        if (!data_.d || data_.d->empty())
-            throw std::range_error(_ERR_OVER_RANGE);
-
-        return data_.d->back();
+        }
     }
 
     /*
@@ -949,11 +1310,12 @@ public:
     TagType type() const { return type_; }
 
     // @brief Get the name of tag.
-    std::string name() const
+    Str name() const
     {
         if (!name_)
             return "";
 
+        std::cout << "name address: " << name_ << std::endl;
         return *name_;
     }
 
@@ -974,13 +1336,15 @@ public:
         if (isString())
             return !data_.s ? 0 : data_.s->size();
         if (isByteArray())
-            return !data_.bs ? 0 : data_.bs->size();
+            return !data_.bad ? 0 : data_.bad->size();
         if (isIntArray())
-            return !data_.is ? 0 : data_.is->size();
+            return !data_.iad ? 0 : data_.iad->size();
         if (isLongArray())
-            return !data_.ls ? 0 : data_.ls->size();
-        if (isComplex())
-            return !data_.d ? 0 : data_.d->size();
+            return !data_.lad ? 0 : data_.lad->size();
+        if (isList())
+            return !data_.ld ? 0 : data_.ld->size();
+        if (isCompound())
+            return !data_.cd ? 0 : data_.cd->size();
 
         throw std::logic_error(_ERR_INCORRECT_TT);
     }
@@ -990,6 +1354,46 @@ public:
     // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND tag.
     bool empty() const { return size() == 0; }
 
+    void reserve(size_t size)
+    {
+        if (isString()) {
+            if (!data_.s)
+                data_.s = new Str();
+
+            data_.s->reserve(size);
+        } else if (isByteArray()) {
+            if (!data_.bad)
+                data_.bad = new Vec<byte>();
+
+            data_.bad->reserve(size);
+        } else if (isIntArray()) {
+            if (!data_.iad)
+                data_.iad = new Vec<int32>();
+
+            data_.iad->reserve(size);
+        } else if (isLongArray()) {
+            if (!data_.lad)
+                data_.lad = new Vec<int64>();
+
+            data_.lad->reserve(size);
+        } else if (isList()) {
+            if (dtype_ == TT_END)
+                throw std::logic_error(_ERR_READ_WRITE_UNINIT_LIST);
+
+            if (!data_.ld)
+                data_.ld = new ListData();
+
+            data_.ld->reserve(size);
+        } else if (isCompound()) {
+            if (!data_.cd)
+                data_.cd = new CompoundData();
+
+            data_.cd->reserve(size);
+        } else {
+            throw std::logic_error(_ERR_INCORRECT_TT);
+        }
+    }
+
     // @brief Whether the list is initialized (#dtype_ is not TT_END).
     // @attention Only be called by #TT_LIST tag.
     bool isInitializedList() const
@@ -998,19 +1402,6 @@ public:
             throw std::logic_error(_ERR_INCORRECT_TT);
 
         return dtype_ != TT_END;
-    }
-
-    // @brief Get the string length of string.
-    // @attention Only be called by #TT_STRING tag.
-    int32 stringLen() const
-    {
-        if (!isString())
-            throw std::logic_error(_ERR_INCORRECT_TT);
-
-        if (!data_.s)
-            return 0;
-
-        return static_cast<int32>(data_.s->size());
     }
 
     // @brief Get the element's tag type of list.
@@ -1025,39 +1416,31 @@ public:
 
     // @brief Whether the tag of specify name is exist.
     // @attention Only be called by #TT_COMPOUND tag.
-    bool hasTag(const std::string& name) const
+    bool hasTag(const Str& name) const
     {
         if (!isCompound())
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        if (!data_.d)
+        if (!data_.cd)
             return false;
 
-        for (const auto& var : *data_.d) {
-            if (!var.name_)
-                continue;
-
-            if (*var.name_ == name)
-                return true;
-        }
-
-        return false;
+        return data_.cd->hasTag(name);
     }
 
     // @brief Set the name of tag.
     // @attention Only be called by non-ListElement tag.
-    Tag& setName(const std::string& name)
+    Tag& setName(const Str& name)
     {
         if (isListElement_)
             throw std::logic_error(_ERR_INCORRECT_TT);
 
-        if (name.empty())
+        if (name.empty() && !name_)
             return *this;
 
         if (name_)
             *name_ = name;
         else
-            name_ = new std::string(name);
+            name_ = new Str(name);
 
         return *this;
     }
@@ -1087,9 +1470,9 @@ public:
         if (dtype_ == TT_END)
             return *this;
 
-        if (data_.d) {
-            delete data_.d;
-            data_.d = nullptr;
+        if (data_.ld) {
+            delete data_.ld;
+            data_.ld = nullptr;
         }
 
         dtype_ = TT_END;
@@ -1100,36 +1483,35 @@ public:
     // @brief Remove the element of container (string, array, list, compound) by index.
     // @attention Only be called by
     // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND tag.
-    Tag& remove(size_t pos)
+    Tag& remove(size_t idx)
     {
         if (isString()) {
-            if (!data_.s || pos >= data_.s->size())
-                throw std::range_error(_ERR_OVER_RANGE);
+            if (!data_.s || idx >= data_.s->size())
+                throw std::out_of_range(_ERR_OUT_OF_RANGE);
 
-            data_.s->erase(data_.s->begin() + pos);
+            data_.s->erase(data_.s->begin() + idx);
         } else if (isByteArray()) {
-            if (!data_.bs || pos >= data_.bs->size())
-                throw std::range_error(_ERR_OVER_RANGE);
+            if (!data_.bad || idx >= data_.bad->size())
+                throw std::out_of_range(_ERR_OUT_OF_RANGE);
 
-            data_.bs->erase(data_.bs->begin() + pos);
+            data_.bad->erase(data_.bad->begin() + idx);
         } else if (isIntArray()) {
-            if (!data_.is || pos >= data_.is->size())
-                throw std::range_error(_ERR_OVER_RANGE);
+            if (!data_.iad || idx >= data_.iad->size())
+                throw std::out_of_range(_ERR_OUT_OF_RANGE);
 
-            data_.is->erase(data_.is->begin() + pos);
+            data_.iad->erase(data_.iad->begin() + idx);
         } else if (isLongArray()) {
-            if (!data_.ls || pos >= data_.ls->size())
-                throw std::range_error(_ERR_OVER_RANGE);
+            if (!data_.lad || idx >= data_.lad->size())
+                throw std::out_of_range(_ERR_OUT_OF_RANGE);
 
-            data_.ls->erase(data_.ls->begin() + pos);
-        } else if (isComplex()) {
-            if (isList() && dtype_ == TT_END)
-                throw std::logic_error(_ERR_READ_WRITE_UNINIT_TT_LIST);
+            data_.lad->erase(data_.lad->begin() + idx);
+        } else if (isList()) {
+            if (dtype_ == TT_END)
+                throw std::logic_error(_ERR_READ_WRITE_UNINIT_LIST);
 
-            if (!data_.d || pos >= data_.d->size())
-                throw std::range_error(_ERR_OVER_RANGE);
-
-            data_.d->erase(data_.d->begin() + pos);
+            data_.ld->erase(idx);
+        } else if (isCompound()) {
+            data_.cd->erase(idx);
         } else {
             throw std::logic_error(_ERR_INCORRECT_TT);
         }
@@ -1140,25 +1522,14 @@ public:
     // @overload
     // @brief Remove the tag by name.
     // @attention Only be called by #TT_COMPOUND tag.
-    Tag& remove(const std::string& name)
+    Tag& remove(const Str& name)
     {
         if (!isCompound())
             throw std::logic_error(_ERR_INCORRECT_TT);
+            
+        data_.cd->erase(name);
 
-        if (!data_.d)
-            throw std::logic_error(_ERR_NO_SPECIFY_MEMBER);
-
-        for (auto it = data_.d->begin(); it != data_.d->end(); ++it) {
-            if (!it->name_)
-                continue;
-
-            if (*(it->name_) == name) {
-                data_.d->erase(it);
-                return *this;
-            }
-        }
-
-        throw std::logic_error(_ERR_NO_SPECIFY_MEMBER);
+        return *this;
     }
 
     // @brief Remove the first element of container (string, array, list, compound).
@@ -1168,32 +1539,31 @@ public:
     {
         if (isString()) {
             if (!data_.s || data_.s->empty())
-                throw std::range_error(_ERR_OVER_RANGE);
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
 
             data_.s->erase(data_.s->begin());
         } else if (isByteArray()) {
-            if (!data_.bs || data_.bs->empty())
-                throw std::range_error(_ERR_OVER_RANGE);
+            if (!data_.bad || data_.bad->empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
 
-            data_.bs->erase(data_.bs->begin());
+            data_.bad->erase(data_.bad->begin());
         } else if (isIntArray()) {
-            if (!data_.is || data_.is->empty())
-                throw std::range_error(_ERR_OVER_RANGE);
+            if (!data_.iad || data_.iad->empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
 
-            data_.is->erase(data_.is->begin());
+            data_.iad->erase(data_.iad->begin());
         } else if (isLongArray()) {
-            if (!data_.ls || data_.ls->empty())
-                throw std::range_error(_ERR_OVER_RANGE);
+            if (!data_.lad || data_.lad->empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
 
-            data_.ls->erase(data_.ls->begin());
-        } else if (isComplex()) {
-            if (isList() && dtype_ == TT_END)
-                throw std::logic_error(_ERR_READ_WRITE_UNINIT_TT_LIST);
+            data_.lad->erase(data_.lad->begin());
+        } else if (isList()) {
+            if (dtype_ == TT_END)
+                throw std::logic_error(_ERR_READ_WRITE_UNINIT_LIST);
 
-            if (!data_.d || data_.d->empty())
-                throw std::range_error(_ERR_OVER_RANGE);
-
-            data_.d->erase(data_.d->begin());
+            data_.ld->popFront();
+        } else if (isCompound()) {
+            data_.cd->popFront();
         } else {
             throw std::logic_error(_ERR_INCORRECT_TT);
         }
@@ -1208,32 +1578,31 @@ public:
     {
         if (isString()) {
             if (!data_.s || data_.s->empty())
-                throw std::range_error(_ERR_OVER_RANGE);
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
 
             data_.s->pop_back();
         } else if (isByteArray()) {
-            if (!data_.bs || data_.bs->empty())
-                throw std::range_error(_ERR_OVER_RANGE);
+            if (!data_.bad || data_.bad->empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
 
-            data_.bs->pop_back();
+            data_.bad->pop_back();
         } else if (isIntArray()) {
-            if (!data_.is || data_.is->empty())
-                throw std::range_error(_ERR_OVER_RANGE);
+            if (!data_.iad || data_.iad->empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
 
-            data_.is->pop_back();
+            data_.iad->pop_back();
         } else if (isLongArray()) {
-            if (!data_.ls || data_.ls->empty())
-                throw std::range_error(_ERR_OVER_RANGE);
+            if (!data_.lad || data_.lad->empty())
+                throw std::out_of_range(_ERR_EMPTY_CONTAINER);
 
-            data_.ls->pop_back();
-        } else if (isComplex()) {
-            if (isList() && dtype_ == TT_END)
-                throw std::logic_error(_ERR_READ_WRITE_UNINIT_TT_LIST);
+            data_.lad->pop_back();
+        } else if (isList()) {
+            if (dtype_ == TT_END)
+                throw std::logic_error(_ERR_READ_WRITE_UNINIT_LIST);
 
-            if (!data_.d || data_.d->empty())
-                throw std::range_error(_ERR_OVER_RANGE);
-
-            data_.d->pop_back();
+            data_.ld->popBack();
+        } else if (isCompound()) {
+            data_.cd->popBack();
         } else {
             throw std::logic_error(_ERR_INCORRECT_TT);
         }
@@ -1244,26 +1613,29 @@ public:
     // @brief Clear the container (string, array, list, compound).
     // @attention Only be called by
     // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND tag.
-    Tag& clear()
+    Tag& removeAll()
     {
         if (isString()) {
             if (data_.s)
                 data_.s->clear();
         } else if (isByteArray()) {
-            if (data_.bs)
-                data_.bs->clear();
+            if (data_.bad)
+                data_.bad->clear();
         } else if (isIntArray()) {
-            if (data_.is)
-                data_.is->clear();
+            if (data_.iad)
+                data_.iad->clear();
         } else if (isLongArray()) {
-            if (data_.ls)
-                data_.ls->clear();
-        } else if (isComplex()) {
-            if (isList() && dtype_ == TT_END)
-                throw std::logic_error(_ERR_READ_WRITE_UNINIT_TT_LIST);
+            if (data_.lad)
+                data_.lad->clear();
+        } else if (isList()) {
+            if (dtype_ == TT_END)
+                throw std::logic_error(_ERR_READ_WRITE_UNINIT_LIST);
 
-            if (data_.d)
-                data_.d->clear();
+            if (data_.ld)
+                data_.ld->clear();
+        } else if (isCompound()) {
+            if (data_.cd)
+                data_.cd->clear();
         } else {
             throw std::logic_error(_ERR_INCORRECT_TT);
         }
@@ -1294,7 +1666,7 @@ public:
 
     // @overload
     // @brief Fast way of #write.
-    void write(const std::string& filename, bool isBigEndian, bool isCompressed = false) const
+    void write(const Str& filename, bool isBigEndian, bool isCompressed = false) const
     {
         std::ofstream ofs(filename, std::ios_base::binary);
 
@@ -1314,7 +1686,7 @@ public:
 
     // @overload
     // @brief Fast way of #write.
-    void write(const std::string& filename, bool isBigEndian) const
+    void write(const Str& filename, bool isBigEndian) const
     {
         std::ofstream ofs(filename, std::ios_base::binary);
 
@@ -1329,12 +1701,12 @@ public:
 
     // @brief Get the SNBT. (The string representation of NBT.)
     // @param isIndented If true, the output string will be indented and proper newline.
-    std::string toSnbt(bool isIndented = true) const
+    Str toSnbt(bool isIndented = true) const
     {
         static unsigned int indentCount = 0;
-        std::string inheritedIndentStr(indentCount * _INDENT_SIZE, ' ');
+        Str inheritedIndentStr(indentCount * _INDENT_SIZE, ' ');
 
-        std::string key = isIndented ? inheritedIndentStr : "";
+        Str key = isIndented ? inheritedIndentStr : "";
 
         if (!isListElement_ && name_ && !name_->empty())
             key += *name_ + (isIndented ? ": " : ":");
@@ -1364,15 +1736,15 @@ public:
             return key + '"' + (data_.s ? *data_.s : "") + '"';
 
         if (isByteArray()) {
-            if (!data_.bs)
+            if (!data_.bad)
                 return key + "[B;]";
 
             // If has indent add the newline character and indent string.
-            std::string result = key + '[';
+            Str result = key + '[';
             result += isIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
             result += "B;";
 
-            for (const auto& var : *data_.bs) {
+            for (const auto& var : *data_.bad) {
                 result += isIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
                 result += std::to_string(static_cast<int>(var)) + "b,";
             }
@@ -1387,15 +1759,15 @@ public:
         }
 
         if (isIntArray()) {
-            if (!data_.is)
+            if (!data_.iad)
                 return key + "[I;]";
 
             // If has indent add the newline character and indent string.
-            std::string result = key + '[';
+            Str result = key + '[';
             result += isIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
             result += "I;";
 
-            for (const auto& var : *data_.is) {
+            for (const auto& var : *data_.iad) {
                 result += isIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
                 result += std::to_string(var) + ",";
             }
@@ -1410,15 +1782,15 @@ public:
         }
 
         if (isLongArray()) {
-            if (!data_.ls)
+            if (!data_.lad)
                 return key + "[L;]";
 
             // If has indent add the newline character and indent string.
-            std::string result = key + '[';
+            Str result = key + '[';
             result += isIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
             result += "L;";
 
-            for (const auto& var : *data_.ls) {
+            for (const auto& var : *data_.lad) {
                 result += isIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
                 result += std::to_string(var) + "l,";
             }
@@ -1433,13 +1805,13 @@ public:
         }
 
         if (isList()) {
-            if (!data_.d)
+            if (!data_.ld)
                 return key + "[]";
 
-            std::string result = key + "[";
+            Str result = key + "[";
 
             indentCount++;
-            for (const auto& var : *data_.d) {
+            for (const auto& var : *data_.ld) {
                 result += isIndented ? "\n" : "";
                 result += var.toSnbt(isIndented) + ",";
             }
@@ -1455,13 +1827,13 @@ public:
         }
 
         if (isCompound()) {
-            if (!data_.d)
+            if (!data_.cd)
                 return key + "{}";
 
-            std::string result = key + "{";
+            Str result = key + "{";
 
             indentCount++;
-            for (const auto& var : *data_.d) {
+            for (const auto& var : *data_.cd) {
                 result += isIndented ? "\n" : "";
                 result += var.toSnbt(isIndented) + ",";
             }
@@ -1482,33 +1854,6 @@ public:
     /*
     * Operators overloading.
     */
-
-    Tag& operator=(const Tag& other)
-    {
-        this->~Tag();
-
-        isListElement_ = other.isListElement_;
-        type_ = other.type_;
-        dtype_ = other.dtype_;
-
-        if (!isListElement_ && other.name_)
-            name_ = new std::string(*other.name_);
-
-        if (other.isNum())
-            data_.n = other.data_.n;
-        else if (other.isString() && other.data_.s)
-            data_.s = new std::string(*other.data_.s);
-        else if (other.isArray() && other.data_.bs)
-            data_.bs = new std::vector<byte>(*other.data_.bs);
-        else if (other.isIntArray() && other.data_.is)
-            data_.is = new std::vector<int32>(*other.data_.is);
-        else if (other.isLongArray() && other.data_.ls)
-            data_.ls = new std::vector<int64>(*other.data_.ls);
-        else if (other.isComplex() && other.data_.d)
-            data_.d = new std::vector<Tag>(*other.data_.d);
-
-        return *this;
-    }
 
     Tag& operator=(Tag&& other) noexcept
     {
@@ -1533,20 +1878,83 @@ public:
         return *this;
     }
 
+    Tag& operator=(const Tag& other)
+    {
+        this->~Tag();
+
+        isListElement_ = other.isListElement_;
+        type_ = other.type_;
+        dtype_ = other.dtype_;
+
+        if (!isListElement_ && other.name_)
+            name_ = new Str(*other.name_);
+
+        if (other.isNum())
+            data_.n = other.data_.n;
+        else if (other.isString() && other.data_.s)
+            data_.s = new Str(*other.data_.s);
+        else if (other.isArray() && other.data_.bad)
+            data_.bad = new Vec<byte>(*other.data_.bad);
+        else if (other.isIntArray() && other.data_.iad)
+            data_.iad = new Vec<int32>(*other.data_.iad);
+        else if (other.isLongArray() && other.data_.lad)
+            data_.lad = new Vec<int64>(*other.data_.lad);
+        else if (other.isList() && other.data_.ld)
+            data_.ld = new ListData(*other.data_.ld);
+        else if (other.isCompound() && other.data_.cd)
+            data_.cd = new CompoundData(*other.data_.cd);
+
+        return *this;
+    }
+
     // @brief Fast way of #getTag by index.
-    Tag& operator[](size_t pos) { return getTag(pos); }
+    Tag& operator[](size_t idx) { return getTag(idx); }
 
     // @overload
     // @brief Fast way of #getTag by name;
-    Tag& operator[](const std::string& name) { return getTag(name); }
-
-    // @brief Fast way of #addTag.
+    Tag& operator[](const Str& name) { return getTag(name); }
+    
     Tag& operator<<(Tag&& tag) { return addTag(std::move(tag)); }
 
-    // @overload
-    Tag& operator<<(Tag& tag) { return addTag(std::move(tag)); }
+    Tag& operator<<(Tag& tag) { return addTag(tag); }
 
 private:
+    // Nums.
+    // Contains interger and float point number.
+    union Num
+    {
+        Num() : i64(0) {}
+        byte i8;
+        int16 i16;
+        int32 i32;
+        int64 i64;
+        fp32 f32;
+        fp64 f64;
+    };
+
+    // Value of tag.
+    // Individual tag is like key-value pair.
+    // The key is the name of tag (can be empty, and all list element not has name.).
+    // The value is stored in the following union.
+    union Data
+    {
+        Data() : s(nullptr) {}
+        // Number data
+        Num n;
+        // String data
+        Str* s;
+        // Byte Array data
+        Vec<byte>* bad;
+        // Int Array data
+        Vec<int32>* iad;
+        // Long Array data
+        Vec<int64>* lad;
+        // List data
+        ListData* ld;
+        // Compound data
+        CompoundData* cd;
+    };
+
     // @param tagType If the param isListElement is false, ignore it.
     // If the param isListElement is true, the tagType must be set to the same as the parent tag.
     static Tag fromBinStream_(std::istream& is, bool isBigEndian, bool isListElement, int tagType = -1)
@@ -1568,7 +1976,7 @@ private:
                 byte* bytes = new byte[nameLen];
 
                 is.read(bytes, nameLen);
-                tag.name_ = new std::string();
+                tag.name_ = new Str();
                 tag.name_->assign(bytes, static_cast<size_t>(is.gcount()));
 
                 delete[] bytes;
@@ -1601,7 +2009,7 @@ private:
                 byte* bytes = new byte[strlen];
 
                 is.read(bytes, strlen);
-                tag.data_.s = new std::string();
+                tag.data_.s = new Str();
                 tag.data_.s->assign(bytes, static_cast<size_t>(is.gcount()));
 
                 delete[] bytes;
@@ -1612,8 +2020,8 @@ private:
             int32 dsize = _bytes2num<int32>(is, isBigEndian);
 
             if (dsize != 0) {
-                tag.data_.bs = new std::vector<byte>();
-                tag.data_.bs->reserve(dsize);
+                tag.data_.bad = new Vec<byte>();
+                tag.data_.bad->reserve(dsize);
 
                 for (int32 i = 0; i < dsize; ++i)
                     tag.addByte(_bytes2num<byte>(is, isBigEndian));
@@ -1624,8 +2032,8 @@ private:
             int32 dsize = _bytes2num<int32>(is, isBigEndian);
 
             if (dsize != 0) {
-                tag.data_.is = new std::vector<int32>();
-                tag.data_.is->reserve(dsize);
+                tag.data_.iad = new Vec<int32>();
+                tag.data_.iad->reserve(dsize);
 
                 for (int32 i = 0; i < dsize; ++i)
                     tag.addInt(_bytes2num<int32>(is, isBigEndian));
@@ -1636,8 +2044,8 @@ private:
             int32 dsize = _bytes2num<int32>(is, isBigEndian);
 
             if (dsize != 0) {
-                tag.data_.ls = new std::vector<int64>();
-                tag.data_.ls->reserve(dsize);
+                tag.data_.lad = new Vec<int64>();
+                tag.data_.lad->reserve(dsize);
 
                 for (int32 i = 0; i < dsize; ++i)
                     tag.addLong(_bytes2num<int64>(is, isBigEndian));
@@ -1649,8 +2057,8 @@ private:
             int32 dsize = _bytes2num<int32>(is, isBigEndian);
 
             if (dsize != 0) {
-                tag.data_.d = new std::vector<Tag>();
-                tag.data_.d->reserve(dsize);
+                tag.data_.ld = new ListData();
+                tag.data_.ld->reserve(dsize);
 
                 for (int32 i = 0; i < dsize; ++i)
                     tag.addTag(fromBinStream_(is, isBigEndian, true, tag.dtype_));
@@ -1733,70 +2141,70 @@ private:
         }
 
         if (isByteArray()) {
-            if (!data_.bs || data_.bs->empty()) {
+            if (!data_.bad || data_.bad->empty()) {
                 _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                 return;
             }
 
-            _num2bytes<int32>(static_cast<int32>(data_.bs->size()), os, isBigEndian);
+            _num2bytes<int32>(static_cast<int32>(data_.bad->size()), os, isBigEndian);
 
-            for (const auto& var : *data_.bs)
+            for (const auto& var : *data_.bad)
                 os.put(var);
 
             return;
         }
 
         if (isIntArray()) {
-            if (!data_.is || data_.is->empty()) {
+            if (!data_.iad || data_.iad->empty()) {
                 _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                 return;
             }
 
-            _num2bytes<int32>(static_cast<int32>(data_.is->size()), os, isBigEndian);
+            _num2bytes<int32>(static_cast<int32>(data_.iad->size()), os, isBigEndian);
 
-            for (const auto& var : *data_.is)
+            for (const auto& var : *data_.iad)
                 _num2bytes<int32>(var, os, isBigEndian);
 
             return;
         }
 
         if (isLongArray()) {
-            if (!data_.ls || data_.ls->empty()) {
+            if (!data_.lad || data_.lad->empty()) {
                 _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                 return;
             }
 
-            _num2bytes<int32>(static_cast<int32>(data_.ls->size()), os, isBigEndian);
+            _num2bytes<int32>(static_cast<int32>(data_.lad->size()), os, isBigEndian);
 
-            for (const auto& var : *data_.ls)
+            for (const auto& var : *data_.lad)
                 _num2bytes<int64>(var, os, isBigEndian);
 
             return;
         }
 
         if (isList()) {
-            if (!data_.d || data_.d->empty()) {
+            if (!data_.ld || data_.ld->empty()) {
                 os.put(static_cast<byte>(TT_END));
                 _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                 return;
             }
 
             os.put(static_cast<byte>(dtype_));
-            _num2bytes<int32>(static_cast<int32>(data_.d->size()), os, isBigEndian);
+            _num2bytes<int32>(static_cast<int32>(data_.ld->size()), os, isBigEndian);
 
-            for (const auto& var : *data_.d)
+            for (const auto& var : *data_.ld)
                 var.write_(os, isBigEndian);
 
             return;
         }
 
         if (isCompound()) {
-            if (!data_.d || data_.d->empty()) {
+            if (!data_.cd || data_.cd->empty()) {
                 os.put(TT_END);
                 return;
             }
 
-            for (const auto& var : *data_.d)
+            for (const auto& var : *data_.cd)
                 var.write_(os, isBigEndian);
 
             os.put(TT_END);
@@ -1812,7 +2220,7 @@ private:
     // Tag type of the list element. Only used if the tag is a list.
     TagType dtype_ = TT_END;
     // Tag name (key of key-value pair), Only used if the tag is not a list element.
-    std::string* name_ = nullptr;
+    Str* name_ = nullptr;
     // Tag value (value of key-value pair).
     Data data_;
 };
@@ -1823,7 +2231,7 @@ private:
 namespace nbt
 {
 
-inline Tag gByte(byte value, const std::string& name = "")
+inline Tag gByte(byte value, const Str& name = "")
 {
     Tag tag(TT_BYTE);
 
@@ -1833,7 +2241,7 @@ inline Tag gByte(byte value, const std::string& name = "")
     return tag.setByte(value);
 }
 
-inline Tag gShort(int16 value, const std::string& name = "")
+inline Tag gShort(int16 value, const Str& name = "")
 {
     Tag tag(TT_SHORT);
 
@@ -1843,7 +2251,7 @@ inline Tag gShort(int16 value, const std::string& name = "")
     return tag.setShort(value);
 }
 
-inline Tag gInt(int32 value, const std::string& name = "")
+inline Tag gInt(int32 value, const Str& name = "")
 {
     Tag tag(TT_INT);
 
@@ -1853,7 +2261,7 @@ inline Tag gInt(int32 value, const std::string& name = "")
     return tag.setInt(value);
 }
 
-inline Tag gLong(int64 value, const std::string& name = "")
+inline Tag gLong(int64 value, const Str& name = "")
 {
     Tag tag(TT_LONG);
 
@@ -1863,7 +2271,7 @@ inline Tag gLong(int64 value, const std::string& name = "")
     return tag.setLong(value);
 }
 
-inline Tag gFloat(fp32 value, const std::string& name = "")
+inline Tag gFloat(fp32 value, const Str& name = "")
 {
     Tag tag(TT_FLOAT);
 
@@ -1873,7 +2281,7 @@ inline Tag gFloat(fp32 value, const std::string& name = "")
     return tag.setFloat(value);
 }
 
-inline Tag gDouble(fp64 value, const std::string& name = "")
+inline Tag gDouble(fp64 value, const Str& name = "")
 {
     Tag tag(TT_DOUBLE);
 
@@ -1883,7 +2291,7 @@ inline Tag gDouble(fp64 value, const std::string& name = "")
     return tag.setDouble(value);
 }
 
-inline Tag gString(const std::string& value, const std::string& name = "")
+inline Tag gString(const Str& value, const Str& name = "")
 {
     Tag tag(TT_STRING);
 
@@ -1893,37 +2301,37 @@ inline Tag gString(const std::string& value, const std::string& name = "")
     return tag.setString(value);
 }
 
-inline Tag gByteArray(const std::vector<byte>& value, const std::string& name = "")
+inline Tag gByteArray(const Vec<byte>& value, const Str& name = "")
 {
     Tag tag(TT_BYTE_ARRAY);
 
     if (!name.empty())
         tag.setName(name);
 
-    return tag.setByteArray(value);
+    return tag.setArray(value);
 }
 
-inline Tag gIntArray(const std::vector<int32>& value, const std::string& name = "")
+inline Tag gIntArray(const Vec<int32>& value, const Str& name = "")
 {
     Tag tag(TT_INT_ARRAY);
 
     if (!name.empty())
         tag.setName(name);
 
-    return tag.setIntArray(value);
+    return tag.setArray(value);
 }
 
-inline Tag gLongArray(const std::vector<int64>& value, const std::string& name = "")
+inline Tag gLongArray(const Vec<int64>& value, const Str& name = "")
 {
     Tag tag(TT_LONG_ARRAY);
 
     if (!name.empty())
         tag.setName(name);
 
-    return tag.setLongArray(value);
+    return tag.setArray(value);
 }
 
-inline Tag gList(TagType dtype, const std::string& name = "")
+inline Tag gList(TagType dtype, const Str& name = "")
 {
     Tag tag(TagType::TT_LIST);
     tag.initListElementType(dtype);
@@ -1934,7 +2342,7 @@ inline Tag gList(TagType dtype, const std::string& name = "")
     return tag;
 }
 
-inline Tag gCompound(const std::string& name = "")
+inline Tag gCompound(const Str& name = "")
 {
     Tag tag(TT_COMPOUND);
 
