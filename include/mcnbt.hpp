@@ -28,11 +28,6 @@
 // Note:
 // Move the tag (not copy) is default when add tag to list or compound. (use #copy() function if need.)
 
-// Warning:
-// 1. Don't add self to self or add parent to self, otherwise cause undefined behavior.
-// 2. Don't assgin a element in list to other element in compound. (use #copy() function if need.)
-// 3. Don't assgin a element in compound to other element in list. (use #copy() function if need.)
-
 #ifndef MCNBT_HPP
 #define MCNBT_HPP
 
@@ -304,16 +299,17 @@ public:
             data_.ld->reserve(other.data_.ld->size());
 
             for (const auto& var : *other.data_.ld) {
-                data_.ld->push_back(var);
+                data_.ld->emplace_back(var);
                 data_.ld->back().parent_ = this;
             }
         } else if (other.isCompound() && other.data_.cd) {
-            data_.cd = new Vec<Tag>();
+            data_.cd = new CompoundData();
             data_.cd->reserve(other.data_.cd->size());
 
-            for (const auto& var : *other.data_.cd) {
-                data_.cd->push_back(var);
-                data_.cd->back().parent_ = this;
+            data_.cd->idxs = other.data_.cd->idxs;
+            for (const auto& var : other.data_.cd->data) {
+                data_.cd->data.emplace_back(var);
+                data_.cd->data.back().parent_ = this;
             }
         }
 
@@ -328,7 +324,7 @@ public:
         if (isList() && data_.ld)
             for (auto& var : *data_.ld) var.parent_ = this;
         else if (isCompound() && data_.cd)
-            for (auto& var : *data_.cd) var.parent_ = this;
+            for (auto& var : data_.cd->data) var.parent_ = this;
         
         other.data_.str = nullptr;
         other.name_ = nullptr;
@@ -348,7 +344,7 @@ public:
         // TODO ASSERT
         assert(!(isListElement() && (type_ != other.type_)));
         if (isListElement() && (type_ != other.type_))
-            throw std::logic_error("Can't assign a tag of incorrect tag type to list element");
+            throw std::logic_error("Can't assign a tag of incorrect tag type to list element.");
 
         release_();
 
@@ -370,16 +366,17 @@ public:
             data_.ld->reserve(other.data_.ld->size());
 
             for (const auto& var : *other.data_.ld) {
-                data_.ld->push_back(var);
+                data_.ld->emplace_back(var);
                 data_.ld->back().parent_ = this;
             }
         } else if (other.isCompound() && other.data_.cd) {
-            data_.cd = new Vec<Tag>();
+            data_.cd = new CompoundData();
             data_.cd->reserve(other.data_.cd->size());
 
-            for (const auto& var : *other.data_.cd) {
-                data_.cd->push_back(var);
-                data_.cd->back().parent_ = this;
+            data_.cd->idxs = other.data_.cd->idxs;
+            for (const auto& var : other.data_.cd->data) {
+                data_.cd->data.emplace_back(var);
+                data_.cd->data.back().parent_ = this;
             }
         }
 
@@ -411,18 +408,18 @@ public:
         data_ = other.data_;
         name_ = other.name_;
 
-        if (isList() && data_.ld)
+       if (isList() && data_.ld)
             for (auto& var : *data_.ld) var.parent_ = this;
         else if (isCompound() && data_.cd)
-            for (auto& var : *data_.cd) var.parent_ = this;
+            for (auto& var : data_.cd->data) var.parent_ = this;
+
+        other.data_.str = nullptr;
+        other.name_ = nullptr;
 
         if (isListElement() && name_) {
             delete name_;
             name_ = nullptr;
         }
-
-        other.data_.str = nullptr;
-        other.name_ = nullptr;
 
         return *this;
     }
@@ -551,15 +548,39 @@ public:
         if (isListElement())
             throw std::logic_error("Can't set name for list element.");
 
-        if (name.empty())
+        if (name.empty() && !name_)
             return *this;
 
-        if (name_)
-            *name_ = name;
-        else
-            name_ = new String(name);
+        String oldname = name_ ? *name_ : "";
 
-        return *this;
+        if (oldname == name)
+            return *this;
+
+        if (!parent_) {
+            if (name_)
+                *name_ = name;
+            else
+                name_ = new String(name);
+
+            return *this;
+        }
+
+        if (parent_->hasTag(name))
+            parent_->remove(name);
+
+        Tag& t = (*parent_)[oldname];
+
+        if (t.name_)
+            *t.name_ = name;
+        else
+            t.name_ = new String(name);
+
+        size_t idx = parent_->data_.cd->idxs[oldname];
+
+        parent_->data_.cd->idxs.erase(oldname);
+        parent_->data_.cd->idxs.insert( { name, idx } );
+
+        return t;
     }
 
     bool isListElement() const { return parent_ && parent_->isList(); }
@@ -647,11 +668,7 @@ public:
         if (!data_.cd)
             return false;
 
-        for (const auto& var : *data_.cd)
-            if (var.name() == name)
-                return true;
-
-        return false;
+        return data_.cd->idxs.find(name) != data_.cd->idxs.end();
     }
 
     /*
@@ -720,7 +737,7 @@ public:
             data_.ld->reserve(size);
         } else if (isCompound()) {
             if (!data_.cd)
-                data_.cd = new Vec<Tag>();
+                data_.cd = new CompoundData();
 
             data_.cd->reserve(size);
         }
@@ -906,7 +923,7 @@ public:
         if (!data_.bad)
             data_.bad = new Vec<byte>();
 
-        data_.bad->push_back(value);
+        data_.bad->emplace_back(value);
 
         return *this;
     }
@@ -920,7 +937,7 @@ public:
         if (!data_.iad)
             data_.iad = new Vec<int32>();
 
-        data_.iad->push_back(value);
+        data_.iad->emplace_back(value);
 
         return *this;
     }
@@ -934,7 +951,7 @@ public:
         if (!data_.lad)
             data_.lad = new Vec<int64>();
 
-        data_.lad->push_back(value);
+        data_.lad->emplace_back(value);
 
         return *this;
     }
@@ -972,7 +989,7 @@ public:
                 data_.ld = new Vec<Tag>();
 
             bool needShuffle = (data_.ld->capacity() - data_.ld->size()) == 0;
-            data_.ld->push_back(std::move(tag));
+            data_.ld->emplace_back(std::move(tag));
 
             if (needShuffle)
                 for (auto& var : *data_.ld) var.parent_ = this;
@@ -985,15 +1002,20 @@ public:
             }
         } else if (isCompound()) {
             if (!data_.cd)
-                data_.cd = new Vec<Tag>();
+                data_.cd = new CompoundData();
 
-            bool needShuffle = (data_.ld->capacity() - data_.ld->size()) == 0;
-            data_.cd->push_back(std::move(tag));
+            if (hasTag(tag.name())) {
+                data_.cd->data[data_.cd->idxs[tag.name()]] = std::move(tag);
+            } else {
+                bool needShuffle = (data_.cd->data.capacity() - data_.cd->size()) == 0;
+                data_.cd->data.emplace_back(std::move(tag));
+                data_.cd->idxs.insert( { data_.cd->data.back().name(), data_.cd->data.size() - 1 } );
 
-            if (needShuffle)
-                for (auto& var : *data_.cd) var.parent_ = this;
-            else
-                data_.cd->back().parent_ = this;
+                if (needShuffle)
+                    for (auto& var : data_.cd->data) var.parent_ = this;
+                else
+                    data_.cd->data.back().parent_ = this;
+            }
         }
 
         return *this;
@@ -1006,6 +1028,16 @@ public:
     Tag& assign(size_t size, const Tag& tag)
     {
         assert(isList());
+
+        if (dtype_ == TT_END)
+            throw std::logic_error("Can't read or write a uninitialized list.");
+
+        if (tag.type_ != dtype_) {
+            String errmsg = "Can't assign the tag of " + getTagTypeString(tag.type());
+            errmsg += " to the list of " + getTagTypeString(dtype_);
+
+            throw std::logic_error(errmsg);
+        }
 
         if (size == 0 && !data_.ld)
             return *this;
@@ -1263,7 +1295,7 @@ public:
             if (!data_.cd || idx >= data_.cd->size())
                 throw std::out_of_range("The specified index is out of range.");
 
-            return (*data_.cd)[idx];
+            return data_.cd->data[idx];
         }
 
         return *this;
@@ -1275,19 +1307,12 @@ public:
     Tag& getTag(const String& name)
     {
         assert(isCompound());
+        assert(hasTag(name));
 
         if (!data_.cd)
             throw std::logic_error("The member of specified name is not exists.");
 
-        for (auto& var : *data_.cd) {
-            if (!var.name_)
-                continue;
-
-            if (*var.name_ == name)
-                return var;
-        }
-
-        throw std::logic_error("The member of specified name is not exists.");
+        return data_.cd->data[data_.cd->idxs[name]];
     }
 
     // @attention Only be called by #TT_LIST, #TT_COMPOUND.
@@ -1307,7 +1332,7 @@ public:
             if (!data_.cd || data_.cd->empty())
                 throw std::out_of_range("The front member is not exists.");
 
-            return data_.cd->front();
+            return data_.cd->data.front();
         }
 
         return *this;
@@ -1330,7 +1355,7 @@ public:
             if (!data_.cd || data_.cd->empty())
                 throw std::out_of_range("The back member is not exists.");
 
-            return data_.cd->back();
+            return data_.cd->data.back();
         }
 
         return *this;
@@ -1375,7 +1400,11 @@ public:
             if (!data_.cd || idx >= data_.cd->size())
                 throw std::out_of_range("The specified index is out of range.");
 
-            data_.cd->erase(data_.cd->begin() + idx);
+            data_.cd->idxs.erase(data_.cd->data[idx].name());
+            data_.cd->data.erase(data_.cd->data.begin() + idx);
+
+            for (auto& var : data_.cd->idxs)
+                if (var.second > idx) var.second--;
         }
 
         return *this;
@@ -1387,21 +1416,20 @@ public:
     Tag& remove(const String& name)
     {
         assert(isCompound());
+        assert(hasTag(name));
 
         if (!data_.cd)
             throw std::logic_error("The member of specified name is not exists.");
 
-        for (auto it = data_.cd->begin(); it != data_.cd->end(); ++it) {
-            if (!it->name_)
-                continue;
+        size_t idx = data_.cd->idxs[name];
 
-            if (*(it->name_) == name) {
-                data_.cd->erase(it);
-                return *this;
-            }
-        }
+        data_.cd->data.erase(data_.cd->data.begin() + idx);
+        data_.cd->idxs.erase(name);
 
-        throw std::logic_error("The member of specified name is not exists.");
+        for (auto& var : data_.cd->idxs)
+            if (var.second > idx) var.second--;
+
+        return *this;
     }
 
     // @brief Remove the first element.
@@ -1443,7 +1471,11 @@ public:
             if (!data_.cd || data_.cd->empty())
                 throw std::out_of_range("The front member is not exists.");
 
-            data_.cd->erase(data_.cd->begin());
+            data_.cd->idxs.erase(data_.cd->data.front().name());
+            data_.cd->data.erase(data_.cd->data.begin());
+
+            for (auto& var : data_.cd->idxs)
+                var.second--;
         }
 
         return *this;
@@ -1488,7 +1520,8 @@ public:
             if (!data_.cd || data_.cd->empty())
                 throw std::out_of_range("The back member is not exists.");
 
-            data_.cd->pop_back();
+            data_.cd->idxs.erase(data_.cd->data.back().name());
+            data_.cd->data.pop_back();
         }
 
         return *this;
@@ -1607,6 +1640,28 @@ private:
         fp64 f64;
     };
 
+    struct CompoundData
+    {
+        Vec<Tag> data;
+        Map<String, size_t> idxs;
+
+        bool empty() const { return data.empty(); }
+
+        size_t size() const { return data.size(); }
+
+        void reserve(size_t size)
+        {
+            data.reserve(size);
+            idxs.reserve(size);
+        }
+
+        void clear()
+        {
+            data.clear();
+            idxs.clear();
+        }
+    };
+
     // Value of tag.
     // Individual tag is like key-value pair.
     // The key is the name of tag (can be empty, and all list element not has name.).
@@ -1627,7 +1682,7 @@ private:
         // List data
         Vec<Tag>* ld;
         // Compound data
-        Vec<Tag>* cd;
+        CompoundData* cd;
     };
 
     // @param tagType If the param isListElement is false, ignore it.
@@ -1873,12 +1928,12 @@ private:
         }
 
         if (isCompound()) {
-            if (!data_.cd || data_.cd->empty()) {
+            if (!data_.cd || data_.cd->data.empty()) {
                 os.put(TT_END);
                 return;
             }
 
-            for (const auto& var : *data_.cd)
+            for (const auto& var : data_.cd->data)
                 var.write_(os, isBigEndian, false);
 
             os.put(TT_END);
@@ -2013,13 +2068,13 @@ private:
         }
 
         if (isCompound()) {
-            if (!data_.cd || data_.cd->empty())
+            if (!data_.cd || data_.cd->data.empty())
                 return key + "{}";
 
             String result = key + "{";
 
             indentCount++;
-            for (const auto& var : *data_.cd) {
+            for (const auto& var : data_.cd->data) {
                 result += isIndented ? "\n" : "";
                 result += var.toSnbt_(isIndented, false) + ",";
             }
