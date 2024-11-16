@@ -115,7 +115,7 @@ constexpr size_t _INDENT_SIZE = 2;
 static const String _INDENT_STR(_INDENT_SIZE, ' ');
 
 /*
-* Aux functions.
+* Aux functions about tag type.
 */
 
 inline bool isEnd(TagType type) { return type == TT_END; }
