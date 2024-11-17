@@ -26,7 +26,7 @@
 // SOFTWARE.
 
 // Note:
-// Move the tag (not copy) is default when add tag to list or compound. (use #copy() function if need.)
+// Move the tag (not copy) is default when add tag to list or compound. (use #copy() function if need)
 
 #ifndef MCNBT_HPP
 #define MCNBT_HPP
@@ -193,9 +193,11 @@ namespace nbt
 // @param size The size of need reversed range, and reverse all if the size is 0.
 inline void _reverse(char* str, size_t size = 0)
 {
+    // If size is 0, reverse all.
     if (size == 0)
         size = std::strlen(str);
 
+    // For each character in the range, swap it with the corresponding character at the end of the range.
     size_t i = 0;
     while (i < size / 2) {
         char ch = str[i];
@@ -212,6 +214,7 @@ inline bool _isBigEndian()
     static bool isInited = false;
     static bool rslt = false;
 
+    // If already checked, return the result.
     if (isInited)
         return rslt;
 
@@ -231,18 +234,23 @@ T _bytes2num(std::istream& is, bool isBigEndian = false, bool resumeCursor = fal
     size_t size = sizeof(T);
     T result = T();
 
+    // Store the begin position of read data used to resume cursor.
     auto begpos = is.tellg();
 
+    // Read the bytes from input stream.
     static byte buffer[sizeof(T)] = {};
     is.read(buffer, size);
 
     size = static_cast<size_t>(is.gcount());
 
+    // Reverse the bytes if the specified endianness is different from system's endianness.
     if (isBigEndian != _isBigEndian())
         _reverse(buffer, size);
 
+    // Convert the bytes to number. (reinterpreting memory bytes)
     std::memcpy(&result, buffer, size);
 
+    // Resume the cursor position of input stream if needed.
     if (resumeCursor)
         is.seekg(begpos);
 
@@ -257,8 +265,10 @@ void _num2bytes(T num, std::ostream& os, bool isBigEndian = false)
 
     static byte buffer[sizeof(T)] = {};
 
+    // Convert the number to bytes. (reinterpreting memory bytes)
     std::memcpy(buffer, &num, size);
 
+    // Reverse the bytes if the specified endianness is different from system's endianness.
     if (isBigEndian != _isBigEndian())
         _reverse(buffer, size);
 
@@ -281,6 +291,7 @@ public:
         type_(type)
     {}
 
+    // @note Just copy the other's base data (e.g. name, type, data value), not copy other's parent.
     Tag(const Tag& other) :
         type_(other.type_), dtype_(other.dtype_)
     {
@@ -317,6 +328,7 @@ public:
             name_ = new String(*other.name_);
     }
 
+    // @ditto
     Tag(Tag&& other) noexcept :
         type_(other.type_), dtype_(other.dtype_),
         data_(other.data_), name_(other.name_)
@@ -330,12 +342,14 @@ public:
         other.name_ = nullptr;
     }
 
+    // Release the all alloced memory and set it's parent to nullptr.
     ~Tag()
     {
         release_();
         parent_ = nullptr;
     }
 
+    // @note Just copy the other's base data (e.g. name, type, data value), not copy other's parent.
     Tag& operator=(const Tag& other)
     {
         if (this == &other)
@@ -386,6 +400,7 @@ public:
         return *this;
     }
 
+    // @ditto
     Tag& operator=(Tag&& other)
     {
         if (this == &other)
@@ -426,9 +441,9 @@ public:
 
     // @brief Load the tag from binary input stream.
     // @param is The input stream.
-    // @param isBigEndian Whether the read data from input stream by big endian.
+    // @param isBigEndian Whether the read data from input stream with big endian.
     // @param headerSize The size of need discard data from input stream begin.
-    // (usually is 0, but bedrock edition map file is 8, some useless dat.)
+    // (usually is 0, but bedrock edition map file is 8, some useless dat)
     static Tag fromBinStream(std::ifstream& is, bool isBigEndian, size_t headerSize = 0)
     {
     #ifdef MCNBT_USE_GZIP
@@ -515,9 +530,9 @@ public:
     * Functions of common.
     */
 
-    // @brief Make a copy and remove the origin attribute.
-    // usually used for add tag to list or compound.
-    // (because default is move when add tag to list or compound.)
+    // @brief Make a copy.
+    // Usually used for add tag to list or compound.
+    // (because default is move when add tag to list or compound)
     Tag copy() const { return Tag(*this); }
 
     // @brief Get the tag type.
@@ -565,30 +580,37 @@ public:
             return *this;
         }
 
-        if (parent_->hasTag(name))
-            parent_->remove(name);
+        Tag* p = parent_;
+        if (p->hasTag(name))
+            p->remove(name);
 
-        Tag& t = (*parent_)[oldname];
+        Tag& t = (*p)[oldname];
 
         if (t.name_)
             *t.name_ = name;
         else
             t.name_ = new String(name);
 
-        size_t idx = parent_->data_.cd->idxs[oldname];
+        size_t idx = p->data_.cd->idxs[oldname];
 
-        parent_->data_.cd->idxs.erase(oldname);
-        parent_->data_.cd->idxs.insert( { name, idx } );
+        p->data_.cd->idxs.erase(oldname);
+        p->data_.cd->idxs.insert( { name, idx } );
 
         return t;
     }
 
+    // @brief Check if is a list element.
     bool isListElement() const { return parent_ && parent_->isList(); }
 
+    // @brief Check if the parent is exists.
     bool hasParent() const { return parent_ != nullptr; }
 
+    // @return The parent pointer, maybe is nullptr.
     const Tag* parent() const { return parent_; }
 
+    // @brief Check self if is be contained in specified tag.
+    // @param container The tag that be checked whether self is contained in it.
+    // @note It check all the parent (parent' parent) until happen a parent is nullptr.
     bool isContained(const Tag& container) const
     {
         const Tag* p = parent_;
@@ -596,6 +618,7 @@ public:
         while (p) {
             if (p == &container)
                 return true;
+
             p = p->parent_;
         }
 
@@ -655,11 +678,37 @@ public:
         return *this;
     }
 
+    // @attention Only be called by #TT_LIST.
+    Tag& assign(size_t size, const Tag& tag)
+    {
+        assert(isList());
+
+        if (dtype_ == TT_END)
+            throw std::logic_error("Can't read or write a uninitialized list.");
+
+        if (tag.type_ != dtype_) {
+            String errmsg = "Can't assign the tag of " + getTagTypeString(tag.type());
+            errmsg += " to the list of " + getTagTypeString(dtype_);
+
+            throw std::logic_error(errmsg);
+        }
+
+        if (size == 0 && !data_.ld)
+            return *this;
+
+        if (!data_.ld)
+            data_.ld = new Vec<Tag>();
+
+        data_.ld->assign(size, tag);
+
+        return *this;
+    }
+
     /*
     * Functions about compound.
     */
 
-    // @brief Check the compound has member of specified name.
+    // @brief Check the compound if contains member of specified name.
     // @attention Only be called by #TT_COMPOUND.
     bool hasTag(const String& name) const
     {
@@ -1023,32 +1072,6 @@ public:
 
     // @overload
     Tag& addTag(Tag& tag) { return addTag(std::move(tag)); }
-
-    // @attention Only be called by #TT_LIST.
-    Tag& assign(size_t size, const Tag& tag)
-    {
-        assert(isList());
-
-        if (dtype_ == TT_END)
-            throw std::logic_error("Can't read or write a uninitialized list.");
-
-        if (tag.type_ != dtype_) {
-            String errmsg = "Can't assign the tag of " + getTagTypeString(tag.type());
-            errmsg += " to the list of " + getTagTypeString(dtype_);
-
-            throw std::logic_error(errmsg);
-        }
-
-        if (size == 0 && !data_.ld)
-            return *this;
-
-        if (!data_.ld)
-            data_.ld = new Vec<Tag>();
-
-        data_.ld->assign(size, tag);
-
-        return *this;
-    }
 
     /*
     * Functions for get value. Only be called by corresponding tag.
@@ -1587,10 +1610,7 @@ public:
     }
 #else
     // @brief Write the tag to output stream.
-    void write(std::ostream& os, bool isBigEndian) const
-    {
-        write_(os, isBigEndian, (isListElement()));
-    }
+    void write(std::ostream& os, bool isBigEndian) const { write_(os, isBigEndian, (isListElement())); }
 
     // @overload
     void write(const String& filename, bool isBigEndian) const
@@ -1606,7 +1626,7 @@ public:
     }
 #endif // MCNBT_USE_GZIP
 
-    // @brief Get the SNBT. (The string representation of NBT)
+    // @brief Get the SNBT (The string representation of NBT).
     // @param isIndented If true, the output string will be indented and proper newline.
     String toSnbt(bool isIndented = true) const { return toSnbt_(isIndented, (isListElement())); }
 
@@ -1618,6 +1638,7 @@ public:
     Tag& operator[](size_t idx) { return getTag(idx); }
 
     // @overload
+    // @brief Fast way of get the tag by name.
     Tag& operator[](const String& name) { return getTag(name); }
 
     // @brief Fast way of add the tag.
@@ -1640,6 +1661,7 @@ private:
         fp64 f64;
     };
 
+    // A simple wrapper of std::vector<tag> and std::map<string, size_t>.
     struct CompoundData
     {
         Vec<Tag> data;
@@ -1664,7 +1686,7 @@ private:
 
     // Value of tag.
     // Individual tag is like key-value pair.
-    // The key is the name of tag (can be empty, and all list element not has name.).
+    // The key is the name of tag (can be empty, and all list element not has name).
     // The value is stored in the following union.
     union Data
     {
@@ -1944,7 +1966,7 @@ private:
 
     String toSnbt_(bool isIndented, bool isListElement) const
     {
-        static unsigned int indentCount = 0;
+        static size_t indentCount = 0;
         String inheritedIndentStr(indentCount * _INDENT_SIZE, ' ');
 
         String key = isIndented ? inheritedIndentStr : "";
@@ -2092,6 +2114,8 @@ private:
         throw std::runtime_error("Read the tag of undefined tag typer.");
     }
 
+    // Release the all alloced memory.
+    // (e.g. name, string, byte array, int array, long array, list, compound)
     void release_()
     {
         if (isString() && data_.str)
@@ -2117,18 +2141,19 @@ private:
 
     // Tag type.
     TagType type_ = TT_END;
-    // Tag type of the list element. Only used if the tag is a list.
+    // Tag type of the list element. Just usefull for list tag.
     TagType dtype_ = TT_END;
     // Tag value (value of key-value pair).
     Data data_;
-    // Tag name (key of key-value pair), Only used if the tag is not a list element.
+    // Tag name (key of key-value pair), Just usefull for non-ListElement tag.
     String* name_ = nullptr;
+    // Parent tag (list or compound tag).
     Tag* parent_ = nullptr;
 };
 
 }
 
-// Faster way for construct a Tag object.
+// Faster way for construct a tag object.
 namespace nbt
 {
 
