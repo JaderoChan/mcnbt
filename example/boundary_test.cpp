@@ -13,7 +13,7 @@ void test1()
     auto root = gCompound();
 
     // Add a same name tag.
-    out("---Start---");
+    out("<Add same name tag>");
 
     root << gString("Hello world!", "Text");
     root << gInt(1, "num1");
@@ -23,41 +23,11 @@ void test1()
     out(root);
 
     root << gString("Hello NBT!", "Text");
-    out("-After Value: ");
+    out("-After Value (add same name tag \"Text\"): ");
     out(root);
 
-    out("---End---");
-
-    // Reset the name of num1.
-    out("---Start---");
-
-    out("-Before Value: ");
-    out(root);
-    out(root.hasTag("num1") ? "num1 exists." : "num1 not exists.");
-
-    root["num1"].setName("num4");
-    out("-After Value: ");
-    out(root);
-    out(root.hasTag("num1") ? "num1 exists." : "num1 not exists.");
-    out(root.hasTag("num4") ? "num4 exists." : "num4 not exists.");
-
-    out("---End---");
-
-    // Add same name tag.
-    out("---Start---");
-
-    out("-Before Value: ");
-    out(root);
-
-    root << gString("Hello World!", "Text");
-
-    out("-After Value: ");
-    out(root);
-
-    out("---End---");
-
-    // Nested compound tag.
-    out("---Start---");
+    // Nested compound tag set and add same name tag
+    out("<Nested compound tag set and add same name tag>");
 
     auto nested = gCompound();
     nested << root;
@@ -65,9 +35,9 @@ void test1()
     out("-Before Value: ");
     out(nested);
 
-    nested[0]["num4"].setName("num5").setInt(5);
-    nested[0]["num3"].setName("num5").setInt(3);
-    nested[0]["num2"].setName("num6").setInt(6);
+    nested[0]["num1"].setName("num4").setInt(0);
+    nested[0]["num2"].setName("num4").setInt(4);
+    nested[0]["num3"].setName("num5").setInt(5);
     nested[0] << gString("Hello NBT!", "Text");
 
     out("-After Value: ");
@@ -80,10 +50,8 @@ void test1()
     nested[0].hasTag("num5") ? out("num5 exists.") : out("num5 not exists.");
     nested[0].hasTag("num6") ? out("num6 exists.") : out("num6 not exists.");
 
-    out("---End---");
-
     // Invaild assignment.
-    out("---Start---");
+    out("<Invaild assignment> (Assign parent to self)");
 
     out("-Before Value: ");
     out(nested);
@@ -97,10 +65,8 @@ void test1()
     out("-After Value: ");
     out(nested);
 
-    out("---End---");
-
     // Valid assignment.
-    out("---Start---");
+    out("<Valid assignment> (Copy parent to self)");
 
     out("-Before Value: ");
     out(nested);
@@ -114,10 +80,8 @@ void test1()
     out("-After Value: ");
     out(nested);
 
-    out("---End---");
-
     // Assign to self.
-    out("---Start---");
+    out("<Assign to self>");
 
     out("-Before Value: ");
     out(nested);
@@ -131,10 +95,8 @@ void test1()
     out("-After Value: ");
     out(nested);
 
-    out("---End---");
-
     // Set list element name.
-    out("---Start---");
+    out("<Set list element name>");
 
     out("-Before Value: ");
     auto list = gList(TT_INT, "list");
@@ -151,8 +113,6 @@ void test1()
 
     out("-After Value: ");
     out(list);
-
-    out("---End---");
 }
 
 void test2()
@@ -298,6 +258,34 @@ void test5()
     out("------------------------------------");
 }
 
+void test6()
+{
+    auto root = gCompound();
+
+    root << gInt(1, "num1");
+    root << gInt(2, "num2");
+    root << gInt(3, "num3");
+    root << gInt(4, "num4");
+    root << gInt(5, "num5");
+
+    out(root);
+
+    root.remove("num2");
+    root.remove("num4");
+
+    out(root);
+
+    out(root[0]);
+    out(root[1]);
+    out(root[2]);
+
+    out(root.hasTag("num1") ? "num1 exists." : "num1 not exists.");
+    out(root.hasTag("num2") ? "num2 exists." : "num2 not exists.");
+    out(root.hasTag("num3") ? "num3 exists." : "num3 not exists.");
+    out(root.hasTag("num4") ? "num4 exists." : "num4 not exists.");
+    out(root.hasTag("num5") ? "num5 exists." : "num5 not exists.");
+}
+
 int main()
 {
     test1();
@@ -305,6 +293,7 @@ int main()
     test3();
     test4();
     test5();
+    test6();
 
     return 0;
 }
