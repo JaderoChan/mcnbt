@@ -447,12 +447,12 @@ public:
     static Tag fromBinStream(std::ifstream& is, bool isBigEndian, size_t headerSize = 0)
     {
     #ifdef MCNBT_USE_GZIP
-        Stringstream buf;
+        std::stringstream buf;
         buf << is.rdbuf();
         String content = buf.str();
         buf.clear();
 
-        Stringstream ss;
+        std::stringstream ss;
         if (gzip::isCompressed(content))
             content = gzip::decompress(content);
 
@@ -1588,7 +1588,7 @@ public:
     void write(std::ostream& os, bool isBigEndian, bool isCompressed = false) const
     {
         if (isCompressed) {
-            Stringstream ss;
+            std::stringstream ss;
             write_(ss, isBigEndian, (isListElement()));
             os << gzip::compress(ss.str());
         } else {
