@@ -14,7 +14,7 @@ struct BlockEntityData
 {
     BlockEntityData() {}
 
-    BlockEntityData(const std::string& id, const std::string& customeName = "") :
+    BlockEntityData(const String& id, const String& customeName = "") :
         id(id), customName(customeName)
     {}
 
@@ -34,9 +34,9 @@ struct BlockEntityData
     };
 
     // The savegame id of the block entity.
-    std::string id;
+    String id;
     // (May not exist) The custom name of the block entity.
-    std::string customName;
+    String customName;
     int32 pos[3] = { 0, 0, 0 };
     // 1 or 0 (true/false)
     // true if the block entity is movable with a piston.
@@ -50,16 +50,16 @@ struct CommandBlockED final : BlockEntityData
 {
     CommandBlockED() : BlockEntityData("CommandBlock") {}
 
-    CommandBlockED(const std::string& command, int32 tickDelay = 0,
+    CommandBlockED(const String& command, int32 tickDelay = 0,
                    bool isAuto = false, bool isPowered = true, bool conditionMet = false) :
         BlockEntityData("CommandBlock"), command(command), tickDelay(tickDelay),
         isAuto(isAuto), isPowered(isPowered), conditionMet(conditionMet)
     {}
 
     // The command entered into the command block.
-    std::string command;
+    String command;
     // The custom name or hover text of this command block.
-    std::string lastOuTut;
+    String lastOuTut;
     // 1 or 0 (true/false)
     // true if it executes on the first tick once saved or activated.
     bool executeOnFirstTick = true;
@@ -153,13 +153,13 @@ struct StructureBlockED final : BlockEntityData
 
     StructureBlockED() : BlockEntityData("StructureBlock") {}
 
-    StructureBlockED(const std::string& structureName, Mode mode = MODE_LOAD, bool ignoreEntities = false) :
+    StructureBlockED(const String& structureName, Mode mode = MODE_LOAD, bool ignoreEntities = false) :
         BlockEntityData("StructureBlock"),
         structureName(structureName),
         ignoreEntities(ignoreEntities)
     {}
 
-    std::string structureName;
+    String structureName;
     Mode data = MODE_LOAD;
     Animation animationMode = ANIMATION_NO;
     Rotation rotation = ROT_0;
@@ -181,7 +181,7 @@ protected:
         tag << gByte(static_cast<byte>(animationMode), "animationMode");
         tag << gFloat(animationSeconds, "animationSeconds");
         tag << gInt(static_cast<int32>(data), "data");
-        tag << gString(std::string(), "dataField");
+        tag << gString(String(), "dataField");
         tag << gString(id, "id");
         tag << gByte(static_cast<byte>(ignoreEntities), "ignoreEntities");
         tag << gByte(0, "includePlayers");

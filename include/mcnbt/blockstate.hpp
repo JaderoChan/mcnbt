@@ -71,7 +71,7 @@ struct StructureBlockSD final : BlockStateData
     Mode mode = MODE_LOAD;
 
 protected:
-    std::string modestr_() const
+    String modestr_() const
     {
         switch (mode) {
             case MODE_SAVE:
