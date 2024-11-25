@@ -72,6 +72,16 @@ using fp64 = double;
 
 using String = std::string;
 
+using SStream = std::stringstream;
+
+using IStream = std::istream;
+using OStream = std::ostream;
+using IOStream = std::iostream;
+
+using IFStream = std::ifstream;
+using OFStream = std::ofstream;
+using FStream = std::fstream;
+
 template<typename T>
 using Vec = std::vector<T>;
 
@@ -229,7 +239,7 @@ inline bool _isBigEndian()
 // @param resumeCursor Whether to resume the cursor position of input stream after read.
 // @return A number.
 template<typename T>
-T _bytes2num(std::istream& is, bool isBigEndian = false, bool resumeCursor = false)
+T _bytes2num(IStream& is, bool isBigEndian = false, bool resumeCursor = false)
 {
     size_t size = sizeof(T);
     T result = T();
@@ -259,7 +269,7 @@ T _bytes2num(std::istream& is, bool isBigEndian = false, bool resumeCursor = fal
 
 // @brief Convert the number to bytes, and write it to output stream.
 template<typename T>
-void _num2bytes(T num, std::ostream& os, bool isBigEndian = false)
+void _num2bytes(T num, OStream& os, bool isBigEndian = false)
 {
     size_t size = sizeof(T);
 
@@ -355,7 +365,6 @@ public:
         if (this == &other)
             return *this;
 
-        // TODO ASSERT
         assert(!(isListElement() && (type_ != other.type_)));
         if (isListElement() && (type_ != other.type_))
             throw std::logic_error("Can't assign a tag of incorrect tag type to list element.");
@@ -406,12 +415,10 @@ public:
         if (this == &other)
             return *this;
 
-        // TODO ASSERT
         assert(!isContained(other));
         if (isContained(other))
             throw std::logic_error("Can't assign parent to self.");
 
-        // TODO ASSERT
         assert(!(isListElement() && (type_ != other.type_)));
         if (isListElement() && (type_ != other.type_))
             throw std::logic_error("Can't assign a tag of incorrect tag type to list element");
@@ -444,15 +451,15 @@ public:
     // @param isBigEndian Whether the read data from input stream with big endian.
     // @param headerSize The size of need discard data from input stream begin.
     // (usually is 0, but bedrock edition map file is 8, some useless dat)
-    static Tag fromBinStream(std::ifstream& is, bool isBigEndian, size_t headerSize = 0)
+    static Tag fromBinStream(IFStream& is, bool isBigEndian, size_t headerSize = 0)
     {
     #ifdef MCNBT_USE_GZIP
-        std::stringstream buf;
+        SStream buf;
         buf << is.rdbuf();
         String content = buf.str();
         buf.clear();
 
-        std::stringstream ss;
+        SStream ss;
         if (gzip::isCompressed(content))
             content = gzip::decompress(content);
 
@@ -474,7 +481,7 @@ public:
     // @brief Load the tag from a nbt file.
     static Tag fromFile(const String& filename, bool isBigEndian, size_t headerSize = 0)
     {
-        std::ifstream ifs(filename, std::ios::binary);
+        IFStream ifs(filename, std::ios::binary);
 
         if (!ifs.is_open())
             throw std::runtime_error("Failed to open file: " + filename);
@@ -484,6 +491,18 @@ public:
         ifs.close();
 
         return rslt;
+    }
+
+    // TODO
+    static Tag fromSnbt(SStream& snbtSs);
+
+    static Tag fromSnbt(const String& snbt)
+    {
+        SStream ss;
+
+        ss << snbt;
+
+        return fromSnbt(ss);
     }
 
     /*
@@ -1013,12 +1032,10 @@ public:
     {
         assert(isContainer());
 
-        // TODO ASSERT
         assert(this != &tag);
         if (this == &tag)
             throw std::runtime_error("Can't add self to self.");
 
-        // TODO ASSERT
         assert(!isContained(tag));
         if (isContained(tag))
             throw std::logic_error("Can't add parent to self.");
@@ -1585,10 +1602,10 @@ public:
 
 #ifdef MCNBT_USE_GZIP
     // @brief Write the tag to output stream.
-    void write(std::ostream& os, bool isBigEndian, bool isCompressed = false) const
+    void write(OStream& os, bool isBigEndian, bool isCompressed = false) const
     {
         if (isCompressed) {
-            std::stringstream ss;
+            SStream ss;
             write_(ss, isBigEndian, (isListElement()));
             os << gzip::compress(ss.str());
         } else {
@@ -1599,7 +1616,7 @@ public:
     // @overload
     void write(const String& filename, bool isBigEndian, bool isCompressed = false) const
     {
-        std::ofstream ofs(filename, std::ios_base::binary);
+        OFStream ofs(filename, std::ios_base::binary);
 
         if (ofs.is_open())
             write(ofs, isBigEndian, isCompressed);
@@ -1610,12 +1627,12 @@ public:
     }
 #else
     // @brief Write the tag to output stream.
-    void write(std::ostream& os, bool isBigEndian) const { write_(os, isBigEndian, (isListElement())); }
+    void write(OStream& os, bool isBigEndian) const { write_(os, isBigEndian, (isListElement())); }
 
     // @overload
     void write(const String& filename, bool isBigEndian) const
     {
-        std::ofstream ofs(filename, std::ios_base::binary);
+        OFStream ofs(filename, std::ios_base::binary);
 
         if (ofs.is_open())
             write(ofs, isBigEndian);
@@ -1709,7 +1726,7 @@ private:
 
     // @param tagType If the param isListElement is false, ignore it.
     // If the param isListElement is true, the tagType must be set to the same as the parent tag.
-    static Tag fromBinStream_(std::istream& is, bool isBigEndian, bool isListElement, int tagType = -1)
+    static Tag fromBinStream_(IStream& is, bool isBigEndian, bool isListElement, int tagType = -1)
     {
         Tag tag;
 
@@ -1831,7 +1848,10 @@ private:
         return tag;
     }
 
-    void write_(std::ostream& os, bool isBigEndian, bool isListElement) const
+    // TODO
+    static Tag fromSnbt_(SStream& snbtSs);
+
+    void write_(OStream& os, bool isBigEndian, bool isListElement) const
     {
         if (!isListElement) {
             os.put(static_cast<byte>(type_));
