@@ -24,9 +24,12 @@ int main()
 
     // Arrays example.
     auto arrays = gCompound("Arrays");
-    arrays << gByteArray({ 1, 2, 3, 4, 5 }, "ByteArray") << gIntArray({ 1, 2, 3, 4, 5 }, "IntArray")
-           << gLongArray({ 1, 2, 3, 4, 5 }, "LongArray") << gByteArray({}, "EmptyByteArray")
-           << gIntArray({}, "EmptyIntArray") << gLongArray({}, "EmptyLongArray");
+    arrays << gByteArray({ 1, 2, 3, 4, 5 }, "ByteArray")
+        << gIntArray({ 1, 2, 3, 4, 5 }, "IntArray")
+        << gLongArray({ 1, 2, 3, 4, 5 }, "LongArray")
+        << gByteArray({}, "EmptyByteArray")
+        << gIntArray({}, "EmptyIntArray")
+        << gLongArray({}, "EmptyLongArray");
 
     // Lists example.
     auto lists = gCompound("Lists");
@@ -49,8 +52,8 @@ int main()
     root << booleans << numbers << strings << arrays << lists << compounds;
 
     /*
-     * Write the snbt without and with indent.
-     */
+    * Write the snbt without and with indent.
+    */
 
     // No indent.
     std::ofstream out1("snbt_example_no_indent.txt");

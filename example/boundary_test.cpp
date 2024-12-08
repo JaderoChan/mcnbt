@@ -4,15 +4,9 @@
 
 using namespace nbt;
 
-void out(const std::string& msg)
-{
-    std::cout << msg << std::endl;
-}
+void out(const std::string& msg) { std::cout << msg << std::endl; }
 
-void out(const Tag& tag)
-{
-    std::cout << tag.toSnbt() << std::endl;
-}
+void out(const Tag& tag) { std::cout << tag.toSnbt() << std::endl; }
 
 void test1()
 {
@@ -48,7 +42,7 @@ void test1()
 
     out("-After Value: ");
     out(nested);
-
+    
     nested[0].hasTag("num1") ? out("num1 exists.") : out("num1 not exists.");
     nested[0].hasTag("num2") ? out("num2 exists.") : out("num2 not exists.");
     nested[0].hasTag("num3") ? out("num3 exists.") : out("num3 not exists.");
@@ -253,13 +247,13 @@ void test5()
 
     out(nested);
     out("------------------------------------");
-    nested[0]["num1"].setName("num5").setInt(5); // num5 = 5; num2 = 2; num3 = 3;
+    nested[0]["num1"].setName("num5").setInt(5);    // num5 = 5; num2 = 2; num3 = 3;
     out(nested);
     out("------------------------------------");
-    nested[0]["num2"].setName("num5").setInt(3); // num5 = 3; num3 = 3;
+    nested[0]["num2"].setName("num5").setInt(3);    // num5 = 3; num3 = 3;
     out(nested);
     out("------------------------------------");
-    nested[0]["num3"].setName("num6").setInt(6); // num5 = 3; num6 = 6;
+    nested[0]["num3"].setName("num6").setInt(6);    // num5 = 3; num6 = 6;
     out(nested);
     out("------------------------------------");
 }

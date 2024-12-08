@@ -14,7 +14,9 @@ struct BlockEntityData
 {
     BlockEntityData() {}
 
-    BlockEntityData(const String& id, const String& customeName = "") : id(id), customName(customeName) {}
+    BlockEntityData(const String& id, const String& customeName = "") :
+        id(id), customName(customeName)
+    {}
 
     virtual ~BlockEntityData() {}
 
@@ -48,10 +50,10 @@ struct CommandBlockED final : BlockEntityData
 {
     CommandBlockED() : BlockEntityData("CommandBlock") {}
 
-    CommandBlockED(const String& command, int32 tickDelay = 0, bool isAuto = false, bool isPowered = true,
-                   bool conditionMet = false) :
-        BlockEntityData("CommandBlock"), command(command), tickDelay(tickDelay), isAuto(isAuto), isPowered(isPowered),
-        conditionMet(conditionMet)
+    CommandBlockED(const String& command, int32 tickDelay = 0,
+                   bool isAuto = false, bool isPowered = true, bool conditionMet = false) :
+        BlockEntityData("CommandBlock"), command(command), tickDelay(tickDelay),
+        isAuto(isAuto), isPowered(isPowered), conditionMet(conditionMet)
     {}
 
     // The command entered into the command block.
@@ -63,12 +65,10 @@ struct CommandBlockED final : BlockEntityData
     bool executeOnFirstTick = true;
     // 1 or 0 (true/false)
     // true if the LastOuTut is stored.
-    // Can be toggled in the GUI by clicking a button near the "Previous ouTut"
-    // textbox.
+    // Can be toggled in the GUI by clicking a button near the "Previous ouTut" textbox.
     bool trackOuTut = true;
     // 1 or 0 (true/false)
-    // Allows to activate the command without the requirement of a redstone
-    // signal.
+    // Allows to activate the command without the requirement of a redstone signal.
     bool isAuto = false;
     // 1 or 0 (true/false)
     // true if the command block is powered by redstone.
@@ -154,7 +154,9 @@ struct StructureBlockED final : BlockEntityData
     StructureBlockED() : BlockEntityData("StructureBlock") {}
 
     StructureBlockED(const String& structureName, Mode mode = MODE_LOAD, bool ignoreEntities = false) :
-        BlockEntityData("StructureBlock"), structureName(structureName), ignoreEntities(ignoreEntities)
+        BlockEntityData("StructureBlock"),
+        structureName(structureName),
+        ignoreEntities(ignoreEntities)
     {}
 
     String structureName;
@@ -202,6 +204,6 @@ protected:
     };
 };
 
-} // namespace nbt
+}
 
 #endif // !MCNBT_BLOCKENTITY_HPP

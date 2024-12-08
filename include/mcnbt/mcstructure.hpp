@@ -11,7 +11,8 @@ namespace nbt
 
 struct MCStructure
 {
-    MCStructure(int32 formatVersion = 1, int32 sizeX = 1, int32 sizeY = 1, int32 sizeZ = 1) : root(gCompound())
+    MCStructure(int32 formatVersion = 1, int32 sizeX = 1, int32 sizeY = 1, int32 sizeZ = 1) :
+        root(gCompound())
     {
         // Write format version.
         root << gInt(formatVersion, "format_version");
@@ -71,7 +72,8 @@ struct MCStructure
     Tag root;
 };
 
-inline Tag createSingleBlockStructure(const std::string& blockId, const BlockEntityData& bed, const BlockStateData& bsd,
+inline Tag createSingleBlockStructure(const std::string& blockId,
+                                      const BlockEntityData& bed, const BlockStateData& bsd,
                                       int32 version = 18105860)
 {
     MCStructure mcs;
@@ -89,6 +91,6 @@ inline Tag createSingleBlockStructure(const std::string& blockId, const BlockEnt
     return mcs.root;
 }
 
-} // namespace nbt
+}
 
 #endif // !MCNBT_MCSTRUCTURE_HPP

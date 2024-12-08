@@ -29,15 +29,16 @@ Tag fastWayExample()
     pack << gIntArray({ 1, 2, 3, 4, 5 }, "IntArrayValue");
     pack << gLongArray({ 1, 2, 3, 4, 5 }, "LongArrayValue");
     // Add a nested list.
-    pack << (gList(TT_LIST, "ListValue")
-             << emptyList.copy().setName("EmptyList1")
-             << emptyList.copy().setName("EmptyList2")); // Invalid #setName, #addTag process will delete them name.
+    pack << (gList(TT_LIST, "ListValue") <<
+             emptyList.copy().setName("EmptyList1") <<
+             emptyList.copy().setName("EmptyList2"));   // Invalid #setName, #addTag process will delete them name.
     // Nested self.
     pack << pack.copy();
 
     // Nested list example.
     auto box = gList(TT_LIST, "Box");
-    box << (gList(TT_COMPOUND) << pack.copy()) << (gList(TT_COMPOUND) << pack.copy() << pack.copy());
+    box << (gList(TT_COMPOUND) << pack.copy()) <<
+        (gList(TT_COMPOUND) << pack.copy() << pack.copy());
 
     // Create the root compound and add tags.
     auto root = gCompound("Root");
@@ -52,10 +53,11 @@ int main()
         auto root = fastWayExample();
         // Fast way for get tag (#getTag) by name or index: operator[](name or index).
         std::cout << "EmptyList Size: " << root["EmptyList"].size() << std::endl;
-        std::cout << "EmptyList Element Tag Type: " << getTagTypeString(root["EmptyList"].listElementType())
-                  << std::endl;
+        std::cout << "EmptyList Element Tag Type: " <<
+            getTagTypeString(root["EmptyList"].listElementType()) << std::endl;
         std::cout << "Root Size: " << root.size() << std::endl;
-        std::cout << "Root[Box][0][0] Type: " << getTagTypeString(root["Box"][0][0].type()) << std::endl;
+        std::cout << "Root[Box][0][0] Type: " <<
+            getTagTypeString(root["Box"][0][0].type()) << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
