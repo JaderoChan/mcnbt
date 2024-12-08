@@ -14,8 +14,8 @@
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -26,7 +26,8 @@
 // SOFTWARE.
 
 // Note:
-// Move the tag (not copy) is default when add tag to list or compound. (use #copy() function if need)
+// Move the tag (not copy) is default when add tag to list or compound. (use
+// #copy() function if need)
 
 #ifndef MCNBT_HPP
 #define MCNBT_HPP
@@ -34,20 +35,20 @@
 // Whether to use GZip to un/compress MCNBT.
 // #define MCNBT_USE_GZIP
 
-#include <cstdint>  // int16_t, int32_t, int64_t
-#include <cstddef>  // size_t
-#include <cstring>  // strlen(), memcpy()
-#include <string>
-#include <vector>
-#include <unordered_map>
-#include <iostream>
+#include <cassert>
+#include <cstddef> // size_t
+#include <cstdint> // int16_t, int32_t, int64_t
+#include <cstring> // strlen(), memcpy()
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
-#include <cassert>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 #ifdef MCNBT_USE_GZIP
-#include "gzip.hpp"
+    #include "gzip.hpp"
 #endif // MCNBT_USE_GZIP
 
 // McNbt namespace.
@@ -82,13 +83,13 @@ using IFStream = std::ifstream;
 using OFStream = std::ofstream;
 using FStream = std::fstream;
 
-template<typename T>
+template <typename T>
 using Vec = std::vector<T>;
 
-template<typename K, typename V>
+template <typename K, typename V>
 using Map = std::unordered_map<K, V>;
 
-}
+} // namespace nbt
 
 // Enum, constants and aux functions.
 namespace nbt
@@ -113,51 +114,105 @@ enum TagType : uchar
 };
 
 /*
-* Constants about the indent of snbt.
-*/
+ * Constants about the indent of snbt.
+ */
 
 constexpr size_t _INDENT_SIZE = 2;
 static const String _INDENT_STR(_INDENT_SIZE, ' ');
 
 /*
-* Aux functions about tag type.
-*/
+ * Aux functions about tag type.
+ */
 
-inline bool isEnd(TagType type) { return type == TT_END; }
+inline bool isEnd(TagType type)
+{
+    return type == TT_END;
+}
 
-inline bool isByte(TagType type) { return type == TT_BYTE; }
+inline bool isByte(TagType type)
+{
+    return type == TT_BYTE;
+}
 
-inline bool isShort(TagType type) { return type == TT_SHORT; }
+inline bool isShort(TagType type)
+{
+    return type == TT_SHORT;
+}
 
-inline bool isInt(TagType type) { return type == TT_INT; }
+inline bool isInt(TagType type)
+{
+    return type == TT_INT;
+}
 
-inline bool isLong(TagType type) { return type == TT_LONG; }
+inline bool isLong(TagType type)
+{
+    return type == TT_LONG;
+}
 
-inline bool isFloat(TagType type) { return type == TT_FLOAT; }
+inline bool isFloat(TagType type)
+{
+    return type == TT_FLOAT;
+}
 
-inline bool isDouble(TagType type) { return type == TT_DOUBLE; }
+inline bool isDouble(TagType type)
+{
+    return type == TT_DOUBLE;
+}
 
-inline bool isString(TagType type) { return type == TT_STRING; }
+inline bool isString(TagType type)
+{
+    return type == TT_STRING;
+}
 
-inline bool isByteArray(TagType type) { return type == TT_BYTE_ARRAY; }
+inline bool isByteArray(TagType type)
+{
+    return type == TT_BYTE_ARRAY;
+}
 
-inline bool isIntArray(TagType type) { return type == TT_INT_ARRAY; }
+inline bool isIntArray(TagType type)
+{
+    return type == TT_INT_ARRAY;
+}
 
-inline bool isLongArray(TagType type) { return type == TT_LONG_ARRAY; }
+inline bool isLongArray(TagType type)
+{
+    return type == TT_LONG_ARRAY;
+}
 
-inline bool isList(TagType type) { return type == TT_LIST; }
+inline bool isList(TagType type)
+{
+    return type == TT_LIST;
+}
 
-inline bool isCompound(TagType type) { return type == TT_COMPOUND; }
+inline bool isCompound(TagType type)
+{
+    return type == TT_COMPOUND;
+}
 
-inline bool isInteger(TagType type) { return isByte(type) || isShort(type) || isInt(type) || isLong(type); }
+inline bool isInteger(TagType type)
+{
+    return isByte(type) || isShort(type) || isInt(type) || isLong(type);
+}
 
-inline bool isFloatPoint(TagType type) { return isFloat(type) || isDouble(type); }
+inline bool isFloatPoint(TagType type)
+{
+    return isFloat(type) || isDouble(type);
+}
 
-inline bool isNum(TagType type) { return isInteger(type) || isFloatPoint(type); }
+inline bool isNum(TagType type)
+{
+    return isInteger(type) || isFloatPoint(type);
+}
 
-inline bool isArray(TagType type) { return isByteArray(type) || isIntArray(type) || isLongArray(type); }
+inline bool isArray(TagType type)
+{
+    return isByteArray(type) || isIntArray(type) || isLongArray(type);
+}
 
-inline bool isContainer(TagType type) { return isList(type) || isCompound(type); }
+inline bool isContainer(TagType type)
+{
+    return isList(type) || isCompound(type);
+}
 
 inline String getTagTypeString(TagType type)
 {
@@ -193,21 +248,23 @@ inline String getTagTypeString(TagType type)
     }
 }
 
-}
+} // namespace nbt
 
 // Core of read and write binary data.
 namespace nbt
 {
 
 // @brief Reverse a C style string.
-// @param size The size of need reversed range, and reverse all if the size is 0.
+// @param size The size of need reversed range, and reverse all if the size is
+// 0.
 inline void _reverse(char* str, size_t size = 0)
 {
     // If size is 0, reverse all.
     if (size == 0)
         size = std::strlen(str);
 
-    // For each character in the range, swap it with the corresponding character at the end of the range.
+    // For each character in the range, swap it with the corresponding character
+    // at the end of the range.
     size_t i = 0;
     while (i < size / 2) {
         char ch = str[i];
@@ -218,7 +275,8 @@ inline void _reverse(char* str, size_t size = 0)
     }
 }
 
-// @brief Check whether the memory order of system of compiler environment is big endian.
+// @brief Check whether the memory order of system of compiler environment is
+// big endian.
 inline bool _isBigEndian()
 {
     static bool isInited = false;
@@ -236,9 +294,10 @@ inline bool _isBigEndian()
 }
 
 // @brief Obtain bytes from input stream, and convert it to number.
-// @param resumeCursor Whether to resume the cursor position of input stream after read.
+// @param resumeCursor Whether to resume the cursor position of input stream
+// after read.
 // @return A number.
-template<typename T>
+template <typename T>
 T _bytes2num(IStream& is, bool isBigEndian = false, bool resumeCursor = false)
 {
     size_t size = sizeof(T);
@@ -253,7 +312,8 @@ T _bytes2num(IStream& is, bool isBigEndian = false, bool resumeCursor = false)
 
     size = static_cast<size_t>(is.gcount());
 
-    // Reverse the bytes if the specified endianness is different from system's endianness.
+    // Reverse the bytes if the specified endianness is different from system's
+    // endianness.
     if (isBigEndian != _isBigEndian())
         _reverse(buffer, size);
 
@@ -268,7 +328,7 @@ T _bytes2num(IStream& is, bool isBigEndian = false, bool resumeCursor = false)
 }
 
 // @brief Convert the number to bytes, and write it to output stream.
-template<typename T>
+template <typename T>
 void _num2bytes(T num, OStream& os, bool isBigEndian = false)
 {
     size_t size = sizeof(T);
@@ -278,14 +338,15 @@ void _num2bytes(T num, OStream& os, bool isBigEndian = false)
     // Convert the number to bytes. (reinterpreting memory bytes)
     std::memcpy(buffer, &num, size);
 
-    // Reverse the bytes if the specified endianness is different from system's endianness.
+    // Reverse the bytes if the specified endianness is different from system's
+    // endianness.
     if (isBigEndian != _isBigEndian())
         _reverse(buffer, size);
 
     os.write(buffer, size);
 }
 
-}
+} // namespace nbt
 
 // Main.
 namespace nbt
@@ -297,13 +358,11 @@ public:
     Tag() = default;
 
     // @brief Construct a tag with tag type.
-    explicit Tag(TagType type) :
-        type_(type)
-    {}
+    explicit Tag(TagType type) : type_(type) {}
 
-    // @note Just copy the other's base data (e.g. name, type, data value), not copy other's parent.
-    Tag(const Tag& other) :
-        type_(other.type_), dtype_(other.dtype_)
+    // @note Just copy the other's base data (e.g. name, type, data value), not
+    // copy other's parent.
+    Tag(const Tag& other) : type_(other.type_), dtype_(other.dtype_)
     {
         if (other.isNum())
             data_.num = other.data_.num;
@@ -339,15 +398,15 @@ public:
     }
 
     // @ditto
-    Tag(Tag&& other) noexcept :
-        type_(other.type_), dtype_(other.dtype_),
-        data_(other.data_), name_(other.name_)
+    Tag(Tag&& other) noexcept : type_(other.type_), dtype_(other.dtype_), data_(other.data_), name_(other.name_)
     {
         if (isList() && data_.ld)
-            for (auto& var : *data_.ld) var.parent_ = this;
+            for (auto& var : *data_.ld)
+                var.parent_ = this;
         else if (isCompound() && data_.cd)
-            for (auto& var : data_.cd->data) var.parent_ = this;
-        
+            for (auto& var : data_.cd->data)
+                var.parent_ = this;
+
         other.data_.str = nullptr;
         other.name_ = nullptr;
     }
@@ -359,7 +418,8 @@ public:
         parent_ = nullptr;
     }
 
-    // @note Just copy the other's base data (e.g. name, type, data value), not copy other's parent.
+    // @note Just copy the other's base data (e.g. name, type, data value), not
+    // copy other's parent.
     Tag& operator=(const Tag& other)
     {
         if (this == &other)
@@ -430,10 +490,12 @@ public:
         data_ = other.data_;
         name_ = other.name_;
 
-       if (isList() && data_.ld)
-            for (auto& var : *data_.ld) var.parent_ = this;
+        if (isList() && data_.ld)
+            for (auto& var : *data_.ld)
+                var.parent_ = this;
         else if (isCompound() && data_.cd)
-            for (auto& var : data_.cd->data) var.parent_ = this;
+            for (auto& var : data_.cd->data)
+                var.parent_ = this;
 
         other.data_.str = nullptr;
         other.name_ = nullptr;
@@ -448,12 +510,13 @@ public:
 
     // @brief Load the tag from binary input stream.
     // @param is The input stream.
-    // @param isBigEndian Whether the read data from input stream with big endian.
+    // @param isBigEndian Whether the read data from input stream with big
+    // endian.
     // @param headerSize The size of need discard data from input stream begin.
     // (usually is 0, but bedrock edition map file is 8, some useless dat)
     static Tag fromBinStream(IFStream& is, bool isBigEndian, size_t headerSize = 0)
     {
-    #ifdef MCNBT_USE_GZIP
+#ifdef MCNBT_USE_GZIP
         SStream buf;
         buf << is.rdbuf();
         String content = buf.str();
@@ -470,12 +533,12 @@ public:
             ss.seekg(headerSize, ss.cur);
 
         return fromBinStream_(ss, isBigEndian, false);
-    #else
+#else
         if (headerSize != 0)
             is.seekg(headerSize, is.cur);
 
         return fromBinStream_(is, isBigEndian, false);
-    #endif // MCNBT_USE_GZIP
+#endif // MCNBT_USE_GZIP
     }
 
     // @brief Load the tag from a nbt file.
@@ -506,8 +569,8 @@ public:
     }
 
     /*
-    * Functions of check tag type.
-    */
+     * Functions of check tag type.
+     */
 
     bool isEnd() const { return nbt::isEnd(type_); }
 
@@ -546,8 +609,8 @@ public:
     bool isContainer() const { return nbt::isContainer(type_); }
 
     /*
-    * Functions of common.
-    */
+     * Functions of common.
+     */
 
     // @brief Make a copy.
     // Usually used for add tag to list or compound.
@@ -613,7 +676,7 @@ public:
         size_t idx = p->data_.cd->idxs[oldname];
 
         p->data_.cd->idxs.erase(oldname);
-        p->data_.cd->idxs.insert( { name, idx } );
+        p->data_.cd->idxs.insert({ name, idx });
 
         return t;
     }
@@ -629,7 +692,8 @@ public:
 
     // @brief Check self if is be contained in specified tag.
     // @param container The tag that be checked whether self is contained in it.
-    // @note It check all the parent (parent' parent) until happen a parent is nullptr.
+    // @note It check all the parent (parent' parent) until happen a parent is
+    // nullptr.
     bool isContained(const Tag& container) const
     {
         const Tag* p = parent_;
@@ -645,8 +709,8 @@ public:
     }
 
     /*
-    * Functions about list.
-    */
+     * Functions about list.
+     */
 
     // @brief Check whether the list is initialized (#dtype_ is not TT_END).
     // @attention Only be called by #TT_LIST.
@@ -671,7 +735,8 @@ public:
         assert(isList());
 
         if (dtype_ != TT_END)
-            throw std::logic_error("Can't repeat initialize element type for already initialized list.");
+            throw std::logic_error("Can't repeat initialize element type for "
+                                   "already initialized list.");
 
         dtype_ = type;
 
@@ -724,8 +789,8 @@ public:
     }
 
     /*
-    * Functions about compound.
-    */
+     * Functions about compound.
+     */
 
     // @brief Check the compound if contains member of specified name.
     // @attention Only be called by #TT_COMPOUND.
@@ -740,16 +805,18 @@ public:
     }
 
     /*
-    * Functions about containers.
-    */
+     * Functions about containers.
+     */
 
-    // @brief Get the length of string or size of array or tag counts of list and compound.
+    // @brief Get the length of string or size of array or tag counts of list
+    // and compound.
     // @attention Only be called by
-    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
+    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST,
+    // #TT_COMPOUND.
     size_t size() const
     {
         assert(isString() || isArray() || isContainer());
-        
+
         if (isString())
             return !data_.str ? 0 : data_.str->size();
         if (isByteArray())
@@ -768,16 +835,18 @@ public:
 
     // @brief Check whether the string or array or list or compound is empty.
     // @attention Only be called by
-    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
+    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST,
+    // #TT_COMPOUND.
     bool empty() const { return size() == 0; }
 
     // @brief Reserve the space of string or array or list or compound.
     // @attention Only be called by
-    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
+    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST,
+    // #TT_COMPOUND.
     void reserve(size_t size)
     {
         assert(isString() || isArray() || isContainer());
-        
+
         if (isString()) {
             if (!data_.str)
                 data_.str = new String();
@@ -812,8 +881,8 @@ public:
     }
 
     /*
-    * Functions for set tag's value. Only be called by corresponding tag.
-    */
+     * Functions for set tag's value. Only be called by corresponding tag.
+     */
 
     // @attention Only be called by #TT_BYTE.
     Tag& setByte(byte value)
@@ -1025,8 +1094,9 @@ public:
     }
 
     // @brief Add a tag to the initialized list or compound.
-    // @note Original tag will be moved to the new tag whether left-value or right-value reference,
-    // and the original tag will invalid after this operation, but you can call #copy() function to avoid this.
+    // @note Original tag will be moved to the new tag whether left-value or
+    // right-value reference, and the original tag will invalid after this
+    // operation, but you can call #copy() function to avoid this.
     // @attention Only be called by #TT_LIST, #TT_COMPOUND.
     Tag& addTag(Tag&& tag)
     {
@@ -1058,7 +1128,8 @@ public:
             data_.ld->emplace_back(std::move(tag));
 
             if (needShuffle)
-                for (auto& var : *data_.ld) var.parent_ = this;
+                for (auto& var : *data_.ld)
+                    var.parent_ = this;
             else
                 data_.ld->back().parent_ = this;
 
@@ -1075,10 +1146,11 @@ public:
             } else {
                 bool needShuffle = (data_.cd->data.capacity() - data_.cd->size()) == 0;
                 data_.cd->data.emplace_back(std::move(tag));
-                data_.cd->idxs.insert( { data_.cd->data.back().name(), data_.cd->data.size() - 1 } );
+                data_.cd->idxs.insert({ data_.cd->data.back().name(), data_.cd->data.size() - 1 });
 
                 if (needShuffle)
-                    for (auto& var : data_.cd->data) var.parent_ = this;
+                    for (auto& var : data_.cd->data)
+                        var.parent_ = this;
                 else
                     data_.cd->data.back().parent_ = this;
             }
@@ -1091,8 +1163,8 @@ public:
     Tag& addTag(Tag& tag) { return addTag(std::move(tag)); }
 
     /*
-    * Functions for get value. Only be called by corresponding tag.
-    */
+     * Functions for get value. Only be called by corresponding tag.
+     */
 
     // @attention Only be called by #TT_BYTE.
     byte getByte() const
@@ -1403,7 +1475,8 @@ public:
 
     // @brief Remove the element by index.
     // @attention Only be called by
-    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
+    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST,
+    // #TT_COMPOUND.
     Tag& remove(size_t idx)
     {
         assert(isString() || isArray() || isContainer());
@@ -1444,7 +1517,8 @@ public:
             data_.cd->data.erase(data_.cd->data.begin() + idx);
 
             for (auto& var : data_.cd->idxs)
-                if (var.second > idx) var.second--;
+                if (var.second > idx)
+                    var.second--;
         }
 
         return *this;
@@ -1467,14 +1541,16 @@ public:
         data_.cd->idxs.erase(name);
 
         for (auto& var : data_.cd->idxs)
-            if (var.second > idx) var.second--;
+            if (var.second > idx)
+                var.second--;
 
         return *this;
     }
 
     // @brief Remove the first element.
     // @attention Only be called by
-    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
+    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST,
+    // #TT_COMPOUND.
     Tag& removeFront()
     {
         assert(isString() || isArray() || isContainer());
@@ -1523,7 +1599,8 @@ public:
 
     // @brief Remove the last element.
     // @attention Only be called by
-    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
+    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST,
+    // #TT_COMPOUND.
     Tag& removeBack()
     {
         assert(isString() || isArray() || isContainer());
@@ -1569,7 +1646,8 @@ public:
 
     // @brief Remove the all elements.
     // @attention Only be called by
-    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
+    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST,
+    // #TT_COMPOUND.
     Tag& removeAll()
     {
         assert(isString() || isArray() || isContainer());
@@ -1644,12 +1722,13 @@ public:
 #endif // MCNBT_USE_GZIP
 
     // @brief Get the SNBT (The string representation of NBT).
-    // @param isIndented If true, the output string will be indented and proper newline.
+    // @param isIndented If true, the output string will be indented and proper
+    // newline.
     String toSnbt(bool isIndented = true) const { return toSnbt_(isIndented, (isListElement())); }
 
     /*
-    * Operators overloading.
-    */
+     * Operators overloading.
+     */
 
     // @brief Fast way of get the tag by index.
     Tag& operator[](size_t idx) { return getTag(idx); }
@@ -1670,6 +1749,7 @@ private:
     union Num
     {
         Num() : i64(0) {}
+
         byte i8;
         int16 i16;
         int32 i32;
@@ -1703,11 +1783,12 @@ private:
 
     // Value of tag.
     // Individual tag is like key-value pair.
-    // The key is the name of tag (can be empty, and all list element not has name).
-    // The value is stored in the following union.
+    // The key is the name of tag (can be empty, and all list element not has
+    // name). The value is stored in the following union.
     union Data
     {
         Data() : num(Num()) {}
+
         // Number data
         Num num;
         // String data
@@ -1725,7 +1806,8 @@ private:
     };
 
     // @param tagType If the param isListElement is false, ignore it.
-    // If the param isListElement is true, the tagType must be set to the same as the parent tag.
+    // If the param isListElement is true, the tagType must be set to the same
+    // as the parent tag.
     static Tag fromBinStream_(IStream& is, bool isBigEndian, bool isListElement, int tagType = -1)
     {
         Tag tag;
@@ -2171,7 +2253,7 @@ private:
     Tag* parent_ = nullptr;
 };
 
-}
+} // namespace nbt
 
 // Faster way for construct a tag object.
 namespace nbt
@@ -2298,6 +2380,6 @@ inline Tag gCompound(const String& name = "")
     return tag;
 }
 
-}
+} // namespace nbt
 
 #endif // !MCNBT_HPP

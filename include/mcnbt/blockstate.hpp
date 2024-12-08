@@ -42,9 +42,7 @@ struct CommandBlockSD final : BlockStateData
         FD_EAST
     };
 
-    CommandBlockSD(bool isConditional = false, FacingDirection fd = FD_UP) :
-        isConditional(isConditional), fd(fd)
-    {}
+    CommandBlockSD(bool isConditional = false, FacingDirection fd = FD_UP) : isConditional(isConditional), fd(fd) {}
 
     bool isConditional;
     FacingDirection fd = FD_UP;
@@ -85,12 +83,9 @@ protected:
         }
     };
 
-    void assemble(Tag& tag) const override
-    {
-        tag << gString(modestr_(), "structure_block_type");
-    };
+    void assemble(Tag& tag) const override { tag << gString(modestr_(), "structure_block_type"); };
 };
 
-}
+} // namespace nbt
 
 #endif // !MCNBT_BLOCKSTATE_HPP

@@ -180,8 +180,8 @@ void listExample()
     try {
         lst.initListElementType(TT_INT);
     } catch (std::exception& e) {
-        std::cout << "Error, init list element type twice (#lst.initListElementType(TT_INT)): " <<
-            e.what() << std::endl;
+        std::cout << "Error, init list element type twice (#lst.initListElementType(TT_INT)): " << e.what()
+                  << std::endl;
     }
     std::cout << '\n';
 
@@ -283,8 +283,8 @@ void listExample()
     Tag lst1 = Tag(TT_LIST).initListElementType(TT_INT);
     lst1 << Tag(TT_INT).setInt(1) << Tag(TT_INT).setInt(2) << Tag(TT_INT).setInt(3);
     std::cout << lst1.toSnbt() << std::endl;
-    lst.addTag(lst1);           // default move constructor. (lst1 is invalid after this operation)
-    lst.addTag(lst2.copy());    // copy constructor. (lst2 is still valid after this operation)
+    lst.addTag(lst1);        // default move constructor. (lst1 is invalid after this operation)
+    lst.addTag(lst2.copy()); // copy constructor. (lst2 is still valid after this operation)
     std::cout << "#lst value after add list (#lst1, #lst2): ";
     std::cout << lst.toSnbt() << std::endl;
     std::cout << "#lst1 value: ";
@@ -310,10 +310,10 @@ void compoundExample()
 
     // Add some list to list for test nested list.
     Tag lst = Tag(TT_LIST).initListElementType(TT_LIST);
-    lst << (Tag(TT_LIST).initListElementType(TT_INT) <<
-            Tag(TT_INT).setInt(1) << Tag(TT_INT).setInt(2) << Tag(TT_INT).setInt(3));
-    lst << (Tag(TT_LIST).initListElementType(TT_STRING) <<
-            Tag(TT_STRING).setString("NiHao") << Tag(TT_STRING).setString("ShiJie!"));
+    lst << (Tag(TT_LIST).initListElementType(TT_INT)
+            << Tag(TT_INT).setInt(1) << Tag(TT_INT).setInt(2) << Tag(TT_INT).setInt(3));
+    lst << (Tag(TT_LIST).initListElementType(TT_STRING)
+            << Tag(TT_STRING).setString("NiHao") << Tag(TT_STRING).setString("ShiJie!"));
     Tag tmpLst = Tag(TT_LIST).initListElementType(TT_DOUBLE);
     tmpLst << Tag(TT_DOUBLE).setDouble(1.1) << Tag(TT_DOUBLE).setDouble(2.2) << Tag(TT_DOUBLE).setDouble(3.3);
     lst << (Tag(TT_LIST).initListElementType(TT_LIST) << tmpLst.copy() << tmpLst);

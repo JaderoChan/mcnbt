@@ -1,5 +1,5 @@
 #include <iostream>
-#include <utility>  // std::pair
+#include <utility> // std::pair
 
 #include <mcnbt/mcnbt.hpp>
 
@@ -44,14 +44,10 @@ void wrieExample(const std::string& filename, bool isBigEndian)
     root << birthday;
 
     auto friends = gList(TT_COMPOUND, "friends");
-    friends << (gCompound("Person") <<
-                gString("Bob", "name") <<
-                gInt(26, "age") <<
-                gByte(1, "gender (0=male, 1=female)"));
-    friends << (gCompound("Person") <<
-                gString("Charlie", "name") <<
-                gInt(30, "age") <<
-                gByte(1, "gender (0=male, 1=female)"));
+    friends << (gCompound("Person") << gString("Bob", "name") << gInt(26, "age")
+                                    << gByte(1, "gender (0=male, 1=female)"));
+    friends << (gCompound("Person") << gString("Charlie", "name") << gInt(30, "age")
+                                    << gByte(1, "gender (0=male, 1=female)"));
     root << friends;
 
     root.write(filename, isBigEndian);

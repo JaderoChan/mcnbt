@@ -1,13 +1,13 @@
 #ifndef MCNBT_GZIP_HPP
 #define MCNBT_GZIP_HPP
 
-#include <cstddef>  // size_t
-#include <string>
+#include <cstddef> // size_t
 #include <limits>
 #include <stdexcept>
+#include <string>
 
 #ifndef ZLIB_CONST
-#define ZLIB_CONST
+    #define ZLIB_CONST
 #endif // !ZLIB_CONST
 #include <zlib.h>
 
@@ -147,8 +147,8 @@ inline std::string decompress(const char* data, size_t size)
     return decompress(std::string(data, size));
 }
 
-}
+} // namespace gzip
 
-}
+} // namespace nbt
 
 #endif // !MCNBT_GZIP_HPP
