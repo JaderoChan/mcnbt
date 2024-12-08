@@ -48,7 +48,7 @@
 #include <vector>
 
 #ifdef MCNBT_USE_GZIP
-    #include "gzip.hpp"
+#include "gzip.hpp"
 #endif // MCNBT_USE_GZIP
 
 // McNbt namespace.
