@@ -82,13 +82,13 @@ using IFStream = std::ifstream;
 using OFStream = std::ofstream;
 using FStream = std::fstream;
 
-template<typename T>
+template <typename T>
 using Vec = std::vector<T>;
 
-template<typename K, typename V>
+template <typename K, typename V>
 using Map = std::unordered_map<K, V>;
 
-}
+} // namespace nbt
 
 // Enum, constants and aux functions.
 namespace nbt
@@ -193,7 +193,7 @@ inline String getTagTypeString(TagType type)
     }
 }
 
-}
+} // namespace nbt
 
 // Core of read and write binary data.
 namespace nbt
@@ -238,7 +238,7 @@ inline bool _isBigEndian()
 // @brief Obtain bytes from input stream, and convert it to number.
 // @param resumeCursor Whether to resume the cursor position of input stream after read.
 // @return A number.
-template<typename T>
+template <typename T>
 T _bytes2num(IStream& is, bool isBigEndian = false, bool resumeCursor = false)
 {
     size_t size = sizeof(T);
@@ -268,7 +268,7 @@ T _bytes2num(IStream& is, bool isBigEndian = false, bool resumeCursor = false)
 }
 
 // @brief Convert the number to bytes, and write it to output stream.
-template<typename T>
+template <typename T>
 void _num2bytes(T num, OStream& os, bool isBigEndian = false)
 {
     size_t size = sizeof(T);
@@ -285,7 +285,7 @@ void _num2bytes(T num, OStream& os, bool isBigEndian = false)
     os.write(buffer, size);
 }
 
-}
+} // namespace nbt
 
 // Main.
 namespace nbt
@@ -297,9 +297,7 @@ public:
     Tag() = default;
 
     // @brief Construct a tag with tag type.
-    explicit Tag(TagType type) :
-        type_(type)
-    {}
+    explicit Tag(TagType type) : type_(type) {}
 
     // @note Just copy the other's base data (e.g. name, type, data value), not copy other's parent.
     Tag(const Tag& other) :
@@ -340,14 +338,13 @@ public:
 
     // @ditto
     Tag(Tag&& other) noexcept :
-        type_(other.type_), dtype_(other.dtype_),
-        data_(other.data_), name_(other.name_)
+        type_(other.type_), dtype_(other.dtype_), data_(other.data_), name_(other.name_)
     {
         if (isList() && data_.ld)
             for (auto& var : *data_.ld) var.parent_ = this;
         else if (isCompound() && data_.cd)
             for (auto& var : data_.cd->data) var.parent_ = this;
-        
+
         other.data_.str = nullptr;
         other.name_ = nullptr;
     }
@@ -430,7 +427,7 @@ public:
         data_ = other.data_;
         name_ = other.name_;
 
-       if (isList() && data_.ld)
+        if (isList() && data_.ld)
             for (auto& var : *data_.ld) var.parent_ = this;
         else if (isCompound() && data_.cd)
             for (auto& var : data_.cd->data) var.parent_ = this;
@@ -453,7 +450,7 @@ public:
     // (usually is 0, but bedrock edition map file is 8, some useless dat)
     static Tag fromBinStream(IFStream& is, bool isBigEndian, size_t headerSize = 0)
     {
-    #ifdef MCNBT_USE_GZIP
+#ifdef MCNBT_USE_GZIP
         SStream buf;
         buf << is.rdbuf();
         String content = buf.str();
@@ -470,12 +467,12 @@ public:
             ss.seekg(headerSize, ss.cur);
 
         return fromBinStream_(ss, isBigEndian, false);
-    #else
+#else
         if (headerSize != 0)
             is.seekg(headerSize, is.cur);
 
         return fromBinStream_(is, isBigEndian, false);
-    #endif // MCNBT_USE_GZIP
+#endif // MCNBT_USE_GZIP
     }
 
     // @brief Load the tag from a nbt file.
@@ -613,7 +610,7 @@ public:
         size_t idx = p->data_.cd->idxs[oldname];
 
         p->data_.cd->idxs.erase(oldname);
-        p->data_.cd->idxs.insert( { name, idx } );
+        p->data_.cd->idxs.insert({ name, idx });
 
         return t;
     }
@@ -749,7 +746,7 @@ public:
     size_t size() const
     {
         assert(isString() || isArray() || isContainer());
-        
+
         if (isString())
             return !data_.str ? 0 : data_.str->size();
         if (isByteArray())
@@ -777,7 +774,7 @@ public:
     void reserve(size_t size)
     {
         assert(isString() || isArray() || isContainer());
-        
+
         if (isString()) {
             if (!data_.str)
                 data_.str = new String();
@@ -1075,7 +1072,7 @@ public:
             } else {
                 bool needShuffle = (data_.cd->data.capacity() - data_.cd->size()) == 0;
                 data_.cd->data.emplace_back(std::move(tag));
-                data_.cd->idxs.insert( { data_.cd->data.back().name(), data_.cd->data.size() - 1 } );
+                data_.cd->idxs.insert({ data_.cd->data.back().name(), data_.cd->data.size() - 1 });
 
                 if (needShuffle)
                     for (auto& var : data_.cd->data) var.parent_ = this;
@@ -2171,7 +2168,7 @@ private:
     Tag* parent_ = nullptr;
 };
 
-}
+} // namespace nbt
 
 // Faster way for construct a tag object.
 namespace nbt
@@ -2298,6 +2295,6 @@ inline Tag gCompound(const String& name = "")
     return tag;
 }
 
-}
+} // namespace nbt
 
 #endif // !MCNBT_HPP

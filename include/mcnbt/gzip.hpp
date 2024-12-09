@@ -89,10 +89,7 @@ inline std::string compress(const std::string& data)
     return compressed;
 }
 
-inline std::string compress(const char* data, size_t size)
-{
-    return compress(std::string(data, size));
-}
+inline std::string compress(const char* data, size_t size) { return compress(std::string(data, size)); }
 
 inline std::string decompress(const std::string& data)
 {
@@ -142,13 +139,10 @@ inline std::string decompress(const std::string& data)
     return decompressed;
 }
 
-inline std::string decompress(const char* data, size_t size)
-{
-    return decompress(std::string(data, size));
-}
+inline std::string decompress(const char* data, size_t size) { return decompress(std::string(data, size)); }
 
 }
 
-}
+} // namespace nbt
 
 #endif // !MCNBT_GZIP_HPP

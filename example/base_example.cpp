@@ -180,8 +180,8 @@ void listExample()
     try {
         lst.initListElementType(TT_INT);
     } catch (std::exception& e) {
-        std::cout << "Error, init list element type twice (#lst.initListElementType(TT_INT)): " <<
-            e.what() << std::endl;
+        std::cout << "Error, init list element type twice (#lst.initListElementType(TT_INT)): "
+                  << e.what() << std::endl;
     }
     std::cout << '\n';
 
@@ -310,10 +310,13 @@ void compoundExample()
 
     // Add some list to list for test nested list.
     Tag lst = Tag(TT_LIST).initListElementType(TT_LIST);
-    lst << (Tag(TT_LIST).initListElementType(TT_INT) <<
-            Tag(TT_INT).setInt(1) << Tag(TT_INT).setInt(2) << Tag(TT_INT).setInt(3));
-    lst << (Tag(TT_LIST).initListElementType(TT_STRING) <<
-            Tag(TT_STRING).setString("NiHao") << Tag(TT_STRING).setString("ShiJie!"));
+    lst << (Tag(TT_LIST).initListElementType(TT_INT)
+            << Tag(TT_INT).setInt(1)
+            << Tag(TT_INT).setInt(2)
+            << Tag(TT_INT).setInt(3));
+    lst << (Tag(TT_LIST).initListElementType(TT_STRING)
+            << Tag(TT_STRING).setString("NiHao")
+            << Tag(TT_STRING).setString("ShiJie!"));
     Tag tmpLst = Tag(TT_LIST).initListElementType(TT_DOUBLE);
     tmpLst << Tag(TT_DOUBLE).setDouble(1.1) << Tag(TT_DOUBLE).setDouble(2.2) << Tag(TT_DOUBLE).setDouble(3.3);
     lst << (Tag(TT_LIST).initListElementType(TT_LIST) << tmpLst.copy() << tmpLst);

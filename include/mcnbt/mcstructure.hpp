@@ -91,6 +91,6 @@ inline Tag createSingleBlockStructure(const std::string& blockId,
     return mcs.root;
 }
 
-}
+} // namespace nbt
 
 #endif // !MCNBT_MCSTRUCTURE_HPP

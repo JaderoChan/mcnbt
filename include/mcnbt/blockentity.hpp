@@ -14,9 +14,7 @@ struct BlockEntityData
 {
     BlockEntityData() {}
 
-    BlockEntityData(const String& id, const String& customeName = "") :
-        id(id), customName(customeName)
-    {}
+    BlockEntityData(const String& id, const String& customeName = "") : id(id), customName(customeName) {}
 
     virtual ~BlockEntityData() {}
 
@@ -51,7 +49,8 @@ struct CommandBlockED final : BlockEntityData
     CommandBlockED() : BlockEntityData("CommandBlock") {}
 
     CommandBlockED(const String& command, int32 tickDelay = 0,
-                   bool isAuto = false, bool isPowered = true, bool conditionMet = false) :
+                   bool isAuto = false, bool isPowered = true,
+                   bool conditionMet = false) :
         BlockEntityData("CommandBlock"), command(command), tickDelay(tickDelay),
         isAuto(isAuto), isPowered(isPowered), conditionMet(conditionMet)
     {}
@@ -154,9 +153,7 @@ struct StructureBlockED final : BlockEntityData
     StructureBlockED() : BlockEntityData("StructureBlock") {}
 
     StructureBlockED(const String& structureName, Mode mode = MODE_LOAD, bool ignoreEntities = false) :
-        BlockEntityData("StructureBlock"),
-        structureName(structureName),
-        ignoreEntities(ignoreEntities)
+        BlockEntityData("StructureBlock"), structureName(structureName), ignoreEntities(ignoreEntities)
     {}
 
     String structureName;
@@ -204,6 +201,6 @@ protected:
     };
 };
 
-}
+} // namespace nbt
 
 #endif // !MCNBT_BLOCKENTITY_HPP

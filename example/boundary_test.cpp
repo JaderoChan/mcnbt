@@ -42,7 +42,7 @@ void test1()
 
     out("-After Value: ");
     out(nested);
-    
+
     nested[0].hasTag("num1") ? out("num1 exists.") : out("num1 not exists.");
     nested[0].hasTag("num2") ? out("num2 exists.") : out("num2 not exists.");
     nested[0].hasTag("num3") ? out("num3 exists.") : out("num3 not exists.");
