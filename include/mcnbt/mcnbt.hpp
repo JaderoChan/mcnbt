@@ -1641,8 +1641,8 @@ public:
 #endif // MCNBT_USE_GZIP
 
     // @brief Get the SNBT (The string representation of NBT).
-    // @param isIndented If true, the output string will be indented and proper newline.
-    String toSnbt(bool isIndented = true) const { return toSnbt_(isIndented, (isListElement())); }
+    // @param isWrappedIndented If true, the output string will be wrapped and indented.
+    String toSnbt(bool isWrappedIndented = true) const { return toSnbt_(isWrappedIndented, (isListElement())); }
 
     /*
     * Operators overloading.
@@ -1981,15 +1981,15 @@ private:
         }
     }
 
-    String toSnbt_(bool isIndented, bool isListElement) const
+    String toSnbt_(bool isWrappedIndented, bool isListElement) const
     {
         static size_t indentCount = 0;
         String inheritedIndentStr(indentCount * _INDENT_SIZE, ' ');
 
-        String key = isIndented ? inheritedIndentStr : "";
+        String key = isWrappedIndented ? inheritedIndentStr : "";
 
         if (!isListElement && name_ && !name_->empty())
-            key += *name_ + (isIndented ? ": " : ":");
+            key += *name_ + (isWrappedIndented ? ": " : ":");
 
         if (isEnd())
             return "";
@@ -2021,18 +2021,18 @@ private:
 
             // If has indent add the newline character and indent string.
             String result = key + '[';
-            result += isIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
+            result += isWrappedIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
             result += "B;";
 
             for (const auto& var : *data_.bad) {
-                result += isIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
+                result += isWrappedIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
                 result += std::to_string(static_cast<int>(var)) + "b,";
             }
 
             if (result.back() == ',')
                 result.pop_back();
 
-            result += isIndented ? ('\n' + inheritedIndentStr) : "";
+            result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
             result += ']';
 
             return result;
@@ -2044,18 +2044,18 @@ private:
 
             // If has indent add the newline character and indent string.
             String result = key + '[';
-            result += isIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
+            result += isWrappedIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
             result += "I;";
 
             for (const auto& var : *data_.iad) {
-                result += isIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
+                result += isWrappedIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
                 result += std::to_string(var) + ",";
             }
 
             if (result.back() == ',')
                 result.pop_back();
 
-            result += isIndented ? ('\n' + inheritedIndentStr) : "";
+            result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
             result += ']';
 
             return result;
@@ -2067,18 +2067,18 @@ private:
 
             // If has indent add the newline character and indent string.
             String result = key + '[';
-            result += isIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
+            result += isWrappedIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
             result += "L;";
 
             for (const auto& var : *data_.lad) {
-                result += isIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
+                result += isWrappedIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
                 result += std::to_string(var) + "l,";
             }
 
             if (result.back() == ',')
                 result.pop_back();
 
-            result += isIndented ? ('\n' + inheritedIndentStr) : "";
+            result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
             result += ']';
 
             return result;
@@ -2092,15 +2092,15 @@ private:
 
             indentCount++;
             for (const auto& var : *data_.ld) {
-                result += isIndented ? "\n" : "";
-                result += var.toSnbt_(isIndented, true) + ",";
+                result += isWrappedIndented ? "\n" : "";
+                result += var.toSnbt_(isWrappedIndented, true) + ",";
             }
             indentCount--;
 
             if (result.back() == ',')
                 result.pop_back();
 
-            result += isIndented ? ('\n' + inheritedIndentStr) : "";
+            result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
             result += ']';
 
             return result;
@@ -2114,15 +2114,15 @@ private:
 
             indentCount++;
             for (const auto& var : data_.cd->data) {
-                result += isIndented ? "\n" : "";
-                result += var.toSnbt_(isIndented, false) + ",";
+                result += isWrappedIndented ? "\n" : "";
+                result += var.toSnbt_(isWrappedIndented, false) + ",";
             }
             indentCount--;
 
             if (result.back() == ',')
                 result.pop_back();
 
-            result += isIndented ? ('\n' + inheritedIndentStr) : "";
+            result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
             result += '}';
 
             return result;
