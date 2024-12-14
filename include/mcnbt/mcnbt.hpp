@@ -116,48 +116,103 @@ enum TagType : uchar
 * Constants about the indent of snbt.
 */
 
-constexpr size_t _INDENT_SIZE = 2;
-static const String _INDENT_STR(_INDENT_SIZE, ' ');
+constexpr size_t _SNBT_INDENT_WIDTH = 2;
+constexpr char _SNBT_INDENT_CHAR = 0x20;
+static const String _SNBT_INDENT_STR = String(_SNBT_INDENT_WIDTH, _SNBT_INDENT_CHAR);
 
 /*
 * Aux functions about tag type.
 */
 
-inline bool isEnd(TagType type) { return type == TT_END; }
+inline bool isEnd(TagType type)
+{
+    return type == TT_END;
+}
 
-inline bool isByte(TagType type) { return type == TT_BYTE; }
+inline bool isByte(TagType type)
+{
+    return type == TT_BYTE;
+}
 
-inline bool isShort(TagType type) { return type == TT_SHORT; }
+inline bool isShort(TagType type)
+{
+    return type == TT_SHORT;
+}
 
-inline bool isInt(TagType type) { return type == TT_INT; }
+inline bool isInt(TagType type)
+{
+    return type == TT_INT;
+}
 
-inline bool isLong(TagType type) { return type == TT_LONG; }
+inline bool isLong(TagType type)
+{
+    return type == TT_LONG;
+}
 
-inline bool isFloat(TagType type) { return type == TT_FLOAT; }
+inline bool isFloat(TagType type)
+{
+    return type == TT_FLOAT;
+}
 
-inline bool isDouble(TagType type) { return type == TT_DOUBLE; }
+inline bool isDouble(TagType type)
+{
+    return type == TT_DOUBLE;
+}
 
-inline bool isString(TagType type) { return type == TT_STRING; }
+inline bool isString(TagType type)
+{
+    return type == TT_STRING;
+}
 
-inline bool isByteArray(TagType type) { return type == TT_BYTE_ARRAY; }
+inline bool isByteArray(TagType type)
+{
+    return type == TT_BYTE_ARRAY;
+}
 
-inline bool isIntArray(TagType type) { return type == TT_INT_ARRAY; }
+inline bool isIntArray(TagType type)
+{
+    return type == TT_INT_ARRAY;
+}
 
-inline bool isLongArray(TagType type) { return type == TT_LONG_ARRAY; }
+inline bool isLongArray(TagType type)
+{
+    return type == TT_LONG_ARRAY;
+}
 
-inline bool isList(TagType type) { return type == TT_LIST; }
+inline bool isList(TagType type)
+{
+    return type == TT_LIST;
+}
 
-inline bool isCompound(TagType type) { return type == TT_COMPOUND; }
+inline bool isCompound(TagType type)
+{
+    return type == TT_COMPOUND;
+}
 
-inline bool isInteger(TagType type) { return isByte(type) || isShort(type) || isInt(type) || isLong(type); }
+inline bool isInteger(TagType type)
+{
+    return isByte(type) || isShort(type) || isInt(type) || isLong(type);
+}
 
-inline bool isFloatPoint(TagType type) { return isFloat(type) || isDouble(type); }
+inline bool isFloatPoint(TagType type)
+{
+    return isFloat(type) || isDouble(type);
+}
 
-inline bool isNum(TagType type) { return isInteger(type) || isFloatPoint(type); }
+inline bool isNum(TagType type)
+{
+    return isInteger(type) || isFloatPoint(type);
+}
 
-inline bool isArray(TagType type) { return isByteArray(type) || isIntArray(type) || isLongArray(type); }
+inline bool isArray(TagType type)
+{
+    return isByteArray(type) || isIntArray(type) || isLongArray(type);
+}
 
-inline bool isContainer(TagType type) { return isList(type) || isCompound(type); }
+inline bool isContainer(TagType type)
+{
+    return isList(type) || isCompound(type);
+}
 
 inline String getTagTypeString(TagType type)
 {
@@ -362,7 +417,6 @@ public:
         if (this == &other)
             return *this;
 
-        assert(!(isListElement() && (type_ != other.type_)));
         if (isListElement() && (type_ != other.type_))
             throw std::logic_error("Can't assign a tag of incorrect tag type to list element.");
 
@@ -555,22 +609,10 @@ public:
     TagType type() const { return type_; }
 
     // @brief Get the name of tag.
-    String name() const
-    {
-        if (!name_)
-            return "";
-
-        return *name_;
-    }
+    String name() const { return name_ ? *name_ : ""; }
 
     // @brief Get the name length of tag.
-    int16 nameLength() const
-    {
-        if (!name_)
-            return 0;
-
-        return static_cast<int16>(name_->size());
-    }
+    int16 nameLength() const { return name_ ? static_cast<int16>(name_->size()) : 0; }
 
     // @brief Set the name of tag.
     // @attention Only be called by non-ListElement.
@@ -693,6 +735,8 @@ public:
 
         return *this;
     }
+
+    Tag assign(const Tag& tag) { return tag.copy(); }
 
     // @attention Only be called by #TT_LIST.
     Tag& assign(size_t size, const Tag& tag)
@@ -1984,7 +2028,7 @@ private:
     String toSnbt_(bool isWrappedIndented, bool isListElement) const
     {
         static size_t indentCount = 0;
-        String inheritedIndentStr(indentCount * _INDENT_SIZE, ' ');
+        String inheritedIndentStr(indentCount * _SNBT_INDENT_WIDTH, ' ');
 
         String key = isWrappedIndented ? inheritedIndentStr : "";
 
@@ -2021,11 +2065,11 @@ private:
 
             // If has indent add the newline character and indent string.
             String result = key + '[';
-            result += isWrappedIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
+            result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
             result += "B;";
 
             for (const auto& var : *data_.bad) {
-                result += isWrappedIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
+                result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
                 result += std::to_string(static_cast<int>(var)) + "b,";
             }
 
@@ -2044,11 +2088,11 @@ private:
 
             // If has indent add the newline character and indent string.
             String result = key + '[';
-            result += isWrappedIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
+            result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
             result += "I;";
 
             for (const auto& var : *data_.iad) {
-                result += isWrappedIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
+                result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
                 result += std::to_string(var) + ",";
             }
 
@@ -2067,11 +2111,11 @@ private:
 
             // If has indent add the newline character and indent string.
             String result = key + '[';
-            result += isWrappedIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
+            result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
             result += "L;";
 
             for (const auto& var : *data_.lad) {
-                result += isWrappedIndented ? ('\n' + inheritedIndentStr + _INDENT_STR) : "";
+                result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
                 result += std::to_string(var) + "l,";
             }
 
