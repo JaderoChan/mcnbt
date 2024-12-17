@@ -34,6 +34,9 @@
 // Whether to use GZip to un/compress MCNBT.
 // #define MCNBT_USE_GZIP
 
+// Whether to disable throw logic exception check (for performance).
+// #define MCNBT_DISABLE_LOGIC_EXCEPTION
+
 #include <cstdint>  // int16_t, int32_t, int64_t
 #include <cstddef>  // size_t
 #include <cstring>  // strlen(), memcpy()
@@ -417,8 +420,11 @@ public:
         if (this == &other)
             return *this;
 
+        assert(!(isListElement() && (type_ != other.type_)));
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
         if (isListElement() && (type_ != other.type_))
             throw std::logic_error("Can't assign a tag of incorrect tag type to list element.");
+#endif
 
         release_();
 
@@ -467,12 +473,16 @@ public:
             return *this;
 
         assert(!isContained(other));
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
         if (isContained(other))
             throw std::logic_error("Can't assign parent to self.");
+#endif
 
         assert(!(isListElement() && (type_ != other.type_)));
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
         if (isListElement() && (type_ != other.type_))
             throw std::logic_error("Can't assign a tag of incorrect tag type to list element");
+#endif
 
         release_();
 
@@ -618,8 +628,11 @@ public:
     // @attention Only be called by non-ListElement.
     Tag& setName(const String& name)
     {
+        assert(!isListElement());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
         if (isListElement())
             throw std::logic_error("Can't set name for list element.");
+#endif
 
         if (name.empty() && !name_)
             return *this;
@@ -692,6 +705,11 @@ public:
     bool isInitializedList() const
     {
         assert(isList());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isList())
+            throw std::logic_error("Can't check initialized list for non-list tag.");
+#endif
+
         return dtype_ != TT_END;
     }
 
@@ -700,6 +718,11 @@ public:
     TagType listElementType() const
     {
         assert(isList());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isList())
+            throw std::logic_error("Can't get element type for non-list tag.");
+#endif
+
         return dtype_;
     }
 
@@ -708,9 +731,13 @@ public:
     Tag& initListElementType(TagType type)
     {
         assert(isList());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isList())
+            throw std::logic_error("Can't initialize element type for non-list tag.");
 
         if (dtype_ != TT_END)
             throw std::logic_error("Can't repeat initialize element type for already initialized list.");
+#endif
 
         dtype_ = type;
 
@@ -722,6 +749,10 @@ public:
     Tag& resetList()
     {
         assert(isList());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isList())
+            throw std::logic_error("Can't reset list for non-list tag.");
+#endif
 
         if (dtype_ == TT_END)
             return *this;
@@ -742,6 +773,9 @@ public:
     Tag& assign(size_t size, const Tag& tag)
     {
         assert(isList());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isList())
+            throw std::logic_error("Can't assign multiple tags to non-list tag.");
 
         if (dtype_ == TT_END)
             throw std::logic_error("Can't read or write a uninitialized list.");
@@ -752,6 +786,7 @@ public:
 
             throw std::logic_error(errmsg);
         }
+#endif
 
         if (size == 0 && !data_.ld)
             return *this;
@@ -773,6 +808,10 @@ public:
     bool hasTag(const String& name) const
     {
         assert(isCompound());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isCompound())
+            throw std::logic_error("Can't check tag existence for non-compound tag.");
+#endif
 
         if (!data_.cd)
             return false;
@@ -790,6 +829,10 @@ public:
     size_t size() const
     {
         assert(isString() || isArray() || isContainer());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isString() && !isArray() && !isContainer())
+            throw std::logic_error("Can't get size for non-string, non-array, non-container tag.");
+#endif
 
         if (isString())
             return !data_.str ? 0 : data_.str->size();
@@ -818,6 +861,10 @@ public:
     void reserve(size_t size)
     {
         assert(isString() || isArray() || isContainer());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isString() && !isArray() && !isContainer())
+            throw std::logic_error("Can't reserve space for non-string, non-array, non-container tag.");
+#endif
 
         if (isString()) {
             if (!data_.str)
@@ -860,6 +907,10 @@ public:
     Tag& setByte(byte value)
     {
         assert(isByte());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isByte())
+            throw std::logic_error("Can't set byte value for non-byte tag.");
+#endif
 
         data_.num.i8 = value;
 
@@ -870,6 +921,10 @@ public:
     Tag& setShort(int16 value)
     {
         assert(isShort());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isShort())
+            throw std::logic_error("Can't set short value for non-short tag.");
+#endif
 
         data_.num.i16 = value;
 
@@ -880,6 +935,10 @@ public:
     Tag& setInt(int32 value)
     {
         assert(isInt());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isInt())
+            throw std::logic_error("Can't set int value for non-int tag.");
+#endif
 
         data_.num.i32 = value;
 
@@ -890,6 +949,10 @@ public:
     Tag& setLong(int64 value)
     {
         assert(isLong());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isLong())
+            throw std::logic_error("Can't set long value for non-long tag.");
+#endif
 
         data_.num.i64 = value;
 
@@ -900,6 +963,10 @@ public:
     Tag& setFloat(fp32 value)
     {
         assert(isFloat());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isFloat())
+            throw std::logic_error("Can't set float value for non-float tag.");
+#endif
 
         data_.num.f32 = value;
 
@@ -910,6 +977,10 @@ public:
     Tag& setDouble(fp64 value)
     {
         assert(isDouble());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isDouble())
+            throw std::logic_error("Can't set double value for non-double tag.");
+#endif
 
         data_.num.f64 = value;
 
@@ -921,6 +992,10 @@ public:
     Tag& setInteger(int64 value)
     {
         assert(isInteger());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isInteger())
+            throw std::logic_error("Can't set interger number for non-integer tag.");
+#endif
 
         if (isByte())
             setByte(static_cast<byte>(value));
@@ -939,6 +1014,10 @@ public:
     Tag& setFloatPoint(fp64 value)
     {
         assert(isFloatPoint());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isFloatPoint())
+            throw std::logic_error("Can't set float point number value for non-float point tag.");
+#endif
 
         if (isFloat())
             setFloat(static_cast<fp32>(value));
@@ -952,6 +1031,10 @@ public:
     Tag& setString(const String& value)
     {
         assert(isString());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isString())
+            throw std::logic_error("Can't set string value for non-string tag.");
+#endif
 
         if (value.empty() && !data_.str)
             return *this;
@@ -968,6 +1051,10 @@ public:
     Tag& setByteArray(const Vec<byte>& value)
     {
         assert(isByteArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isByteArray())
+            throw std::logic_error("Can't set byte array value for non-byte array tag.");
+#endif
 
         if (value.empty() && !data_.bad)
             return *this;
@@ -984,6 +1071,10 @@ public:
     Tag& setIntArray(const Vec<int32>& value)
     {
         assert(isIntArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isIntArray())
+            throw std::logic_error("Can't set int array value for non-int array tag.");
+#endif
 
         if (value.empty() && !data_.iad)
             return *this;
@@ -1000,6 +1091,10 @@ public:
     Tag& setLongArray(const Vec<int64>& value)
     {
         assert(isLongArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isLongArray())
+            throw std::logic_error("Can't set long array value for non-long array tag.");
+#endif
 
         if (value.empty() && !data_.lad)
             return *this;
@@ -1028,6 +1123,10 @@ public:
     Tag& addByte(byte value)
     {
         assert(isByteArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isByteArray())
+            throw std::logic_error("Can't add byte value to non-byte array tag.");
+#endif
 
         if (!data_.bad)
             data_.bad = new Vec<byte>();
@@ -1042,6 +1141,10 @@ public:
     Tag& addInt(int32 value)
     {
         assert(isIntArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isIntArray())
+            throw std::logic_error("Can't add int value to non-int array tag.");
+#endif
 
         if (!data_.iad)
             data_.iad = new Vec<int32>();
@@ -1056,6 +1159,10 @@ public:
     Tag& addLong(int64 value)
     {
         assert(isLongArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isLongArray())
+            throw std::logic_error("Can't add long value to non-long array tag.");
+#endif
 
         if (!data_.lad)
             data_.lad = new Vec<int64>();
@@ -1072,16 +1179,25 @@ public:
     Tag& addTag(Tag&& tag)
     {
         assert(isContainer());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isContainer())
+            throw std::logic_error("Can't add tag to non-container tag.");
+#endif
 
         assert(this != &tag);
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
         if (this == &tag)
-            throw std::runtime_error("Can't add self to self.");
+            throw std::logic_error("Can't add self to self.");
+#endif
 
         assert(!isContained(tag));
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
         if (isContained(tag))
             throw std::logic_error("Can't add parent to self.");
+#endif
 
         if (isList()) {
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
             if (dtype_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
 
@@ -1091,6 +1207,7 @@ public:
 
                 throw std::logic_error(errmsg);
             }
+#endif
 
             if (!data_.ld)
                 data_.ld = new Vec<Tag>();
@@ -1139,6 +1256,11 @@ public:
     byte getByte() const
     {
         assert(isByte());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isByte())
+            throw std::logic_error("Can't get byte value for non-byte tag.");
+#endif
+
         return data_.num.i8;
     }
 
@@ -1146,6 +1268,11 @@ public:
     int16 getShort() const
     {
         assert(isShort());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isShort())
+            throw std::logic_error("Can't get short value for non-short tag.");
+#endif
+
         return data_.num.i16;
     }
 
@@ -1153,6 +1280,11 @@ public:
     int32 getInt() const
     {
         assert(isInt());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isInt())
+            throw std::logic_error("Can't get int value for non-int tag.");
+#endif
+
         return data_.num.i32;
     }
 
@@ -1160,6 +1292,11 @@ public:
     int64 getLong() const
     {
         assert(isLong());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isLong())
+            throw std::logic_error("Can't get long value for non-long tag.");
+#endif
+
         return data_.num.i64;
     }
 
@@ -1167,6 +1304,11 @@ public:
     fp32 getFloat() const
     {
         assert(isFloat());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isFloat())
+            throw std::logic_error("Can't get float value for non-float tag.");
+#endif
+
         return data_.num.f32;
     }
 
@@ -1174,6 +1316,11 @@ public:
     fp64 getDouble() const
     {
         assert(isDouble());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isDouble())
+            throw std::logic_error("Can't get double value for non-double tag.");
+#endif
+
         return data_.num.f64;
     }
 
@@ -1182,6 +1329,10 @@ public:
     int64 getInteger() const
     {
         assert(isInteger());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isInteger())
+            throw std::logic_error("Can't get interger number for non-integer tag.");
+#endif
 
         if (isByte())
             return data_.num.i8;
@@ -1200,6 +1351,10 @@ public:
     fp64 getFloatPoint() const
     {
         assert(isFloatPoint());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isFloatPoint())
+            throw std::logic_error("Can't get float point number value for non-float point tag.");
+#endif
 
         if (isFloat())
             return data_.num.f32;
@@ -1213,6 +1368,10 @@ public:
     String getString() const
     {
         assert(isString());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isString())
+            throw std::logic_error("Can't get string value for non-string tag.");
+#endif
 
         if (!data_.str)
             return String();
@@ -1224,6 +1383,10 @@ public:
     Vec<byte> getByteArray() const
     {
         assert(isByteArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isByteArray())
+            throw std::logic_error("Can't get byte array value for non-byte array tag.");
+#endif
 
         if (!data_.bad)
             return Vec<byte>();
@@ -1235,6 +1398,10 @@ public:
     Vec<int32> getIntArray() const
     {
         assert(isIntArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isIntArray())
+            throw std::logic_error("Can't get int array value for non-int array tag.");
+#endif
 
         if (!data_.iad)
             return Vec<int32>();
@@ -1246,6 +1413,10 @@ public:
     Vec<int64> getLongArray() const
     {
         assert(isLongArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isLongArray())
+            throw std::logic_error("Can't get long array value for non-long array tag.");
+#endif
 
         if (!data_.lad)
             return Vec<int64>();
@@ -1259,6 +1430,10 @@ public:
     byte getByte(size_t idx) const
     {
         assert(isByteArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isByteArray())
+            throw std::logic_error("Can't get byte value from non-byte array tag.");
+#endif
 
         if (!data_.bad || idx >= data_.bad->size())
             throw std::out_of_range("The specified index is out of range.");
@@ -1270,6 +1445,10 @@ public:
     byte getFrontByte() const
     {
         assert(isByteArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isByteArray())
+            throw std::logic_error("Can't get front byte value from non-byte array tag.");
+#endif
 
         if (!data_.bad || data_.bad->empty())
             throw std::out_of_range("The front member is not exists.");
@@ -1281,6 +1460,10 @@ public:
     byte getBackByte() const
     {
         assert(isByteArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isByteArray())
+            throw std::logic_error("Can't get back byte value from non-byte array tag.");
+#endif
 
         if (!data_.bad || data_.bad->empty())
             throw std::out_of_range("The back member is not exits.");
@@ -1294,6 +1477,10 @@ public:
     int32 getInt(size_t idx) const
     {
         assert(isIntArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isIntArray())
+            throw std::logic_error("Can't get int value from non-int array tag.");
+#endif
 
         if (!data_.iad || idx >= data_.iad->size())
             throw std::out_of_range("The specified index is out of range.");
@@ -1305,6 +1492,10 @@ public:
     int32 getFrontInt() const
     {
         assert(isIntArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isIntArray())
+            throw std::logic_error("Can't get front int value from non-int array tag.");
+#endif
 
         if (!data_.iad || data_.iad->empty())
             throw std::out_of_range("The front member is not exists.");
@@ -1316,6 +1507,10 @@ public:
     int32 getBackInt() const
     {
         assert(isIntArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isIntArray())
+            throw std::logic_error("Can't get back int value from non-int array tag.");
+#endif
 
         if (!data_.iad || data_.iad->empty())
             throw std::out_of_range("The back member is not exits.");
@@ -1329,6 +1524,10 @@ public:
     int64 getLong(size_t idx) const
     {
         assert(isLongArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isLongArray())
+            throw std::logic_error("Can't get long value from non-long array tag.");
+#endif
 
         if (!data_.lad || idx >= data_.lad->size())
             throw std::out_of_range("The specified index is out of range.");
@@ -1340,6 +1539,10 @@ public:
     int64 getFrontLong() const
     {
         assert(isLongArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isLongArray())
+            throw std::logic_error("Can't get front long value from non-long array tag.");
+#endif
 
         if (!data_.lad || data_.lad->empty())
             throw std::out_of_range("The front member is not exists.");
@@ -1351,6 +1554,10 @@ public:
     int64 getBackLong() const
     {
         assert(isLongArray());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isLongArray())
+            throw std::logic_error("Can't get back long value from non-long array tag.");
+#endif
 
         if (!data_.lad || data_.lad->empty())
             throw std::out_of_range("The back member is not exits.");
@@ -1363,10 +1570,16 @@ public:
     Tag& getTag(size_t idx)
     {
         assert(isContainer());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isContainer())
+            throw std::logic_error("Can't get tag from non-container tag.");
+#endif
 
         if (isList()) {
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
             if (dtype_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
+#endif
 
             if (!data_.ld || idx >= data_.ld->size())
                 throw std::out_of_range("The specified index is out of range.");
@@ -1389,9 +1602,16 @@ public:
     {
         assert(isCompound());
         assert(hasTag(name));
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isCompound())
+            throw std::logic_error("Can't get tag from non-compound tag.");
+
+        if (!hasTag(name))
+            throw std::logic_error("The specified name is not exists.");
 
         if (!data_.cd)
             throw std::logic_error("The member of specified name is not exists.");
+#endif
 
         return data_.cd->data[data_.cd->idxs[name]];
     }
@@ -1400,10 +1620,16 @@ public:
     Tag& getFrontTag()
     {
         assert(isContainer());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isContainer())
+            throw std::logic_error("Can't get front tag from non-container tag.");
+#endif
 
         if (isList()) {
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
             if (dtype_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
+#endif
 
             if (!data_.ld || data_.ld->empty())
                 throw std::out_of_range("The front member is not exists.");
@@ -1423,10 +1649,16 @@ public:
     Tag& getBackTag()
     {
         assert(isContainer());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isContainer())
+            throw std::logic_error("Can't get back tag from non-container tag.");
+#endif
 
         if (isList()) {
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
             if (dtype_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
+#endif
 
             if (!data_.ld || data_.ld->empty())
                 throw std::out_of_range("The back member is not exists.");
@@ -1448,6 +1680,10 @@ public:
     Tag& remove(size_t idx)
     {
         assert(isString() || isArray() || isContainer());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isString() && !isArray() && !isContainer())
+            throw std::logic_error("Can't remove element from non-string, non-array, non-container tag.");
+#endif
 
         if (isString()) {
             if (!data_.str || idx >= data_.str->size())
@@ -1470,8 +1706,10 @@ public:
 
             data_.lad->erase(data_.lad->begin() + idx);
         } else if (isList()) {
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
             if (dtype_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
+#endif
 
             if (!data_.ld || idx >= data_.ld->size())
                 throw std::out_of_range("The specified index is out of range.");
@@ -1498,9 +1736,16 @@ public:
     {
         assert(isCompound());
         assert(hasTag(name));
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isCompound())
+            throw std::logic_error("Can't remove tag from non-compound tag.");
+
+        if (!hasTag(name))
+            throw std::logic_error("The specified name is not exists.");
 
         if (!data_.cd)
             throw std::logic_error("The member of specified name is not exists.");
+#endif
 
         size_t idx = data_.cd->idxs[name];
 
@@ -1519,6 +1764,10 @@ public:
     Tag& removeFront()
     {
         assert(isString() || isArray() || isContainer());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isString() && !isArray() && !isContainer())
+            throw std::logic_error("Can't remove front element from non-string, non-array, non-container tag.");
+#endif
 
         if (isString()) {
             if (!data_.str || data_.str->empty())
@@ -1541,8 +1790,10 @@ public:
 
             data_.lad->erase(data_.lad->begin());
         } else if (isList()) {
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
             if (dtype_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
+#endif
 
             if (!data_.ld || data_.ld->empty())
                 throw std::out_of_range("The front member is not exists.");
@@ -1568,6 +1819,10 @@ public:
     Tag& removeBack()
     {
         assert(isString() || isArray() || isContainer());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isString() && !isArray() && !isContainer())
+            throw std::logic_error("Can't remove back element from non-string, non-array, non-container tag.");
+#endif
 
         if (isString()) {
             if (!data_.str || data_.str->empty())
@@ -1590,8 +1845,10 @@ public:
 
             data_.lad->pop_back();
         } else if (isList()) {
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
             if (dtype_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
+#endif
 
             if (!data_.ld || data_.ld->empty())
                 throw std::out_of_range("The back member is not exists.");
@@ -1614,6 +1871,10 @@ public:
     Tag& removeAll()
     {
         assert(isString() || isArray() || isContainer());
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        if (!isString() && !isArray() && !isContainer())
+            throw std::logic_error("Can't remove all elements from non-string, non-array, non-container tag.");
+#endif
 
         if (isString()) {
             if (data_.str)
@@ -1628,8 +1889,10 @@ public:
             if (data_.lad)
                 data_.lad->clear();
         } else if (isList()) {
+#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
             if (dtype_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
+#endif
 
             if (data_.ld)
                 data_.ld->clear();
