@@ -555,7 +555,7 @@ public:
     }
 
     // TODO
-    static Tag fromSnbt(SStream& snbtSs);
+    static Tag fromSnbt(IStream& snbtSs);
 
     static Tag fromSnbt(const String& snbt)
     {
@@ -2028,17 +2028,18 @@ private:
         CompoundData* cd;
     };
 
-    // @param tagType If the param isListElement is false, ignore it.
-    // If the param isListElement is true, the tagType must be set to the same as the parent tag.
-    static Tag fromBinStream_(IStream& is, bool isBigEndian, bool isListElement, int tagType = -1)
+    // @param parentType If the param isListElement is false, ignore it.
+    // If the param isListElement is true, the parentType must be set to the same as the parent tag (List's data type).
+    static Tag fromBinStream_(IStream& is, bool isBigEndian, bool isListElement, TagType parentType = TT_END)
     {
         Tag tag;
 
         if (!isListElement)
-            tagType = is.get();
-        tag.type_ = static_cast<TagType>(tagType);
+            tag.type_ = static_cast<TagType>(is.get());
+        else
+            tag.type_ = parentType;
 
-        if (tagType == TT_END)
+        if (tag.type_ == TT_END)
             return tag;
 
         // If the tag is not a list elment read it's name.
@@ -2055,105 +2056,126 @@ private:
             }
         }
 
-        // Read value.
-        if (tagType == TT_BYTE)
-            tag.data_.num.i8 = _bytes2num<byte>(is, isBigEndian);
+        switch (tag.type_) {
+            case TT_BYTE:
+                tag.data_.num.i8 = _bytes2num<byte>(is, isBigEndian);
+                break;
+            case TT_SHORT:
+                tag.data_.num.i16 = _bytes2num<int16>(is, isBigEndian);
+                break;
+            case TT_INT:
+                tag.data_.num.i32 = _bytes2num<int32>(is, isBigEndian);
+                break;
+            case TT_LONG:
+                tag.data_.num.i64 = _bytes2num<int64>(is, isBigEndian);
+                break;
+            case TT_FLOAT:
+                tag.data_.num.f32 = _bytes2num<fp32>(is, isBigEndian);
+                break;
+            case TT_DOUBLE:
+                tag.data_.num.f64 = _bytes2num<fp64>(is, isBigEndian);
+                break;
+            case TT_STRING: {
+                int16 strlen = _bytes2num<int16>(is, isBigEndian);
 
-        if (tagType == TT_SHORT)
-            tag.data_.num.i16 = _bytes2num<int16>(is, isBigEndian);
+                if (strlen != 0) {
+                    byte* bytes = new byte[strlen];
 
-        if (tagType == TT_INT)
-            tag.data_.num.i32 = _bytes2num<int32>(is, isBigEndian);
+                    is.read(bytes, strlen);
+                    tag.data_.str = new String();
+                    tag.data_.str->assign(bytes, static_cast<size_t>(is.gcount()));
 
-        if (tagType == TT_LONG)
-            tag.data_.num.i64 = _bytes2num<int64>(is, isBigEndian);
-
-        if (tagType == TT_FLOAT)
-            tag.data_.num.f32 = _bytes2num<fp32>(is, isBigEndian);
-
-        if (tagType == TT_DOUBLE)
-            tag.data_.num.f64 = _bytes2num<fp64>(is, isBigEndian);
-
-        if (tagType == TT_STRING) {
-            int16 strlen = _bytes2num<int16>(is, isBigEndian);
-
-            if (strlen != 0) {
-                byte* bytes = new byte[strlen];
-
-                is.read(bytes, strlen);
-                tag.data_.str = new String();
-                tag.data_.str->assign(bytes, static_cast<size_t>(is.gcount()));
-
-                delete[] bytes;
-            }
-        }
-
-        if (tagType == TT_BYTE_ARRAY) {
-            int32 dsize = _bytes2num<int32>(is, isBigEndian);
-
-            if (dsize != 0) {
-                tag.data_.bad = new Vec<byte>();
-                tag.data_.bad->reserve(dsize);
-
-                for (int32 i = 0; i < dsize; ++i)
-                    tag.addByte(_bytes2num<byte>(is, isBigEndian));
-            }
-        }
-
-        if (tagType == TT_INT_ARRAY) {
-            int32 dsize = _bytes2num<int32>(is, isBigEndian);
-
-            if (dsize != 0) {
-                tag.data_.iad = new Vec<int32>();
-                tag.data_.iad->reserve(dsize);
-
-                for (int32 i = 0; i < dsize; ++i)
-                    tag.addInt(_bytes2num<int32>(is, isBigEndian));
-            }
-        }
-
-        if (tagType == TT_LONG_ARRAY) {
-            int32 dsize = _bytes2num<int32>(is, isBigEndian);
-
-            if (dsize != 0) {
-                tag.data_.lad = new Vec<int64>();
-                tag.data_.lad->reserve(dsize);
-
-                for (int32 i = 0; i < dsize; ++i)
-                    tag.addLong(_bytes2num<int64>(is, isBigEndian));
-            }
-        }
-
-        if (tagType == TT_LIST) {
-            tag.dtype_ = static_cast<TagType>(is.get());
-            int32 dsize = _bytes2num<int32>(is, isBigEndian);
-
-            if (dsize != 0) {
-                tag.data_.ld = new Vec<Tag>();
-                tag.data_.ld->reserve(dsize);
-
-                for (int32 i = 0; i < dsize; ++i)
-                    tag.addTag(fromBinStream_(is, isBigEndian, true, tag.dtype_));
-            }
-        }
-
-        if (tagType == TT_COMPOUND) {
-            while (!is.eof()) {
-                if (is.peek() == TT_END) {
-                    // Give up End tag and move stream point to next byte.
-                    is.get();
-                    break;
+                    delete[] bytes;
                 }
-
-                tag.addTag(fromBinStream_(is, isBigEndian, false));
+                break;
             }
+            case TT_BYTE_ARRAY: {
+                int32 dsize = _bytes2num<int32>(is, isBigEndian);
+
+                if (dsize != 0) {
+                    tag.data_.bad = new Vec<byte>();
+                    tag.data_.bad->reserve(dsize);
+
+                    for (int32 i = 0; i < dsize; ++i)
+                        tag.addByte(_bytes2num<byte>(is, isBigEndian));
+                }
+                break;
+            }
+            case TT_INT_ARRAY: {
+                int32 dsize = _bytes2num<int32>(is, isBigEndian);
+
+                if (dsize != 0) {
+                    tag.data_.iad = new Vec<int32>();
+                    tag.data_.iad->reserve(dsize);
+
+                    for (int32 i = 0; i < dsize; ++i)
+                        tag.addInt(_bytes2num<int32>(is, isBigEndian));
+                }
+                break;
+            }
+            case TT_LONG_ARRAY: {
+                int32 dsize = _bytes2num<int32>(is, isBigEndian);
+
+                if (dsize != 0) {
+                    tag.data_.lad = new Vec<int64>();
+                    tag.data_.lad->reserve(dsize);
+
+                    for (int32 i = 0; i < dsize; ++i)
+                        tag.addLong(_bytes2num<int64>(is, isBigEndian));
+                }
+                break;
+            }
+            case TT_LIST: {
+                tag.dtype_ = static_cast<TagType>(is.get());
+                int32 dsize = _bytes2num<int32>(is, isBigEndian);
+
+                if (dsize != 0) {
+                    tag.data_.ld = new Vec<Tag>();
+                    tag.data_.ld->reserve(dsize);
+
+                    for (int32 i = 0; i < dsize; ++i)
+                        tag.addTag(fromBinStream_(is, isBigEndian, true, tag.dtype_));
+                }
+                break;
+            }
+            case TT_COMPOUND: {
+                while (!is.eof()) {
+                    if (is.peek() == TT_END) {
+                        // Give up End tag and move stream point to next byte.
+                        is.get();
+                        break;
+                    }
+
+                    tag.addTag(fromBinStream_(is, isBigEndian, false));
+                }
+                break;
+            }
+            default:
+                throw std::runtime_error("Invalid tag type.");
         }
 
         return tag;
     }
 
     // TODO
-    static Tag fromSnbt_(SStream& snbtSs);
+    static Tag fromSnbt_(IStream& snbtSs, TagType parentType)
+    {
+        // Must be a compound tag.
+        Tag tag(TT_COMPOUND);
+
+        TagType type = TT_COMPOUND;
+        while (!snbtSs.eof()) {
+            char c = snbtSs.get();
+
+            if (c == '{') {
+
+            } else if (std::isalpha(c)) {
+
+            } else {
+                throw std::runtime_error("Invalid SNBT format. The SNBT must be a compound tag.");
+            }
+        }
+    }
 
     void write_(OStream& os, bool isBigEndian, bool isListElement) const
     {
@@ -2168,123 +2190,108 @@ private:
             }
         }
 
-        if (isEnd()) {
-            os.put(TT_END);
-            return;
-        }
-
-        if (isByte()) {
-            os.put(data_.num.i8);
-            return;
-        }
-
-        if (isShort()) {
-            _num2bytes<int16>(data_.num.i16, os, isBigEndian);
-            return;
-        }
-
-        if (isInt()) {
-            _num2bytes<int32>(data_.num.i32, os, isBigEndian);
-            return;
-        }
-
-        if (isLong()) {
-            _num2bytes<int64>(data_.num.i64, os, isBigEndian);
-            return;
-        }
-
-        if (isFloat()) {
-            _num2bytes<fp32>(data_.num.f32, os, isBigEndian);
-            return;
-        }
-
-        if (isDouble()) {
-            _num2bytes<fp64>(data_.num.f64, os, isBigEndian);
-            return;
-        }
-
-        if (isString()) {
-            if (!data_.str || data_.str->empty()) {
-                _num2bytes<int16>(static_cast<int16>(0), os, isBigEndian);
-                return;
-            }
-
-            _num2bytes<int16>(static_cast<int16>(data_.str->size()), os, isBigEndian);
-            os.write(data_.str->c_str(), data_.str->size());
-
-            return;
-        }
-
-        if (isByteArray()) {
-            if (!data_.bad || data_.bad->empty()) {
-                _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
-                return;
-            }
-
-            _num2bytes<int32>(static_cast<int32>(data_.bad->size()), os, isBigEndian);
-
-            for (const auto& var : *data_.bad)
-                os.put(var);
-
-            return;
-        }
-
-        if (isIntArray()) {
-            if (!data_.iad || data_.iad->empty()) {
-                _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
-                return;
-            }
-
-            _num2bytes<int32>(static_cast<int32>(data_.iad->size()), os, isBigEndian);
-
-            for (const auto& var : *data_.iad)
-                _num2bytes<int32>(var, os, isBigEndian);
-
-            return;
-        }
-
-        if (isLongArray()) {
-            if (!data_.lad || data_.lad->empty()) {
-                _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
-                return;
-            }
-
-            _num2bytes<int32>(static_cast<int32>(data_.lad->size()), os, isBigEndian);
-
-            for (const auto& var : *data_.lad)
-                _num2bytes<int64>(var, os, isBigEndian);
-
-            return;
-        }
-
-        if (isList()) {
-            if (!data_.ld || data_.ld->empty()) {
-                os.put(static_cast<byte>(TT_END));
-                _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
-                return;
-            }
-
-            os.put(static_cast<byte>(dtype_));
-            _num2bytes<int32>(static_cast<int32>(data_.ld->size()), os, isBigEndian);
-
-            for (const auto& var : *data_.ld)
-                var.write_(os, isBigEndian, true);
-
-            return;
-        }
-
-        if (isCompound()) {
-            if (!data_.cd || data_.cd->data.empty()) {
+        switch (type_) {
+            case TT_END:
                 os.put(TT_END);
-                return;
+                break;
+            case TT_BYTE:
+                os.put(data_.num.i8);
+                break;
+            case TT_SHORT:
+                _num2bytes<int16>(data_.num.i16, os, isBigEndian);
+                break;
+            case TT_INT:
+                _num2bytes<int32>(data_.num.i32, os, isBigEndian);
+                break;
+            case TT_LONG:
+                _num2bytes<int64>(data_.num.i64, os, isBigEndian);
+                break;
+            case TT_FLOAT:
+                _num2bytes<fp32>(data_.num.f32, os, isBigEndian);
+                break;
+            case TT_DOUBLE:
+                _num2bytes<fp64>(data_.num.f64, os, isBigEndian);
+                break;
+            case TT_STRING: {
+                if (!data_.str || data_.str->empty()) {
+                    _num2bytes<int16>(static_cast<int16>(0), os, isBigEndian);
+                    break;
+                }
+
+                _num2bytes<int16>(static_cast<int16>(data_.str->size()), os, isBigEndian);
+                os.write(data_.str->c_str(), data_.str->size());
+
+                break;
             }
+            case TT_BYTE_ARRAY: {
+                if (!data_.bad || data_.bad->empty()) {
+                    _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
+                    break;
+                }
 
-            for (const auto& var : data_.cd->data)
-                var.write_(os, isBigEndian, false);
+                _num2bytes<int32>(static_cast<int32>(data_.bad->size()), os, isBigEndian);
 
-            os.put(TT_END);
+                for (const auto& var : *data_.bad)
+                    os.put(var);
 
-            return;
+                break;
+            }
+            case TT_INT_ARRAY: {
+                if (!data_.iad || data_.iad->empty()) {
+                    _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
+                    break;
+                }
+
+                _num2bytes<int32>(static_cast<int32>(data_.iad->size()), os, isBigEndian);
+
+                for (const auto& var : *data_.iad)
+                    _num2bytes<int32>(var, os, isBigEndian);
+
+                break;
+            }
+            case TT_LONG_ARRAY: {
+                if (!data_.lad || data_.lad->empty()) {
+                    _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
+                    break;
+                }
+
+                _num2bytes<int32>(static_cast<int32>(data_.lad->size()), os, isBigEndian);
+
+                for (const auto& var : *data_.lad)
+                    _num2bytes<int64>(var, os, isBigEndian);
+
+                break;
+            }
+            case TT_LIST: {
+                if (!data_.ld || data_.ld->empty()) {
+                    os.put(static_cast<byte>(TT_END));
+                    _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
+                    break;
+                }
+
+                os.put(static_cast<byte>(dtype_));
+                _num2bytes<int32>(static_cast<int32>(data_.ld->size()), os, isBigEndian);
+
+                for (const auto& var : *data_.ld)
+                    var.write_(os, isBigEndian, true);
+
+                break;
+            }
+            case TT_COMPOUND: {
+                if (!data_.cd || data_.cd->data.empty()) {
+                    os.put(TT_END);
+                    break;
+                }
+
+                for (const auto& var : data_.cd->data)
+                    var.write_(os, isBigEndian, false);
+
+                os.put(TT_END);
+
+                break;
+            }
+            default:
+                throw std::runtime_error("Invalid tag type.");
         }
     }
 
@@ -2298,144 +2305,134 @@ private:
         if (!isListElement && name_ && !name_->empty())
             key += *name_ + (isWrappedIndented ? ": " : ":");
 
-        if (isEnd())
-            return "";
+        switch (type_) {
+            case TT_END:
+                return "";
+            case TT_BYTE:
+                return key + std::to_string(static_cast<int>(data_.num.i8)) + 'b';
+            case TT_SHORT:
+                return key + std::to_string(data_.num.i16) + 's';
+            case TT_INT:
+                return key + std::to_string(data_.num.i32);
+            case TT_LONG:
+                return key + std::to_string(data_.num.i64) + 'l';
+            case TT_FLOAT:
+                return key + std::to_string(data_.num.f32) + 'f';
+            case TT_DOUBLE:
+                return key + std::to_string(data_.num.f64) + 'd';
+            case TT_STRING:
+                return key + '"' + (data_.str ? *data_.str : "") + '"';
+            case TT_BYTE_ARRAY: {
+                if (!data_.bad || data_.bad->empty())
+                    return key + "[B;]";
 
-        if (isByte())
-            return key + std::to_string(static_cast<int>(data_.num.i8)) + 'b';
-
-        if (isShort())
-            return key + std::to_string(static_cast<int>(data_.num.i16)) + 's';
-
-        if (isInt())
-            return key + std::to_string(data_.num.i32);
-
-        if (isLong())
-            return key + std::to_string(data_.num.i64) + 'l';
-
-        if (isFloat())
-            return key + std::to_string(data_.num.f32) + 'f';
-
-        if (isDouble())
-            return key + std::to_string(data_.num.f64) + 'd';
-
-        if (isString())
-            return key + '"' + (data_.str ? *data_.str : "") + '"';
-
-        if (isByteArray()) {
-            if (!data_.bad || data_.bad->empty())
-                return key + "[B;]";
-
-            // If has indent add the newline character and indent string.
-            String result = key + '[';
-            result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-            result += "B;";
-
-            for (const auto& var : *data_.bad) {
+                // If has indent add the newline character and indent string.
+                String result = key + '[';
                 result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-                result += std::to_string(static_cast<int>(var)) + "b,";
+                result += "B;";
+
+                for (const auto& var : *data_.bad) {
+                    result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
+                    result += std::to_string(static_cast<int>(var)) + "b,";
+                }
+
+                if (result.back() == ',')
+                    result.pop_back();
+
+                result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
+                result += ']';
+
+                return result;
             }
+            case TT_INT_ARRAY: {
+                if (!data_.iad || data_.iad->empty())
+                    return key + "[I;]";
 
-            if (result.back() == ',')
-                result.pop_back();
-
-            result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
-            result += ']';
-
-            return result;
-        }
-
-        if (isIntArray()) {
-            if (!data_.iad || data_.iad->empty())
-                return key + "[I;]";
-
-            // If has indent add the newline character and indent string.
-            String result = key + '[';
-            result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-            result += "I;";
-
-            for (const auto& var : *data_.iad) {
+                // If has indent add the newline character and indent string.
+                String result = key + '[';
                 result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-                result += std::to_string(var) + ",";
+                result += "I;";
+
+                for (const auto& var : *data_.iad) {
+                    result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
+                    result += std::to_string(var) + ",";
+                }
+
+                if (result.back() == ',')
+                    result.pop_back();
+
+                result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
+                result += ']';
+
+                return result;
             }
+            case TT_LONG_ARRAY: {
+                if (!data_.lad || data_.lad->empty())
+                    return key + "[L;]";
 
-            if (result.back() == ',')
-                result.pop_back();
-
-            result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
-            result += ']';
-
-            return result;
-        }
-
-        if (isLongArray()) {
-            if (!data_.lad || data_.lad->empty())
-                return key + "[L;]";
-
-            // If has indent add the newline character and indent string.
-            String result = key + '[';
-            result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-            result += "L;";
-
-            for (const auto& var : *data_.lad) {
+                // If has indent add the newline character and indent string.
+                String result = key + '[';
                 result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-                result += std::to_string(var) + "l,";
+                result += "L;";
+
+                for (const auto& var : *data_.lad) {
+                    result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
+                    result += std::to_string(var) + "l,";
+                }
+
+                if (result.back() == ',')
+                    result.pop_back();                
+
+                result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
+                result += ']';
+
+                return result;
             }
+            case TT_LIST: {
+                if (!data_.ld || data_.ld->empty())
+                    return key + "[]";
 
-            if (result.back() == ',')
-                result.pop_back();
+                String result = key + '[';
 
-            result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
-            result += ']';
+                indentCount++;
+                for (const auto& var : *data_.ld) {
+                    result += isWrappedIndented ? "\n" : "";
+                    result += var.toSnbt_(isWrappedIndented, true) + ",";
+                }
+                indentCount--;
 
-            return result;
-        }
+                if (result.back() == ',')
+                    result.pop_back();
 
-        if (isList()) {
-            if (!data_.ld || data_.ld->empty())
-                return key + "[]";
+                result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
+                result += ']';
 
-            String result = key + "[";
-
-            indentCount++;
-            for (const auto& var : *data_.ld) {
-                result += isWrappedIndented ? "\n" : "";
-                result += var.toSnbt_(isWrappedIndented, true) + ",";
+                return result;
             }
-            indentCount--;
+            case TT_COMPOUND: {
+                if (!data_.cd || data_.cd->data.empty())
+                    return key + "{}";
 
-            if (result.back() == ',')
-                result.pop_back();
+                String result = key + "{";
 
-            result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
-            result += ']';
+                indentCount++;
+                for (const auto& var : data_.cd->data) {
+                    result += isWrappedIndented ? "\n" : "";
+                    result += var.toSnbt_(isWrappedIndented, false) + ",";
+                }
+                indentCount--;
 
-            return result;
-        }
+                if (result.back() == ',')
+                    result.pop_back();
 
-        if (isCompound()) {
-            if (!data_.cd || data_.cd->data.empty())
-                return key + "{}";
+                result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
+                result += '}';
 
-            String result = key + "{";
-
-            indentCount++;
-            for (const auto& var : data_.cd->data) {
-                result += isWrappedIndented ? "\n" : "";
-                result += var.toSnbt_(isWrappedIndented, false) + ",";
+                return result;
             }
-            indentCount--;
-
-            if (result.back() == ',')
-                result.pop_back();
-
-            result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
-            result += '}';
-
-            return result;
+            default:
+                throw std::runtime_error("Invalid tag type.");
         }
-
-        throw std::runtime_error("Read the tag of undefined tag typer.");
     }
 
     // Release the all alloced memory.
