@@ -2158,24 +2158,7 @@ private:
     }
 
     // TODO
-    static Tag fromSnbt_(IStream& snbtSs, TagType parentType)
-    {
-        // Must be a compound tag.
-        Tag tag(TT_COMPOUND);
-
-        TagType type = TT_COMPOUND;
-        while (!snbtSs.eof()) {
-            char c = snbtSs.get();
-
-            if (c == '{') {
-
-            } else if (std::isalpha(c)) {
-
-            } else {
-                throw std::runtime_error("Invalid SNBT format. The SNBT must be a compound tag.");
-            }
-        }
-    }
+    static Tag fromSnbt_(IStream& snbtSs, TagType parentType);
 
     void write_(OStream& os, bool isBigEndian, bool isListElement) const
     {
