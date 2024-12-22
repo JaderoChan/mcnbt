@@ -295,7 +295,9 @@ inline bool _isBigEndian()
 }
 
 // @brief Obtain bytes from input stream, and convert it to number.
-// @param resumeCursor Whether to resume the cursor position of input stream after read.
+// @param is            The input stream.
+// @param isBigEndian   The endianness of the bytes.
+// @param resumeCursor  Whether to resume the cursor position of input stream after read.
 // @return A number.
 template <typename T>
 T _bytes2num(IStream& is, bool isBigEndian = false, bool resumeCursor = false)
@@ -327,6 +329,9 @@ T _bytes2num(IStream& is, bool isBigEndian = false, bool resumeCursor = false)
 }
 
 // @brief Convert the number to bytes, and write it to output stream.
+// @param num The       number to convert.
+// @param os The        output stream.
+// @param isBigEndian   The endianness of the bytes need to write.
 template <typename T>
 void _num2bytes(T num, OStream& os, bool isBigEndian = false)
 {
@@ -395,7 +400,7 @@ public:
             name_ = new String(*other.name_);
     }
 
-    // @ditto
+    // ditto
     Tag(Tag&& other) noexcept :
         type_(other.type_), dtype_(other.dtype_), data_(other.data_), name_(other.name_)
     {
@@ -467,7 +472,7 @@ public:
         return *this;
     }
 
-    // @ditto
+    // ditto
     Tag& operator=(Tag&& other)
     {
         if (this == &other)
@@ -621,6 +626,8 @@ public:
     // Usually used for add tag to list or compound. (because default is move when add tag to list or compound)
     Tag copy() const { return Tag(*this); }
 
+    Tag assign(const Tag& tag) { return tag.copy(); }
+
     // @brief Get the tag type.
     TagType type() const { return type_; }
 
@@ -687,7 +694,7 @@ public:
 
     // @brief Check self if is be contained in specified tag.
     // @param container The tag that be checked whether self is contained in it.
-    // @note It check all the parent (parent' parent) until happen a parent is nullptr.
+    // @note It recursive check all the parent (parent' parent) until happen a parent is nullptr.
     bool isContained(const Tag& container) const
     {
         const Tag* p = parent_;
@@ -772,8 +779,6 @@ public:
 
         return *this;
     }
-
-    Tag assign(const Tag& tag) { return tag.copy(); }
 
     // @attention Only be called by #TT_LIST.
     Tag& assign(size_t size, const Tag& tag)
