@@ -5,8 +5,6 @@
 
 #include "mcnbt.hpp"
 
-#include <string>
-
 namespace nbt
 {
 
@@ -35,10 +33,10 @@ struct BlockEntityData
     String id;
     // (May not exist) The custom name of the block entity.
     String customName;
-    int32 pos[3] = { 0, 0, 0 };
+    int32 pos[3]    = { 0, 0, 0 };
     // 1 or 0 (true/false)
     // true if the block entity is movable with a piston.
-    bool isMovable = true;
+    bool isMovable  = true;
 
 protected:
     virtual void assemble(Tag& tag) const = 0;
@@ -65,27 +63,27 @@ struct CommandBlockED final : BlockEntityData
     // 1 or 0 (true/false)
     // true if the LastOuTut is stored.
     // Can be toggled in the GUI by clicking a button near the "Previous ouTut" textbox.
-    bool trackOuTut = true;
+    bool trackOuTut         = true;
     // 1 or 0 (true/false)
     // Allows to activate the command without the requirement of a redstone signal.
-    bool isAuto = false;
+    bool isAuto             = false;
     // 1 or 0 (true/false)
     // true if the command block is powered by redstone.
-    bool isPowered = true;
+    bool isPowered          = true;
     // 1 or 0 (true/false)
     // if a conditional command block had its condition met when last activated.
     // True if not a conditional command block.
-    bool conditionMet = false;
-    byte conditionalMode = 1;
+    bool conditionMet       = false;
+    byte conditionalMode    = 1;
     // Represents the strength of the analog signal ouTut by
     // redstone comparators attached to this command block.
-    int32 successCount = 0;
+    int32 successCount      = 0;
     // The delay between each execution.
-    int32 tickDelay = 0;
+    int32 tickDelay         = 0;
     // The data version.
-    int32 version = 38;
+    int32 version           = 38;
     // tores the time when a command block was last executed.
-    int64 lastExecution = 0;
+    int64 lastExecution     = 0;
 
 protected:
     void assemble(Tag& tag) const override
@@ -123,10 +121,10 @@ struct StructureBlockED final : BlockEntityData
 
     enum Mirror : uchar
     {
-        MIRROR_NO = 0x00,
-        MIRROR_X = 0x01,
-        MIRROR_Y = 0x02,
-        MIRROR_XY = 0x03
+        MIRROR_NO   = 0x00,
+        MIRROR_X    = 0x01,
+        MIRROR_Y    = 0x02,
+        MIRROR_XY   = 0x03
     };
 
     enum Rotation : uchar
@@ -157,20 +155,20 @@ struct StructureBlockED final : BlockEntityData
     {}
 
     String structureName;
-    Mode data = MODE_LOAD;
-    Animation animationMode = ANIMATION_NO;
-    Rotation rotation = ROT_0;
-    Mirror mirror = MIRROR_NO;
-    RedstoneSaveMode redstoneSaveMode = RSM_MEMORY;
-    bool ignoreEntities = false;
-    bool removeBlocks = false;
-    bool isPowered = true;
-    bool showBoundingBox = true;
-    int64 seed = 0;
-    fp32 integrity = 100.;
-    fp32 animationSeconds = 0.;
-    int32 offset[3] = { 0, 0, 0 };
-    int32 size[3] = { 1, 1, 1 };
+    Mode data                           = MODE_LOAD;
+    Animation animationMode             = ANIMATION_NO;
+    Rotation rotation                   = ROT_0;
+    Mirror mirror                       = MIRROR_NO;
+    RedstoneSaveMode redstoneSaveMode   = RSM_MEMORY;
+    bool ignoreEntities                 = false;
+    bool removeBlocks                   = false;
+    bool isPowered                      = true;
+    bool showBoundingBox                = true;
+    int64 seed                          = 0;
+    fp32 integrity                      = 100.0;
+    fp32 animationSeconds               = 0.0;
+    int32 offset[3]                     = { 0, 0, 0 };
+    int32 size[3]                       = { 1, 1, 1 };
 
 protected:
     void assemble(Tag& tag) const override

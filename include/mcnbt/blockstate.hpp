@@ -5,8 +5,6 @@
 
 #include "mcnbt.hpp"
 
-#include <string>
-
 namespace nbt
 {
 

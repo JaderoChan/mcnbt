@@ -1,10 +1,10 @@
 #ifndef MCNBT_GZIP_HPP
 #define MCNBT_GZIP_HPP
 
-#include <cstddef>  // size_t
-#include <string>
-#include <limits>
-#include <stdexcept>
+#include <cstddef>      // size_t
+#include <string>       // string
+#include <limits>       // numeric_limits
+#include <stdexcept>    // runtime_error
 
 #ifndef ZLIB_CONST
 #define ZLIB_CONST
@@ -17,6 +17,7 @@ namespace nbt
 namespace gzip
 {
 
+// @brief Checks if the given data is compressed using Gzip or Zlib.
 inline bool isCompressed(const std::string& data)
 {
     if (data.size() < 2)
@@ -31,11 +32,13 @@ inline bool isCompressed(const std::string& data)
     return isZlib || isGzip;
 }
 
+// @overload
 inline bool isCompressed(const char* data, size_t size)
 {
     return isCompressed(std::string(data, size));
 }
 
+// @brief Compresses the given data using Gzip.
 inline std::string compress(const std::string& data)
 {
     if (data.size() > std::numeric_limits<uInt>::max())
@@ -89,8 +92,13 @@ inline std::string compress(const std::string& data)
     return compressed;
 }
 
-inline std::string compress(const char* data, size_t size) { return compress(std::string(data, size)); }
+// @overload
+inline std::string compress(const char* data, size_t size)
+{
+    return compress(std::string(data, size));
+}
 
+// @brief Decompresses the given data using Gzip.
 inline std::string decompress(const std::string& data)
 {
     if (data.size() * 2 > std::numeric_limits<uInt>::max())
@@ -139,9 +147,13 @@ inline std::string decompress(const std::string& data)
     return decompressed;
 }
 
-inline std::string decompress(const char* data, size_t size) { return decompress(std::string(data, size)); }
-
+// @overload
+inline std::string decompress(const char* data, size_t size)
+{
+    return decompress(std::string(data, size));
 }
+
+} // namespace gzip
 
 } // namespace nbt
 
