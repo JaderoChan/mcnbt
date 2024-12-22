@@ -37,17 +37,17 @@
 // Whether to disable throw logic exception check (for performance).
 // #define MCNBT_DISABLE_LOGIC_EXCEPTION
 
-#include <cstdint>  // int16_t, int32_t, int64_t
-#include <cstddef>  // size_t
-#include <cstring>  // strlen(), memcpy()
-#include <string>   // string
-#include <vector>   // vector
+#include <cstdint>          // int16_t, int32_t, int64_t
+#include <cstddef>          // size_t
+#include <cstring>          // strlen(), memcpy()
+#include <string>           // string
+#include <vector>           // vector
 #include <unordered_map>    // unordered_map
-#include <iostream>     // istream, ostream
-#include <fstream>      // ifstream, ofstream
-#include <sstream>      // stringstream
-#include <stdexcept>    // runtime_error, logic_error
-#include <cassert>      // assert
+#include <iostream>         // istream, ostream
+#include <fstream>          // ifstream, ofstream
+#include <sstream>          // stringstream
+#include <stdexcept>        // runtime_error, logic_error
+#include <cassert>          // assert
 
 #ifdef MCNBT_USE_GZIP
 #include "gzip.hpp"
