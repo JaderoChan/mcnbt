@@ -40,14 +40,14 @@
 #include <cstdint>  // int16_t, int32_t, int64_t
 #include <cstddef>  // size_t
 #include <cstring>  // strlen(), memcpy()
-#include <string>
-#include <vector>
-#include <unordered_map>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <stdexcept>
-#include <cassert>
+#include <string>   // string
+#include <vector>   // vector
+#include <unordered_map>    // unordered_map
+#include <iostream>     // istream, ostream
+#include <fstream>      // ifstream, ofstream
+#include <sstream>      // stringstream
+#include <stdexcept>    // runtime_error, logic_error
+#include <cassert>      // assert
 
 #ifdef MCNBT_USE_GZIP
 #include "gzip.hpp"
@@ -217,6 +217,7 @@ inline bool isContainer(TagType type)
     return isList(type) || isCompound(type);
 }
 
+// @brief Get the tag type string by tag type.
 inline String getTagTypeString(TagType type)
 {
     switch (type) {
@@ -407,7 +408,7 @@ public:
         other.name_ = nullptr;
     }
 
-    // Release the all alloced memory and set it's parent to nullptr.
+    // @note Release the all alloced memory and set it's parent to nullptr.
     ~Tag()
     {
         release_();
@@ -508,9 +509,9 @@ public:
     }
 
     // @brief Load the tag from binary input stream.
-    // @param is The input stream.
-    // @param isBigEndian Whether the read data from input stream with big endian.
-    // @param headerSize The size of need discard data from input stream begin.
+    // @param is            The input stream.
+    // @param isBigEndian   Whether the read data from input stream with big endian.
+    // @param headerSize    The size of need discard data from input stream begin.
     // (usually is 0, but bedrock edition map file is 8, some useless dat)
     static Tag fromBinStream(IFStream& is, bool isBigEndian, size_t headerSize = 0)
     {
@@ -555,8 +556,14 @@ public:
     }
 
     // TODO
+    // @brief Load the tag from a input stream.
+    // @note The root tag must be a compound tag.
+    // @note The tag name (key of key-value) must valid, it can't contains {, }, [,] and so on key characters.
     static Tag fromSnbt(IStream& snbtSs);
 
+    // @brief Load the tag from a string.
+    // @note The root tag must be a compound tag.
+    // @note The tag name (key of key-value) must valid, it can't contains {, }, [,] and so on key characters.
     static Tag fromSnbt(const String& snbt)
     {
         SStream ss;
@@ -607,12 +614,11 @@ public:
     bool isContainer() const { return nbt::isContainer(type_); }
 
     /*
-    * Functions of common.
+    * Functions of common to all tag.
     */
 
     // @brief Make a copy.
-    // Usually used for add tag to list or compound.
-    // (because default is move when add tag to list or compound)
+    // Usually used for add tag to list or compound. (because default is move when add tag to list or compound)
     Tag copy() const { return Tag(*this); }
 
     // @brief Get the tag type.
@@ -697,7 +703,7 @@ public:
     }
 
     /*
-    * Functions about list.
+    * Functions about the list tag.
     */
 
     // @brief Check whether the list is initialized (#dtype_ is not TT_END).
@@ -800,7 +806,7 @@ public:
     }
 
     /*
-    * Functions about compound.
+    * Functions about the compound tag.
     */
 
     // @brief Check the compound if contains member of specified name.
@@ -820,7 +826,7 @@ public:
     }
 
     /*
-    * Functions about containers.
+    * Functions about the tag of containers.
     */
 
     // @brief Get the length of string or size of array or tag counts of list and compound.
