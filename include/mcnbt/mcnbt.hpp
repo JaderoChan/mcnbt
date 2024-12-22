@@ -65,31 +65,31 @@ namespace nbt
 namespace nbt
 {
 
-using uchar = unsigned char;
-using byte = char;
-using int16 = int16_t;
-using int32 = int32_t;
-using int64 = int64_t;
-using fp32 = float;
-using fp64 = double;
+using uchar     = unsigned char;
+using byte      = char;
+using int16     = int16_t;
+using int32     = int32_t;
+using int64     = int64_t;
+using fp32      = float;
+using fp64      = double;
 
-using String = std::string;
+using String    = std::string;
 
-using SStream = std::stringstream;
+using SStream   = std::stringstream;
 
-using IStream = std::istream;
-using OStream = std::ostream;
-using IOStream = std::iostream;
+using IStream   = std::istream;
+using OStream   = std::ostream;
+using IOStream  = std::iostream;
 
-using IFStream = std::ifstream;
-using OFStream = std::ofstream;
-using FStream = std::fstream;
+using IFStream  = std::ifstream;
+using OFStream  = std::ofstream;
+using FStream   = std::fstream;
 
 template <typename T>
-using Vec = std::vector<T>;
+using Vec       = std::vector<T>;
 
 template <typename K, typename V>
-using Map = std::unordered_map<K, V>;
+using Map       = std::unordered_map<K, V>;
 
 } // namespace nbt
 
@@ -100,28 +100,28 @@ namespace nbt
 // Enum of NBT tag type.
 enum TagType : uchar
 {
-    TT_END = 0,
-    TT_BYTE = 1,
-    TT_SHORT = 2,
-    TT_INT = 3,
-    TT_LONG = 4,
-    TT_FLOAT = 5,
-    TT_DOUBLE = 6,
-    TT_BYTE_ARRAY = 7,
-    TT_STRING = 8,
-    TT_LIST = 9,
-    TT_COMPOUND = 10,
-    TT_INT_ARRAY = 11,
-    TT_LONG_ARRAY = 12
+    TT_END          = 0,
+    TT_BYTE         = 1,
+    TT_SHORT        = 2,
+    TT_INT          = 3,
+    TT_LONG         = 4,
+    TT_FLOAT        = 5,
+    TT_DOUBLE       = 6,
+    TT_BYTE_ARRAY   = 7,
+    TT_STRING       = 8,
+    TT_LIST         = 9,
+    TT_COMPOUND     = 10,
+    TT_INT_ARRAY    = 11,
+    TT_LONG_ARRAY   = 12
 };
 
 /*
 * Constants about the indent of snbt.
 */
 
-constexpr size_t _SNBT_INDENT_WIDTH = 2;
-constexpr char _SNBT_INDENT_CHAR = 0x20;
-static const String _SNBT_INDENT_STR = String(_SNBT_INDENT_WIDTH, _SNBT_INDENT_CHAR);
+constexpr size_t _SNBT_INDENT_WIDTH     = 2;
+constexpr char _SNBT_INDENT_CHAR        = 0x20;
+static const String _SNBT_INDENT_STR    = String(_SNBT_INDENT_WIDTH, _SNBT_INDENT_CHAR);
 
 /*
 * Aux functions about tag type.
@@ -1985,12 +1985,12 @@ private:
     union Num
     {
         Num() : i64(0) {}
-        byte i8;
-        int16 i16;
-        int32 i32;
-        int64 i64;
-        fp32 f32;
-        fp64 f64;
+        byte    i8;
+        int16   i16;
+        int32   i32;
+        int64   i64;
+        fp32    f32;
+        fp64    f64;
     };
 
     // A simple wrapper of std::vector<tag> and std::map<string, size_t>.
@@ -2024,19 +2024,19 @@ private:
     {
         Data() : num(Num()) {}
         // Number data
-        Num num;
+        Num             num;
         // String data
-        String* str;
+        String*         str;
         // Byte Array data
-        Vec<byte>* bad;
+        Vec<byte>*      bad;
         // Int Array data
-        Vec<int32>* iad;
+        Vec<int32>*     iad;
         // Long Array data
-        Vec<int64>* lad;
+        Vec<int64>*     lad;
         // List data
-        Vec<Tag>* ld;
+        Vec<Tag>*       ld;
         // Compound data
-        CompoundData* cd;
+        CompoundData*   cd;
     };
 
     // @param parentType If the param isListElement is false, ignore it.
@@ -2455,15 +2455,15 @@ private:
     }
 
     // Tag type.
-    TagType type_ = TT_END;
+    TagType type_   = TT_END;
     // Tag type of the list element. Just usefull for list tag.
-    TagType dtype_ = TT_END;
+    TagType dtype_  = TT_END;
     // Tag value (value of key-value pair).
     Data data_;
     // Tag name (key of key-value pair), Just usefull for non-ListElement tag.
-    String* name_ = nullptr;
+    String* name_   = nullptr;
     // Parent tag (list or compound tag).
-    Tag* parent_ = nullptr;
+    Tag* parent_    = nullptr;
 };
 
 } // namespace nbt
