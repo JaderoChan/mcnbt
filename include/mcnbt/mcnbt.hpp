@@ -1,7 +1,7 @@
-// The "mcnbt" library written in c++.
+// The "mcnbt" library, in c++.
 //
 // Webs: https://github.com/JaderoChan/mcnbt
-// You can contact me at: c_dl_cn@outlook.com
+// You can contact me by email: c_dl_cn@outlook.com
 //
 // MIT License
 //
