@@ -360,8 +360,12 @@ class Tag
 public:
     Tag() = default;
 
-    // @brief Construct a tag with tag type.
-    explicit Tag(TagType type) : type_(type) {}
+    // @note Release the all alloced memory and set it's parent to nullptr.
+    ~Tag()
+    {
+        release_();
+        parent_ = nullptr;
+    }
 
     // @note Just copy the other's base data (e.g. name, type, data value), not copy other's parent.
     Tag(const Tag& other) :
@@ -411,13 +415,6 @@ public:
 
         other.data_.str = nullptr;
         other.name_ = nullptr;
-    }
-
-    // @note Release the all alloced memory and set it's parent to nullptr.
-    ~Tag()
-    {
-        release_();
-        parent_ = nullptr;
     }
 
     // @note Just copy the other's base data (e.g. name, type, data value), not copy other's parent.
@@ -512,6 +509,9 @@ public:
 
         return *this;
     }
+
+    // @brief Construct a tag with tag type.
+    explicit Tag(TagType type) : type_(type) {}
 
     // @brief Load the tag from binary input stream.
     // @param is            The input stream.
