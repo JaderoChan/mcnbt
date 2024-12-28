@@ -29,7 +29,7 @@ protected:
 
 struct CommandBlockSD final : BlockStateData
 {
-    // Block facing direction.
+    /// @brief Block facing direction.
     enum FacingDirection : uchar
     {
         FD_DOWN,

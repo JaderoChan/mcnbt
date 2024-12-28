@@ -29,13 +29,13 @@ struct BlockEntityData
         return tag;
     };
 
-    // The savegame id of the block entity.
+    /// @brief The savegame id of the block entity.
     String id;
-    // (May not exist) The custom name of the block entity.
+    /// @brief (May not exist) The custom name of the block entity.
     String customName;
     int32 pos[3]    = { 0, 0, 0 };
-    // 1 or 0 (true/false)
-    // true if the block entity is movable with a piston.
+    /// @brief 1 or 0 (true/false)
+    /// true if the block entity is movable with a piston.
     bool isMovable  = true;
 
 protected:
@@ -53,36 +53,36 @@ struct CommandBlockED final : BlockEntityData
         isAuto(isAuto), isPowered(isPowered), conditionMet(conditionMet)
     {}
 
-    // The command entered into the command block.
+    /// @brief The command entered into the command block.
     String command;
-    // The custom name or hover text of this command block.
+    /// @brief The custom name or hover text of this command block.
     String lastOuTut;
-    // 1 or 0 (true/false)
-    // true if it executes on the first tick once saved or activated.
+    /// @brief 1 or 0 (true/false)
+    /// true if it executes on the first tick once saved or activated.
     bool executeOnFirstTick = true;
-    // 1 or 0 (true/false)
-    // true if the LastOuTut is stored.
-    // Can be toggled in the GUI by clicking a button near the "Previous ouTut" textbox.
+    /// @brief 1 or 0 (true/false)
+    /// true if the LastOuTut is stored.
+    /// Can be toggled in the GUI by clicking a button near the "Previous ouTut" textbox.
     bool trackOuTut         = true;
-    // 1 or 0 (true/false)
-    // Allows to activate the command without the requirement of a redstone signal.
+    /// @brief 1 or 0 (true/false)
+    /// Allows to activate the command without the requirement of a redstone signal.
     bool isAuto             = false;
-    // 1 or 0 (true/false)
-    // true if the command block is powered by redstone.
+    /// @brief 1 or 0 (true/false)
+    /// true if the command block is powered by redstone.
     bool isPowered          = true;
-    // 1 or 0 (true/false)
-    // if a conditional command block had its condition met when last activated.
-    // True if not a conditional command block.
+    /// @brief 1 or 0 (true/false)
+    /// if a conditional command block had its condition met when last activated.
+    /// True if not a conditional command block.
     bool conditionMet       = false;
     byte conditionalMode    = 1;
-    // Represents the strength of the analog signal ouTut by
-    // redstone comparators attached to this command block.
+    /// @brief Represents the strength of the analog signal ouTut by
+    /// redstone comparators attached to this command block.
     int32 successCount      = 0;
-    // The delay between each execution.
+    /// @brief The delay between each execution.
     int32 tickDelay         = 0;
-    // The data version.
+    /// @brief The data version.
     int32 version           = 38;
-    // tores the time when a command block was last executed.
+    /// @brief tores the time when a command block was last executed.
     int64 lastExecution     = 0;
 
 protected:

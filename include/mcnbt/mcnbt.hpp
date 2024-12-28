@@ -2,7 +2,7 @@
 //
 // Webs: https://github.com/JaderoChan/mcnbt
 // You can contact me by email: c_dl_cn@outlook.com
-//
+
 // MIT License
 //
 // Copyright (c) 2024 頔珞JaderoChan
@@ -217,7 +217,7 @@ inline bool isContainer(TagType type)
     return isList(type) || isCompound(type);
 }
 
-// @brief Get the tag type string by tag type.
+/// @brief Get the tag type string by tag type.
 inline String getTagTypeString(TagType type)
 {
     switch (type) {
@@ -258,8 +258,8 @@ inline String getTagTypeString(TagType type)
 namespace nbt
 {
 
-// @brief Reverse a C style string.
-// @param size The size of need reversed range, and reverse all if the size is 0.
+/// @brief Reverse a C style string.
+/// @param size The size of need reversed range, and reverse all if the size is 0.
 inline void _reverse(char* str, size_t size = 0)
 {
     // If size is 0, reverse all.
@@ -277,7 +277,7 @@ inline void _reverse(char* str, size_t size = 0)
     }
 }
 
-// @brief Check whether the memory order of system of compiler environment is big endian.
+/// @brief Check whether the memory order of system of compiler environment is big endian.
 inline bool _isBigEndian()
 {
     static bool isInited = false;
@@ -294,11 +294,11 @@ inline bool _isBigEndian()
     return rslt;
 }
 
-// @brief Obtain bytes from input stream, and convert it to number.
-// @param is            The input stream.
-// @param isBigEndian   The endianness of the bytes.
-// @param resumeCursor  Whether to resume the cursor position of input stream after read.
-// @return A number.
+/// @brief Obtain bytes from input stream, and convert it to number.
+/// @param is               The input stream.
+/// @param isBigEndian      The endianness of the bytes.
+/// @param resumeCursor     Whether to resume the cursor position of input stream after read.
+/// @return A number.
 template <typename T>
 T _bytes2num(IStream& is, bool isBigEndian = false, bool resumeCursor = false)
 {
@@ -328,10 +328,10 @@ T _bytes2num(IStream& is, bool isBigEndian = false, bool resumeCursor = false)
     return result;
 }
 
-// @brief Convert the number to bytes, and write it to output stream.
-// @param num The       number to convert.
-// @param os The        output stream.
-// @param isBigEndian   The endianness of the bytes need to write.
+/// @brief Convert the number to bytes, and write it to output stream.
+/// @param num The          number to convert.
+/// @param os The           output stream.
+/// @param isBigEndian      The endianness of the bytes need to write.
 template <typename T>
 void _num2bytes(T num, OStream& os, bool isBigEndian = false)
 {
@@ -360,14 +360,14 @@ class Tag
 public:
     Tag() = default;
 
-    // @note Release the all alloced memory and set it's parent to nullptr.
+    /// @note Release the all alloced memory and set it's parent to nullptr.
     ~Tag()
     {
         release_();
         parent_ = nullptr;
     }
 
-    // @note Just copy the other's base data (e.g. name, type, data value), not copy other's parent.
+    /// @note Just copy the other's base data (e.g. name, type, data value), not copy other's parent.
     Tag(const Tag& other) :
         type_(other.type_), dtype_(other.dtype_)
     {
@@ -404,7 +404,6 @@ public:
             name_ = new String(*other.name_);
     }
 
-    // ditto
     Tag(Tag&& other) noexcept :
         type_(other.type_), dtype_(other.dtype_), data_(other.data_), name_(other.name_)
     {
@@ -417,7 +416,7 @@ public:
         other.name_ = nullptr;
     }
 
-    // @note Just copy the other's base data (e.g. name, type, data value), not copy other's parent.
+    /// @note Just copy the other's base data (e.g. name, type, data value), not copy other's parent.
     Tag& operator=(const Tag& other)
     {
         if (this == &other)
@@ -469,7 +468,6 @@ public:
         return *this;
     }
 
-    // ditto
     Tag& operator=(Tag&& other)
     {
         if (this == &other)
@@ -510,13 +508,13 @@ public:
         return *this;
     }
 
-    // @brief Construct a tag with tag type.
+    /// @brief Construct a tag with tag type.
     explicit Tag(TagType type) : type_(type) {}
 
-    // @brief Load the tag from binary input stream.
-    // @param is            The input stream.
-    // @param isBigEndian   Whether the read data from input stream with big endian.
-    // @param headerSize    The size of need discard data from input stream begin.
+    /// @brief Load the tag from binary input stream.
+    /// @param is               The input stream.
+    /// @param isBigEndian      Whether the read data from input stream with big endian.
+    /// @param headerSize       The size of need discard data from input stream begin.
     // (usually is 0, but bedrock edition map file is 8, some useless dat)
     static Tag fromBinStream(IFStream& is, bool isBigEndian, size_t headerSize = 0)
     {
@@ -545,7 +543,7 @@ public:
 #endif // MCNBT_USE_GZIP
     }
 
-    // @brief Load the tag from a nbt file.
+    /// @brief Load the tag from a nbt file.
     static Tag fromFile(const String& filename, bool isBigEndian, size_t headerSize = 0)
     {
         IFStream ifs(filename, std::ios::binary);
@@ -560,15 +558,15 @@ public:
         return rslt;
     }
 
-    // TODO
-    // @brief Load the tag from a input stream.
-    // @note The root tag must be a compound tag.
-    // @note The tag name (key of key-value) must valid, it can't contains {, }, [,] and so on key characters.
+    /// @todo
+    /// @brief Load the tag from a input stream.
+    /// @note The root tag must be a compound tag.
+    /// @note The tag name (key of key-value) must valid, it can't contains {, }, [,] and so on key characters.
     static Tag fromSnbt(IStream& snbtSs);
 
-    // @brief Load the tag from a string.
-    // @note The root tag must be a compound tag.
-    // @note The tag name (key of key-value) must valid, it can't contains {, }, [,] and so on key characters.
+    /// @brief Load the tag from a string.
+    /// @note The root tag must be a compound tag.
+    /// @note The tag name (key of key-value) must valid, it can't contains {, }, [,] and so on key characters.
     static Tag fromSnbt(const String& snbt)
     {
         SStream ss;
@@ -622,23 +620,23 @@ public:
     * Functions of common to all tag.
     */
 
-    // @brief Make a copy.
+    /// @brief Make a copy.
     // Usually used for add tag to list or compound. (because default is move when add tag to list or compound)
     Tag copy() const { return Tag(*this); }
 
     Tag assign(const Tag& tag) { return tag.copy(); }
 
-    // @brief Get the tag type.
+    /// @brief Get the tag type.
     TagType type() const { return type_; }
 
-    // @brief Get the name of tag.
+    /// @brief Get the name of tag.
     String name() const { return name_ ? *name_ : ""; }
 
-    // @brief Get the name length of tag.
+    /// @brief Get the name length of tag.
     int16 nameLength() const { return name_ ? static_cast<int16>(name_->size()) : 0; }
 
-    // @brief Set the name of tag.
-    // @attention Only be called by non-ListElement.
+    /// @brief Set the name of tag.
+    /// @attention Only be called by non-ListElement.
     Tag& setName(const String& name)
     {
         assert(!isListElement());
@@ -683,18 +681,18 @@ public:
         return t;
     }
 
-    // @brief Check if is a list element.
+    /// @brief Check if is a list element.
     bool isListElement() const { return parent_ && parent_->isList(); }
 
-    // @brief Check if the parent is exists.
+    /// @brief Check if the parent is exists.
     bool hasParent() const { return parent_ != nullptr; }
 
-    // @return The parent pointer, maybe is nullptr.
+    /// @return The parent pointer, maybe is nullptr.
     const Tag* parent() const { return parent_; }
 
-    // @brief Check self if is be contained in specified tag.
-    // @param container The tag that be checked whether self is contained in it.
-    // @note It recursive check all the parent (parent' parent) until happen a parent is nullptr.
+    /// @brief Check self if is be contained in specified tag.
+    /// @param container The tag that be checked whether self is contained in it.
+    /// @note It recursive check all the parent (parent' parent) until happen a parent is nullptr.
     bool isContained(const Tag& container) const
     {
         const Tag* p = parent_;
@@ -713,8 +711,8 @@ public:
     * Functions about the list tag.
     */
 
-    // @brief Check whether the list is initialized (#dtype_ is not TT_END).
-    // @attention Only be called by #TT_LIST.
+    /// @brief Check whether the list is initialized (#dtype_ is not TT_END).
+    /// @attention Only be called by #TT_LIST.
     bool isInitializedList() const
     {
         assert(isList());
@@ -726,8 +724,8 @@ public:
         return dtype_ != TT_END;
     }
 
-    // @brief Get the element tag type of the list.
-    // @attention Only be called by #TT_LIST.
+    /// @brief Get the element tag type of the list.
+    /// @attention Only be called by #TT_LIST.
     TagType listElementType() const
     {
         assert(isList());
@@ -739,8 +737,8 @@ public:
         return dtype_;
     }
 
-    // @brief Initalize the element tag type of the list.
-    // @attention Only be called by #TT_LIST.
+    /// @brief Initalize the element tag type of the list.
+    /// @attention Only be called by #TT_LIST.
     Tag& initListElementType(TagType type)
     {
         assert(isList());
@@ -757,8 +755,8 @@ public:
         return *this;
     }
 
-    // @brief Reset the element tag type of the list and clear all elements.
-    // @attention Only be called by #TT_LIST.
+    /// @brief Reset the element tag type of the list and clear all elements.
+    /// @attention Only be called by #TT_LIST.
     Tag& resetList()
     {
         assert(isList());
@@ -780,7 +778,7 @@ public:
         return *this;
     }
 
-    // @attention Only be called by #TT_LIST.
+    /// @attention Only be called by #TT_LIST.
     Tag& assign(size_t size, const Tag& tag)
     {
         assert(isList());
@@ -814,8 +812,8 @@ public:
     * Functions about the compound tag.
     */
 
-    // @brief Check the compound if contains member of specified name.
-    // @attention Only be called by #TT_COMPOUND.
+    /// @brief Check the compound if contains member of specified name.
+    /// @attention Only be called by #TT_COMPOUND.
     bool hasTag(const String& name) const
     {
         assert(isCompound());
@@ -834,8 +832,8 @@ public:
     * Functions about the tag of containers.
     */
 
-    // @brief Get the length of string or size of array or tag counts of list and compound.
-    // @attention Only be called by
+    /// @brief Get the length of string or size of array or tag counts of list and compound.
+    /// @attention Only be called by
     // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
     size_t size() const
     {
@@ -861,13 +859,13 @@ public:
         return 0;
     }
 
-    // @brief Check whether the string or array or list or compound is empty.
-    // @attention Only be called by
+    /// @brief Check whether the string or array or list or compound is empty.
+    /// @attention Only be called by
     // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
     bool empty() const { return size() == 0; }
 
-    // @brief Reserve the space of string or array or list or compound.
-    // @attention Only be called by
+    /// @brief Reserve the space of string or array or list or compound.
+    /// @attention Only be called by
     // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
     void reserve(size_t size)
     {
@@ -914,7 +912,7 @@ public:
     * Functions for set tag's value. Only be called by corresponding tag.
     */
 
-    // @attention Only be called by #TT_BYTE.
+    /// @attention Only be called by #TT_BYTE.
     Tag& setByte(byte value)
     {
         assert(isByte());
@@ -928,7 +926,7 @@ public:
         return *this;
     }
 
-    // @attention Only be called by #TT_SHORT.
+    /// @attention Only be called by #TT_SHORT.
     Tag& setShort(int16 value)
     {
         assert(isShort());
@@ -942,7 +940,7 @@ public:
         return *this;
     }
 
-    // @attention Only be called by #TT_INT.
+    /// @attention Only be called by #TT_INT.
     Tag& setInt(int32 value)
     {
         assert(isInt());
@@ -956,7 +954,7 @@ public:
         return *this;
     }
 
-    // @attention Only be called by #TT_LONG.
+    /// @attention Only be called by #TT_LONG.
     Tag& setLong(int64 value)
     {
         assert(isLong());
@@ -970,7 +968,7 @@ public:
         return *this;
     }
 
-    // @attention Only be called by #TT_FLOAT.
+    /// @attention Only be called by #TT_FLOAT.
     Tag& setFloat(fp32 value)
     {
         assert(isFloat());
@@ -984,7 +982,7 @@ public:
         return *this;
     }
 
-    // @attention Only be called by #TT_DOUBLE.
+    /// @attention Only be called by #TT_DOUBLE.
     Tag& setDouble(fp64 value)
     {
         assert(isDouble());
@@ -998,8 +996,8 @@ public:
         return *this;
     }
 
-    // @brief Fast way of set the integer value. (auto check the tag type)
-    // @attention Only be called by #TT_BYTE, #TT_SHORT, #TT_INT, #TT_LONG.
+    /// @brief Fast way of set the integer value. (auto check the tag type)
+    /// @attention Only be called by #TT_BYTE, #TT_SHORT, #TT_INT, #TT_LONG.
     Tag& setInteger(int64 value)
     {
         assert(isInteger());
@@ -1020,8 +1018,8 @@ public:
         return *this;
     }
 
-    // @brief Fast way of set the float point value. (auto check the tag type)
-    // @attention Only be called by #TT_FLOAT, #TT_DOUBLE.
+    /// @brief Fast way of set the float point value. (auto check the tag type)
+    /// @attention Only be called by #TT_FLOAT, #TT_DOUBLE.
     Tag& setFloatPoint(fp64 value)
     {
         assert(isFloatPoint());
@@ -1038,7 +1036,7 @@ public:
         return *this;
     }
 
-    // @attention Only be called by #TT_STRING.
+    /// @attention Only be called by #TT_STRING.
     Tag& setString(const String& value)
     {
         assert(isString());
@@ -1058,7 +1056,7 @@ public:
         return *this;
     }
 
-    // @attention Only be called by #TT_BYTE_ARRAY.
+    /// @attention Only be called by #TT_BYTE_ARRAY.
     Tag& setByteArray(const Vec<byte>& value)
     {
         assert(isByteArray());
@@ -1078,7 +1076,7 @@ public:
         return *this;
     }
 
-    // @attention Only be called by #TT_INT_ARRAY.
+    /// @attention Only be called by #TT_INT_ARRAY.
     Tag& setIntArray(const Vec<int32>& value)
     {
         assert(isIntArray());
@@ -1098,7 +1096,7 @@ public:
         return *this;
     }
 
-    // @attention Only be called by #TT_LONG_ARRAY.
+    /// @attention Only be called by #TT_LONG_ARRAY.
     Tag& setLongArray(const Vec<int64>& value)
     {
         assert(isLongArray());
@@ -1118,19 +1116,19 @@ public:
         return *this;
     }
 
-    // @attention Only be called by #TT_BYTE_ARRAY.
+    /// @attention Only be called by #TT_BYTE_ARRAY.
     Tag& setArray(const Vec<byte>& value) { return setByteArray(value); }
 
-    // @overload
-    // @attention Only be called by #TT_INT_ARRAY.
+    /// @overload
+    /// @attention Only be called by #TT_INT_ARRAY.
     Tag& setArray(const Vec<int32>& value) { return setIntArray(value); }
 
-    // @overload
-    // @attention Only be called by #TT_LONG_ARRAY.
+    /// @overload
+    /// @attention Only be called by #TT_LONG_ARRAY.
     Tag& setArray(const Vec<int64>& value) { return setLongArray(value); }
 
-    // @brief Add a value to the byte array.
-    // @attention Only be called by #TT_BYTE_ARRAY.
+    /// @brief Add a value to the byte array.
+    /// @attention Only be called by #TT_BYTE_ARRAY.
     Tag& addByte(byte value)
     {
         assert(isByteArray());
@@ -1147,8 +1145,8 @@ public:
         return *this;
     }
 
-    // @brief Add a value to the int array.
-    // @attention Only be called by #TT_INT_ARRAY.
+    /// @brief Add a value to the int array.
+    /// @attention Only be called by #TT_INT_ARRAY.
     Tag& addInt(int32 value)
     {
         assert(isIntArray());
@@ -1165,8 +1163,8 @@ public:
         return *this;
     }
 
-    // @brief Add a value to the long array.
-    // @attention Only be called by #TT_LONG_ARRAY.
+    /// @brief Add a value to the long array.
+    /// @attention Only be called by #TT_LONG_ARRAY.
     Tag& addLong(int64 value)
     {
         assert(isLongArray());
@@ -1183,10 +1181,10 @@ public:
         return *this;
     }
 
-    // @brief Add a tag to the initialized list or compound.
-    // @note Original tag will be moved to the new tag whether left-value or right-value reference,
+    /// @brief Add a tag to the initialized list or compound.
+    /// @note Original tag will be moved to the new tag whether left-value or right-value reference,
     // and the original tag will invalid after this operation, but you can call #copy() function to avoid this.
-    // @attention Only be called by #TT_LIST, #TT_COMPOUND.
+    /// @attention Only be called by #TT_LIST, #TT_COMPOUND.
     Tag& addTag(Tag&& tag)
     {
         assert(isContainer());
@@ -1256,14 +1254,14 @@ public:
         return *this;
     }
 
-    // @overload
+    /// @overload
     Tag& addTag(Tag& tag) { return addTag(std::move(tag)); }
 
     /*
     * Functions for get value. Only be called by corresponding tag.
     */
 
-    // @attention Only be called by #TT_BYTE.
+    /// @attention Only be called by #TT_BYTE.
     byte getByte() const
     {
         assert(isByte());
@@ -1275,7 +1273,7 @@ public:
         return data_.num.i8;
     }
 
-    // @attention Only be called by #TT_SHORT.
+    /// @attention Only be called by #TT_SHORT.
     int16 getShort() const
     {
         assert(isShort());
@@ -1287,7 +1285,7 @@ public:
         return data_.num.i16;
     }
 
-    // @attention Only be called by #TT_INT.
+    /// @attention Only be called by #TT_INT.
     int32 getInt() const
     {
         assert(isInt());
@@ -1299,7 +1297,7 @@ public:
         return data_.num.i32;
     }
 
-    // @attention Only be called by #TT_LONG.
+    /// @attention Only be called by #TT_LONG.
     int64 getLong() const
     {
         assert(isLong());
@@ -1311,7 +1309,7 @@ public:
         return data_.num.i64;
     }
 
-    // @attention Only be called by #TT_FLOAT.
+    /// @attention Only be called by #TT_FLOAT.
     fp32 getFloat() const
     {
         assert(isFloat());
@@ -1323,7 +1321,7 @@ public:
         return data_.num.f32;
     }
 
-    // @attention Only be called by #TT_DOUBLE.
+    /// @attention Only be called by #TT_DOUBLE.
     fp64 getDouble() const
     {
         assert(isDouble());
@@ -1335,8 +1333,8 @@ public:
         return data_.num.f64;
     }
 
-    // @brief Fast way of get the integer value. (auto check the tag type)
-    // @attention Only be called by #TT_BYTE, #TT_SHORT, #TT_INT, #TT_LONG.
+    /// @brief Fast way of get the integer value. (auto check the tag type)
+    /// @attention Only be called by #TT_BYTE, #TT_SHORT, #TT_INT, #TT_LONG.
     int64 getInteger() const
     {
         assert(isInteger());
@@ -1357,8 +1355,8 @@ public:
         return 0;
     }
 
-    // @brief Fast way of get the float point value. (auto check the tag type)
-    // @attention Only be called by #TT_FLOAT, #TT_DOUBLE.
+    /// @brief Fast way of get the float point value. (auto check the tag type)
+    /// @attention Only be called by #TT_FLOAT, #TT_DOUBLE.
     fp64 getFloatPoint() const
     {
         assert(isFloatPoint());
@@ -1375,7 +1373,7 @@ public:
         return 0;
     }
 
-    // @attention Only be called by #TT_STRING.
+    /// @attention Only be called by #TT_STRING.
     String getString() const
     {
         assert(isString());
@@ -1390,7 +1388,7 @@ public:
         return *data_.str;
     }
 
-    // @attention Only be called by #TT_BYTE_ARRAY.
+    /// @attention Only be called by #TT_BYTE_ARRAY.
     Vec<byte> getByteArray() const
     {
         assert(isByteArray());
@@ -1405,7 +1403,7 @@ public:
         return *data_.bad;
     }
 
-    // @attention Only be called by #TT_INT_ARRAY.
+    /// @attention Only be called by #TT_INT_ARRAY.
     Vec<int32> getIntArray() const
     {
         assert(isIntArray());
@@ -1420,7 +1418,7 @@ public:
         return *data_.iad;
     }
 
-    // @attention Only be called by #TT_LONG_ARRAY.
+    /// @attention Only be called by #TT_LONG_ARRAY.
     Vec<int64> getLongArray() const
     {
         assert(isLongArray());
@@ -1435,9 +1433,9 @@ public:
         return *data_.lad;
     }
 
-    // @overload
-    // @brief Get a value from the byte array by index.
-    // @attention Only be called by #TT_BYTE_ARRAY.
+    /// @overload
+    /// @brief Get a value from the byte array by index.
+    /// @attention Only be called by #TT_BYTE_ARRAY.
     byte getByte(size_t idx) const
     {
         assert(isByteArray());
@@ -1452,7 +1450,7 @@ public:
         return (*data_.bad)[idx];
     }
 
-    // @attention Only be called by #TT_BYTE_ARRAY.
+    /// @attention Only be called by #TT_BYTE_ARRAY.
     byte getFrontByte() const
     {
         assert(isByteArray());
@@ -1467,7 +1465,7 @@ public:
         return data_.bad->front();
     }
 
-    // @attention Only be called by #TT_BYTE_ARRAY.
+    /// @attention Only be called by #TT_BYTE_ARRAY.
     byte getBackByte() const
     {
         assert(isByteArray());
@@ -1482,9 +1480,9 @@ public:
         return data_.bad->back();
     }
 
-    // @overload
-    // @brief Get a value from the int array by index.
-    // @attention Only be called by #TT_INT_ARRAY.
+    /// @overload
+    /// @brief Get a value from the int array by index.
+    /// @attention Only be called by #TT_INT_ARRAY.
     int32 getInt(size_t idx) const
     {
         assert(isIntArray());
@@ -1499,7 +1497,7 @@ public:
         return (*data_.iad)[idx];
     }
 
-    // @attention Only be called by #TT_INT_ARRAY.
+    /// @attention Only be called by #TT_INT_ARRAY.
     int32 getFrontInt() const
     {
         assert(isIntArray());
@@ -1514,7 +1512,7 @@ public:
         return data_.iad->front();
     }
 
-    // @attention Only be called by #TT_INT_ARRAY.
+    /// @attention Only be called by #TT_INT_ARRAY.
     int32 getBackInt() const
     {
         assert(isIntArray());
@@ -1529,9 +1527,9 @@ public:
         return data_.iad->back();
     }
 
-    // @overload
-    // @brief Get a value from long array by index.
-    // @attention Only be called by #TT_LONG_ARRAY.
+    /// @overload
+    /// @brief Get a value from long array by index.
+    /// @attention Only be called by #TT_LONG_ARRAY.
     int64 getLong(size_t idx) const
     {
         assert(isLongArray());
@@ -1546,7 +1544,7 @@ public:
         return (*data_.lad)[idx];
     }
 
-    // @attention Only be called by #TT_LONG_ARRAY.
+    /// @attention Only be called by #TT_LONG_ARRAY.
     int64 getFrontLong() const
     {
         assert(isLongArray());
@@ -1561,7 +1559,7 @@ public:
         return data_.lad->front();
     }
 
-    // @attention Only be called by #TT_LONG_ARRAY.
+    /// @attention Only be called by #TT_LONG_ARRAY.
     int64 getBackLong() const
     {
         assert(isLongArray());
@@ -1576,8 +1574,8 @@ public:
         return data_.lad->back();
     }
 
-    // @brief Get the tag by index.
-    // @attention Only be called by #TT_LIST, #TT_COMPOUND.
+    /// @brief Get the tag by index.
+    /// @attention Only be called by #TT_LIST, #TT_COMPOUND.
     Tag& getTag(size_t idx)
     {
         assert(isContainer());
@@ -1606,9 +1604,9 @@ public:
         return *this;
     }
 
-    // @overload
-    // @brief Get the tag by name.
-    // @attention Only be called by #TT_COMPOUND.
+    /// @overload
+    /// @brief Get the tag by name.
+    /// @attention Only be called by #TT_COMPOUND.
     Tag& getTag(const String& name)
     {
         assert(isCompound());
@@ -1627,7 +1625,7 @@ public:
         return data_.cd->data[data_.cd->idxs[name]];
     }
 
-    // @attention Only be called by #TT_LIST, #TT_COMPOUND.
+    /// @attention Only be called by #TT_LIST, #TT_COMPOUND.
     Tag& getFrontTag()
     {
         assert(isContainer());
@@ -1656,7 +1654,7 @@ public:
         return *this;
     }
 
-    // @attention Only be called by #TT_LIST, #TT_COMPOUND.
+    /// @attention Only be called by #TT_LIST, #TT_COMPOUND.
     Tag& getBackTag()
     {
         assert(isContainer());
@@ -1685,8 +1683,8 @@ public:
         return *this;
     }
 
-    // @brief Remove the element by index.
-    // @attention Only be called by
+    /// @brief Remove the element by index.
+    /// @attention Only be called by
     // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
     Tag& remove(size_t idx)
     {
@@ -1740,9 +1738,9 @@ public:
         return *this;
     }
 
-    // @overload
-    // @brief Remove the tag by name.
-    // @attention Only be called by #TT_COMPOUND.
+    /// @overload
+    /// @brief Remove the tag by name.
+    /// @attention Only be called by #TT_COMPOUND.
     Tag& remove(const String& name)
     {
         assert(isCompound());
@@ -1769,8 +1767,8 @@ public:
         return *this;
     }
 
-    // @brief Remove the first element.
-    // @attention Only be called by
+    /// @brief Remove the first element.
+    /// @attention Only be called by
     // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
     Tag& removeFront()
     {
@@ -1824,8 +1822,8 @@ public:
         return *this;
     }
 
-    // @brief Remove the last element.
-    // @attention Only be called by
+    /// @brief Remove the last element.
+    /// @attention Only be called by
     // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
     Tag& removeBack()
     {
@@ -1876,8 +1874,8 @@ public:
         return *this;
     }
 
-    // @brief Remove the all elements.
-    // @attention Only be called by
+    /// @brief Remove the all elements.
+    /// @attention Only be called by
     // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
     Tag& removeAll()
     {
@@ -1916,7 +1914,7 @@ public:
     }
 
 #ifdef MCNBT_USE_GZIP
-    // @brief Write the tag to output stream.
+    /// @brief Write the tag to output stream.
     void write(OStream& os, bool isBigEndian, bool isCompressed = false) const
     {
         if (isCompressed) {
@@ -1928,7 +1926,7 @@ public:
         }
     }
 
-    // @overload
+    /// @overload
     void write(const String& filename, bool isBigEndian, bool isCompressed = false) const
     {
         OFStream ofs(filename, std::ios_base::binary);
@@ -1941,10 +1939,10 @@ public:
         ofs.close();
     }
 #else
-    // @brief Write the tag to output stream.
+    /// @brief Write the tag to output stream.
     void write(OStream& os, bool isBigEndian) const { write_(os, isBigEndian, (isListElement())); }
 
-    // @overload
+    /// @overload
     void write(const String& filename, bool isBigEndian) const
     {
         OFStream ofs(filename, std::ios_base::binary);
@@ -1958,25 +1956,25 @@ public:
     }
 #endif // MCNBT_USE_GZIP
 
-    // @brief Get the SNBT (The string representation of NBT).
-    // @param isWrappedIndented If true, the output string will be wrapped and indented.
+    /// @brief Get the SNBT (The string representation of NBT).
+    /// @param isWrappedIndented If true, the output string will be wrapped and indented.
     String toSnbt(bool isWrappedIndented = true) const { return toSnbt_(isWrappedIndented, (isListElement())); }
 
     /*
     * Operators overloading.
     */
 
-    // @brief Fast way of get the tag by index.
+    /// @brief Fast way of get the tag by index.
     Tag& operator[](size_t idx) { return getTag(idx); }
 
-    // @overload
-    // @brief Fast way of get the tag by name.
+    /// @overload
+    /// @brief Fast way of get the tag by name.
     Tag& operator[](const String& name) { return getTag(name); }
 
-    // @brief Fast way of add the tag.
+    /// @brief Fast way of add the tag.
     Tag& operator<<(Tag&& tag) { return addTag(std::move(tag)); }
 
-    // @overload
+    /// @overload
     Tag& operator<<(Tag& tag) { return addTag(tag); }
 
 private:
@@ -2039,7 +2037,7 @@ private:
         CompoundData*   cd;
     };
 
-    // @param parentType If the param isListElement is false, ignore it.
+    /// @param parentType If the param isListElement is false, ignore it.
     // If the param isListElement is true, the parentType must be set to the same as the parent tag (List's data type).
     static Tag fromBinStream_(IStream& is, bool isBigEndian, bool isListElement, TagType parentType = TT_END)
     {
