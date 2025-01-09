@@ -48,7 +48,7 @@ You only need to include the *mcnbt.hpp* header file in your project（In cases 
 
 ```cpp
 //...
-std::string filename = "C:/nbt.nbt";	// NBT filename.
+std::string filename = "C:/nbt.nbt";  // NBT filename.
 bool isBigEndian = true;              // Specifies the byte order of the NBT file to be read (small endian order is used for bedrock edition NBT, large endian order is used for java edition)
 nbt::Tag nbt = nbt::fromFile(filename, isBigEndian);
 //...
