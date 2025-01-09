@@ -123,16 +123,16 @@ For list Tag, only get element by index.
 ```cpp
 //...
 nbt::Tag root = nbt::gCompound("Compound");
-root.addTag(gInt(1, "Num1"));		 // add element by addTag function.
-root << gInt(2, "Num2");			   // add element by << operator.
-root.removeTag("Num1");				   // earse element by element's name.
-root.removeTag(0);			    	   // earse element by element's index.
+root.addTag(gInt(1, "Num1"));    // add element by addTag function.
+root << gInt(2, "Num2");         // add element by << operator.
+root.removeTag("Num1");          // earse element by element's name.
+root.removeTag(0);               // earse element by element's index.
 root.addTag(gString("text", "str"));
-root["str"].setString("text2");			              // get element by it's name.
-std::string str1 = root[0].getString();	          // get element by it's index str1 == "text2"
-std::string str2 = root.front().getString();	    // get element by front and back function. str2 == "tex2"
+root["str"].setString("text2");                   // get element by it's name.
+std::string str1 = root[0].getString();           // get element by it's index str1 == "text2"
+std::string str2 = root.front().getString();      // get element by front and back function. str2 == "tex2"
 
-nbt::Tag list = nbt::gList(Nbt::TT_INT, "List");	// gList function's first parameter used for specifies the tag type of element.
+nbt::Tag list = nbt::gList(Nbt::TT_INT, "List");  // gList function's first parameter used for specifies the tag type of element.
 list.addTagr(gInt(1));
 list << gInt(2);
 int num = list[0].getInt();		    // num == 1
