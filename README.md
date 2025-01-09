@@ -49,7 +49,7 @@ You only need to include the *mcnbt.hpp* header file in your project（In cases 
 ```cpp
 //...
 std::string filename = "C:/nbt.nbt";	// NBT filename.
-bool isBigEndian = true;	// Specifies the byte order of the NBT file to be read (small endian order is used for bedrock edition NBT, large endian order is used for java edition)
+bool isBigEndian = true;	            // Specifies the byte order of the NBT file to be read (small endian order is used for bedrock edition NBT, large endian order is used for java edition)
 nbt::Tag nbt = nbt::fromFile(filename, isBigEndian);
 //...
 ```
@@ -124,13 +124,13 @@ For list Tag, only get element by index.
 //...
 nbt::Tag root = nbt::gCompound("Compound");
 root.addTag(gInt(1, "Num1"));		 // add element by addTag function.
-root << gInt(2, "Num2");			// add element by << operator.
-root.removeTag("Num1");				// earse element by element's name.
-root.removeTag(0);			    	// earse element by element's index.
+root << gInt(2, "Num2");			   // add element by << operator.
+root.removeTag("Num1");				   // earse element by element's name.
+root.removeTag(0);			    	   // earse element by element's index.
 root.addTag(gString("text", "str"));
-root["str"].setString("text2");			// get element by it's name.
-std::string str1 = root[0].getString();	 // get element by it's index str1 == "text2"
-std::string str2 = root.front().getString();	// get element by front and back function. str2 == "tex2"
+root["str"].setString("text2");			              // get element by it's name.
+std::string str1 = root[0].getString();	          // get element by it's index str1 == "text2"
+std::string str2 = root.front().getString();	    // get element by front and back function. str2 == "tex2"
 
 nbt::Tag list = nbt::gList(Nbt::TT_INT, "List");	// gList function's first parameter used for specifies the tag type of element.
 list.addTagr(gInt(1));
