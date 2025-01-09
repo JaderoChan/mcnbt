@@ -46,8 +46,8 @@
 
 ```cpp
 //...
-std::string filename = "C:/nbt.nbt";	// NBT文件路径
-bool isBigEndian = true;	// 指定待读取的NBT文件的字节序（基岩版NBT使用小端序，Java版使用大端序）
+std::string filename = "C:/nbt.nbt";  // NBT文件路径
+bool isBigEndian = true;              // 指定待读取的NBT文件的字节序（基岩版NBT使用小端序，Java版使用大端序）
 nbt::Tag nbt = nbt::fromFile(filename, isBigEndian);
 //...
 ```
@@ -119,18 +119,18 @@ int first = (*intArray.getIntArray())[0];		// first == 2.
 ```cpp
 //...
 nbt::Tag root = nbt::gCompound("Compound");
-root.addTag(gInt(1, "Num1"));		 // 使用addTag()函数添加元素。
-root << gInt(2, "Num2");			// 使用<<运算符添加元素。
-root.removeTag("Num1");				// 使用元素名称移除元素。
-root.removeTag(0);			    	// 使用元素索引移除元素。
+root.addTag(gInt(1, "Num1"));    // 使用addTag()函数添加元素。
+root << gInt(2, "Num2");         // 使用<<运算符添加元素。
+root.removeTag("Num1");          // 使用元素名称移除元素。
+root.removeTag(0);               // 使用元素索引移除元素。
 root.addTag(gString("text", "str"));
-root["str"].setString("text2");			// 使用元素名称获取元素。
-std::string str1 = root[0].getString();	 // 使用元素索引获取元素。str1 == "text2"
-std::string str2 = root.front().getString();	// 使用front或back函数获取元素。str2 == "tex2"
+root["str"].setString("text2");                  // 使用元素名称获取元素。
+std::string str1 = root[0].getString();          // 使用元素索引获取元素。str1 == "text2"
+std::string str2 = root.front().getString();     // 使用front或back函数获取元素。str2 == "tex2"
 
-nbt::Tag list = nbt::gList(Nbt::TT_INT, "List");	// gList函数的第一个参数用于指定List内部Tag的类型
-list.addTagr(gInt(1));			// 使用addTag()函数添加元素。
-list << gInt(2);				   // 使用<<运算符添加元素。
+nbt::Tag list = nbt::gList(Nbt::TT_INT, "List"); // gList函数的第一个参数用于指定List内部Tag的类型
+list.addTagr(gInt(1));   // 使用addTag()函数添加元素。
+list << gInt(2);         // 使用<<运算符添加元素。
 int num = list[0].getInt();		    // num == 1
 //...
 ```
