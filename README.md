@@ -1,5 +1,3 @@
-[中文文档](./README_CN.md)
-
 # MCNBT
 
 An NBT read-write library written in C++ (header-only library).
@@ -21,11 +19,11 @@ e.g.
 // Others.
 ```
 
-## :rocket: Features 
+## :rocket: Features
 
 - Easy to use
 - Header-only library, easy to add to project
-- Fast speed, high performance 
+- Fast speed, high performance
 - In addition to the *zlib* library required for decompress and compress, there are no other dependencies, and C++11 standard and above can be used
 - Support bedrock edition and java edition (bedrock edition nbt byte order is little endian, java is big endian)
 - Support gzip decompress and compress by *zlib* library
@@ -48,8 +46,8 @@ You only need to include the *mcnbt.hpp* header file in your project（In cases 
 
 ```cpp
 //...
-std::string filename = "C:/nbt.nbt";  // NBT filename.
-bool isBigEndian = true;              // Specifies the byte order of the NBT file to be read (small endian order is used for bedrock edition NBT, large endian order is used for java edition)
+std::string filename = "C:/nbt.nbt";    // NBT filename.
+bool isBigEndian = true;                // Specifies the byte order of the NBT file to be read (small endian order is used for bedrock edition NBT, large endian order is used for java edition)
 nbt::Tag nbt = nbt::fromFile(filename, isBigEndian);
 //...
 ```
@@ -85,7 +83,7 @@ All fast way functions:
 - nbt::gList(const std::vector\<nbt::Tag\>& value, const std::string& name)
 - nbt::gCompound(const std::string& name)
 
-### 3. Read and modify tag value.
+### 3. Read and modify tag value
 
 For nums Tag, direct call the corresponding getter/setter.
 e.g.
@@ -93,9 +91,9 @@ e.g.
 ```cpp
 //...
 Nbt::Tag num = Nbt::gInt(1, "Num");
-num.getInt();	// return 1.
+num.getInt();   // return 1.
 num.setInt(10);
-num.getInt();	// return 10.
+num.getInt();   // return 10.
 //...
 ```
 
@@ -106,11 +104,11 @@ e.g.
 //...
 // Initialize a int array by empty std::vector<nbt::int32> value.
 nbt::Tag intArray = nbt::gIntArray({}, "Nums");
-intArray.addInt(1);			// Add a value.
+intArray.addInt(1);         // Add a value.
 intArray.addInt(2);
 intArray.addInt(3);
-intArray.remove(0);			// Remove a value by index.
-int first = (*intArray.getIntArray())[0];		// first == 2.
+intArray.remove(0);         // Remove a value by index.
+int first = (*intArray.getIntArray())[0];   // first == 2.
 //...
 ```
 
@@ -123,18 +121,18 @@ For list Tag, only get element by index.
 ```cpp
 //...
 nbt::Tag root = nbt::gCompound("Compound");
-root.addTag(gInt(1, "Num1"));    // add element by addTag function.
-root << gInt(2, "Num2");         // add element by << operator.
-root.removeTag("Num1");          // earse element by element's name.
-root.removeTag(0);               // earse element by element's index.
+root.addTag(gInt(1, "Num1"));           // add element by addTag function.
+root << gInt(2, "Num2");                // add element by << operator.
+root.removeTag("Num1");                 // earse element by element's name.
+root.removeTag(0);                      // earse element by element's index.
 root.addTag(gString("text", "str"));
-root["str"].setString("text2");                   // get element by it's name.
-std::string str1 = root[0].getString();           // get element by it's index str1 == "text2"
-std::string str2 = root.front().getString();      // get element by front and back function. str2 == "tex2"
+root["str"].setString("text2");         // get element by it's name.
+std::string str1 = root[0].getString(); // get element by it's index str1 == "text2"
+std::string str2 = root.front().getString();        // get element by front and back function. str2 == "tex2"
 
-nbt::Tag list = nbt::gList(Nbt::TT_INT, "List");  // gList function's first parameter used for specifies the tag type of element.
+nbt::Tag list = nbt::gList(Nbt::TT_INT, "List");    // gList function's first parameter used for specifies the tag type of element.
 list.addTagr(gInt(1));
 list << gInt(2);
-int num = list[0].getInt();		    // num == 1
+int num = list[0].getInt();             // num == 1
 //...
 ```
