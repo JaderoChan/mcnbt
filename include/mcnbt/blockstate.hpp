@@ -17,7 +17,6 @@ struct BlockStateData
     Tag getTag() const
     {
         Tag tag = gCompound("states");
-
         assemble(tag);
 
         return tag;
@@ -73,14 +72,10 @@ private:
     String modestr_() const
     {
         switch (mode) {
-            case MODE_SAVE:
-                return "save";
-            case MODE_LOAD:
-                return "load";
-            case MODE_CORNER:
-                return "corner";
-            default:
-                return "";
+            case MODE_SAVE:     return "save";
+            case MODE_LOAD:     return "load";
+            case MODE_CORNER:   return "corner";
+            default:            return "";
         }
     };
 };
