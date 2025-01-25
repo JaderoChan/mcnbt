@@ -1,5 +1,7 @@
 #include <iostream>
 
+#define NDEBUG
+
 #include <mcnbt/mcnbt.hpp>
 
 using namespace nbt;

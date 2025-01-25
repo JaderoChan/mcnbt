@@ -1,6 +1,8 @@
 #include <iostream>
 #include <utility> // std::pair
 
+#define NDEBUG
+
 #define MCNBT_USE_GZIP
 #include <mcnbt/mcnbt.hpp>
 

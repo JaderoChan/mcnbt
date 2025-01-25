@@ -1,6 +1,8 @@
 #include <iostream>
 #include <utility>  // std::pair
 
+#define NDEBUG
+
 #include <mcnbt/mcnbt.hpp>
 
 using namespace nbt;
