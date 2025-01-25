@@ -221,34 +221,20 @@ inline bool isContainer(TagType type)
 inline String getTagTypeString(TagType type)
 {
     switch (type) {
-        case TT_END:
-            return "End";
-        case TT_BYTE:
-            return "Byte";
-        case TT_SHORT:
-            return "Short";
-        case TT_INT:
-            return "Int";
-        case TT_LONG:
-            return "Long";
-        case TT_FLOAT:
-            return "Float";
-        case TT_DOUBLE:
-            return "Double";
-        case TT_BYTE_ARRAY:
-            return "Byte Array";
-        case TT_STRING:
-            return "String";
-        case TT_LIST:
-            return "List";
-        case TT_COMPOUND:
-            return "Compound";
-        case TT_INT_ARRAY:
-            return "Int Array";
-        case TT_LONG_ARRAY:
-            return "Long Array";
-        default:
-            return "";
+        case TT_END:            return "End";
+        case TT_BYTE:           return "Byte";
+        case TT_SHORT:          return "Short";
+        case TT_INT:            return "Int";
+        case TT_LONG:           return "Long";
+        case TT_FLOAT:          return "Float";
+        case TT_DOUBLE:         return "Double";
+        case TT_BYTE_ARRAY:     return "Byte Array";
+        case TT_STRING:         return "String";
+        case TT_LIST:           return "List";
+        case TT_COMPOUND:       return "Compound";
+        case TT_INT_ARRAY:      return "Int Array";
+        case TT_LONG_ARRAY:     return "Long Array";
+        default:                return "";
     }
 }
 
@@ -367,7 +353,7 @@ public:
         parent_ = nullptr;
     }
 
-    /// @note Just copy the other's base data (e.g. name, type, data value), not copy other's parent.
+    /// @note Deep copy but not copy the other's parent.
     Tag(const Tag& other) :
         tagType_(other.tagType_), itemType_(other.itemType_)
     {
@@ -404,6 +390,7 @@ public:
             tagName_ = new String(*other.tagName_);
     }
 
+    /// @note Copy the other's parent.
     Tag(Tag&& other) noexcept :
         tagType_(other.tagType_), itemType_(other.itemType_), tagData_(other.tagData_), tagName_(other.tagName_)
     {
@@ -422,7 +409,7 @@ public:
         other.tagName_      = nullptr;
     }
 
-    /// @note Just copy the other's base data (e.g. name, type, data value), not copy other's parent.
+    /// @note Deep copy but not copy the other's parent.
     Tag& operator=(const Tag& other)
     {
         assert(!(isListItem() && (type() != other.type())));
@@ -474,6 +461,7 @@ public:
         return *this;
     }
 
+    /// @note Copy the other's parent.
     Tag& operator=(Tag&& other)
     {
         assert(!isContained(other));
@@ -631,6 +619,9 @@ public:
     // Usually used for add tag to list or compound. (because default is move when add tag to list or compound)
     Tag copy() const            { return Tag(*this); }
 
+    /// @brief Assign a tag to self, be equal to *this = tag;
+    Tag& assign(const Tag& tag) { *this = tag; return *this; }
+
     /// @brief Get the tag type.
     TagType type() const        { return tagType_; }
 
@@ -641,8 +632,8 @@ public:
     int16 nameLength() const    { return static_cast<int16>(name().size()); }
 
     /// @brief Set the name of tag.
-    /// @note If the new name already exist in parent, over it.
-    /// @attention Only be called via non-ListItem.
+    /// @note If the new name already exist in parent, cover it.
+    /// @attention Only be called via #non-ListItem.
     Tag& setName(const String& name)
     {
         assert(!isListItem());
@@ -664,10 +655,8 @@ public:
 
         if (!parent_)
         {
-            if (tagName_)
-                *tagName_ = name;
-            else
-                tagName_ = new String(name);
+            if (tagName_)       *tagName_ = name;
+            else                tagName_ = new String(name);
 
             return *this;
         }
@@ -679,10 +668,8 @@ public:
 
             Tag& t = (*p)[oldname];
 
-            if (t.tagName_)
-                *t.tagName_ = name;
-            else
-                t.tagName_ = new String(name);
+            if (t.tagName_)     *t.tagName_ = name;
+            else                t.tagName_ = new String(name);
 
             size_t idx = p->tagData_.cd->idxs[oldname];
 
@@ -697,19 +684,20 @@ public:
     bool isListItem() const     { return parent_ && parent_->isList(); }
 
     /// @brief Check if the parent is exists.
-    bool hasParent() const { return parent_ != nullptr; }
+    bool hasParent() const      { return parent_ != nullptr; }
 
-    /// @return The parent pointer, maybe is nullptr.
-    const Tag* parent() const { return parent_; }
+    /// @return The parent pointer.
+    const Tag* parent() const   { return parent_; }
 
-    /// @brief Check self if is be contained in specified tag.
+    /// @brief Check if is be contained in specified tag.
     /// @param container The tag that be checked whether self is contained in it.
-    /// @note It recursive check all the parent (parent' parent) until happen a parent is nullptr.
+    /// @note Recursive check all the parent (parent's parent) until a parent is nullptr.
     bool isContained(const Tag& container) const
     {
         const Tag* p = parent_;
 
-        while (p) {
+        while (p)
+        {
             if (p == &container)
                 return true;
 
@@ -719,78 +707,54 @@ public:
         return false;
     }
 
-    /*
-    * Functions about the list tag.
-    */
+    /// @brief Functions about the list tag.
 
-    /// @brief Check whether the list is initialized (#itemType_ is not TT_END).
-    /// @attention Only be called by #TT_LIST.
-    bool isInitializedList() const
+    /// @brief Get the list item type.
+    /// @attention Only be called via #TT_LIST.
+    bool listItemType() const
     {
         assert(isList());
 #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
         if (!isList())
-            throw std::logic_error("Can't check initialized list for non-list tag.");
-#endif
-
-        return itemType_ != TT_END;
-    }
-
-    /// @brief Get the element tag type of the list.
-    /// @attention Only be called by #TT_LIST.
-    TagType listElementType() const
-    {
-        assert(isList());
-#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
-        if (!isList())
-            throw std::logic_error("Can't get element type for non-list tag.");
+            throw std::logic_error("Can't get the list item type for non-list tag.");
 #endif
 
         return itemType_;
     }
 
-    /// @brief Initalize the element tag type of the list.
-    /// @attention Only be called by #TT_LIST.
-    Tag& initListElementType(TagType type)
+    /// @brief Check if the list item type is be seted.
+    /// @attention Only be called via #TT_LIST.
+    bool hasSetListItemType() const
+    {
+        return listItemType() != TT_END;
+    }
+
+    /// @brief Set the tag type of list item.
+    /// @note If the list item type already be seted, cover the original list item type and remove all original items.
+    /// @attention Only be called via #TT_LIST.
+    Tag& setListItemType(TagType type)
     {
         assert(isList());
 #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
         if (!isList())
-            throw std::logic_error("Can't initialize element type for non-list tag.");
+            throw std::logic_error("Can't set the list item type for non-list tag.");
+#endif
 
         if (itemType_ != TT_END)
-            throw std::logic_error("Can't repeat initialize element type for already initialized list.");
-#endif
+        {
+            if (tagData_.ld)
+            {
+                delete tagData_.ld;
+                tagData_.ld = nullptr;
+            }
+        }
 
         itemType_ = type;
 
         return *this;
     }
 
-    /// @brief Reset the element tag type of the list and clear all elements.
-    /// @attention Only be called by #TT_LIST.
-    Tag& resetList()
-    {
-        assert(isList());
-#if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
-        if (!isList())
-            throw std::logic_error("Can't reset list for non-list tag.");
-#endif
-
-        if (itemType_ == TT_END)
-            return *this;
-
-        if (tagData_.ld) {
-            delete tagData_.ld;
-            tagData_.ld = nullptr;
-        }
-
-        itemType_ = TT_END;
-
-        return *this;
-    }
-
-    /// @attention Only be called by #TT_LIST.
+    /// @attention Only be called via #TT_LIST.
     Tag& assign(size_t size, const Tag& tag)
     {
         assert(isList());
@@ -801,7 +765,8 @@ public:
         if (itemType_ == TT_END)
             throw std::logic_error("Can't read or write a uninitialized list.");
 
-        if (tag.tagType_ != itemType_) {
+        if (tag.type() != itemType_)
+        {
             String errmsg = "Can't assign the tag of " + getTagTypeString(tag.type());
             errmsg += " to the list of " + getTagTypeString(itemType_);
 
@@ -820,12 +785,10 @@ public:
         return *this;
     }
 
-    /*
-    * Functions about the compound tag.
-    */
+    /// @brief Functions about the compound tag.
 
-    /// @brief Check the compound if contains member of specified name.
-    /// @attention Only be called by #TT_COMPOUND.
+    /// @brief Check if the compound contains member of specified name.
+    /// @attention Only be called via #TT_COMPOUND.
     bool hasTag(const String& name) const
     {
         assert(isCompound());
@@ -840,12 +803,10 @@ public:
         return tagData_.cd->idxs.find(name) != tagData_.cd->idxs.end();
     }
 
-    /*
-    * Functions about the tag of containers.
-    */
+    /// @brief Functions about the tag of containers.
 
     /// @brief Get the length of string or size of array or tag counts of list and compound.
-    /// @attention Only be called by
+    /// @attention Only be called via
     // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
     size_t size() const
     {
@@ -855,29 +816,23 @@ public:
             throw std::logic_error("Can't get size for non-string, non-array, non-container tag.");
 #endif
 
-        if (isString())
-            return !tagData_.str ? 0 : tagData_.str->size();
-        if (isByteArray())
-            return !tagData_.bad ? 0 : tagData_.bad->size();
-        if (isIntArray())
-            return !tagData_.iad ? 0 : tagData_.iad->size();
-        if (isLongArray())
-            return !tagData_.lad ? 0 : tagData_.lad->size();
-        if (isList())
-            return !tagData_.ld ? 0 : tagData_.ld->size();
-        if (isCompound())
-            return !tagData_.cd ? 0 : tagData_.cd->size();
+        if (isString())     return !tagData_.str ? 0 : tagData_.str->size();
+        if (isByteArray())  return !tagData_.bad ? 0 : tagData_.bad->size();
+        if (isIntArray())   return !tagData_.iad ? 0 : tagData_.iad->size();
+        if (isLongArray())  return !tagData_.lad ? 0 : tagData_.lad->size();
+        if (isList())       return !tagData_.ld ? 0 : tagData_.ld->size();
+        if (isCompound())   return !tagData_.cd ? 0 : tagData_.cd->size();
 
         return 0;
     }
 
-    /// @brief Check whether the string or array or list or compound is empty.
-    /// @attention Only be called by
+    /// @brief Check if the string or array or list or compound is empty.
+    /// @attention Only be called via
     // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
     bool empty() const { return size() == 0; }
 
     /// @brief Reserve the space of string or array or list or compound.
-    /// @attention Only be called by
+    /// @attention Only be called via
     // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
     void reserve(size_t size)
     {
@@ -887,32 +842,43 @@ public:
             throw std::logic_error("Can't reserve space for non-string, non-array, non-container tag.");
 #endif
 
-        if (isString()) {
+        if (isString())
+        {
             if (!tagData_.str)
                 tagData_.str = new String();
 
             tagData_.str->reserve(size);
-        } else if (isByteArray()) {
+        }
+        else if (isByteArray())
+        {
             if (!tagData_.bad)
                 tagData_.bad = new Vec<byte>();
 
             tagData_.bad->reserve(size);
-        } else if (isIntArray()) {
+        }
+        else if (isIntArray())
+        {
             if (!tagData_.iad)
                 tagData_.iad = new Vec<int32>();
 
             tagData_.iad->reserve(size);
-        } else if (isLongArray()) {
+        }
+        else if (isLongArray())
+        {
             if (!tagData_.lad)
                 tagData_.lad = new Vec<int64>();
 
             tagData_.lad->reserve(size);
-        } else if (isList()) {
+        }
+        else if (isList())
+        {
             if (!tagData_.ld)
                 tagData_.ld = new Vec<Tag>();
 
             tagData_.ld->reserve(size);
-        } else if (isCompound()) {
+        }
+        else if (isCompound())
+        {
             if (!tagData_.cd)
                 tagData_.cd = new CompoundData();
 
@@ -920,11 +886,9 @@ public:
         }
     }
 
-    /*
-    * Functions for set tag's value. Only be called by corresponding tag.
-    */
+    /// @brief Functions for set value. Only be called via corresponding tag.
 
-    /// @attention Only be called by #TT_BYTE.
+    /// @attention Only be called via #TT_BYTE.
     Tag& setByte(byte value)
     {
         assert(isByte());
@@ -938,7 +902,7 @@ public:
         return *this;
     }
 
-    /// @attention Only be called by #TT_SHORT.
+    /// @attention Only be called via #TT_SHORT.
     Tag& setShort(int16 value)
     {
         assert(isShort());
@@ -952,7 +916,7 @@ public:
         return *this;
     }
 
-    /// @attention Only be called by #TT_INT.
+    /// @attention Only be called via #TT_INT.
     Tag& setInt(int32 value)
     {
         assert(isInt());
@@ -966,7 +930,7 @@ public:
         return *this;
     }
 
-    /// @attention Only be called by #TT_LONG.
+    /// @attention Only be called via #TT_LONG.
     Tag& setLong(int64 value)
     {
         assert(isLong());
@@ -980,7 +944,7 @@ public:
         return *this;
     }
 
-    /// @attention Only be called by #TT_FLOAT.
+    /// @attention Only be called via #TT_FLOAT.
     Tag& setFloat(fp32 value)
     {
         assert(isFloat());
@@ -994,7 +958,7 @@ public:
         return *this;
     }
 
-    /// @attention Only be called by #TT_DOUBLE.
+    /// @attention Only be called via #TT_DOUBLE.
     Tag& setDouble(fp64 value)
     {
         assert(isDouble());
@@ -1008,8 +972,8 @@ public:
         return *this;
     }
 
-    /// @brief Fast way of set the integer value. (auto check the tag type)
-    /// @attention Only be called by #TT_BYTE, #TT_SHORT, #TT_INT, #TT_LONG.
+    /// @brief Fast way of set the integer value.
+    /// @attention Only be called via #TT_BYTE, #TT_SHORT, #TT_INT, #TT_LONG.
     Tag& setInteger(int64 value)
     {
         assert(isInteger());
@@ -1018,20 +982,16 @@ public:
             throw std::logic_error("Can't set interger number for non-integer tag.");
 #endif
 
-        if (isByte())
-            setByte(static_cast<byte>(value));
-        else if (isShort())
-            setShort(static_cast<int16>(value));
-        else if (isInt())
-            setInt(static_cast<int32>(value));
-        else if (isLong())
-            setLong(value);
+        if (isByte())           setByte(static_cast<byte>(value));
+        else if (isShort())     setShort(static_cast<int16>(value));
+        else if (isInt())       setInt(static_cast<int32>(value));
+        else if (isLong())      setLong(value);
 
         return *this;
     }
 
-    /// @brief Fast way of set the float point value. (auto check the tag type)
-    /// @attention Only be called by #TT_FLOAT, #TT_DOUBLE.
+    /// @brief Fast way of set the float point value.
+    /// @attention Only be called via #TT_FLOAT, #TT_DOUBLE.
     Tag& setFloatPoint(fp64 value)
     {
         assert(isFloatPoint());
@@ -1040,15 +1000,13 @@ public:
             throw std::logic_error("Can't set float point number value for non-float point tag.");
 #endif
 
-        if (isFloat())
-            setFloat(static_cast<fp32>(value));
-        else if (isDouble())
-            setDouble(value);
+        if (isFloat())          setFloat(static_cast<fp32>(value));
+        else if (isDouble())    setDouble(value);
 
         return *this;
     }
 
-    /// @attention Only be called by #TT_STRING.
+    /// @attention Only be called via #TT_STRING.
     Tag& setString(const String& value)
     {
         assert(isString());
@@ -1060,15 +1018,13 @@ public:
         if (value.empty() && !tagData_.str)
             return *this;
 
-        if (tagData_.str)
-            *tagData_.str = value;
-        else
-            tagData_.str = new String(value);
+        if (tagData_.str)   *tagData_.str = value;
+        else                tagData_.str = new String(value);
 
         return *this;
     }
 
-    /// @attention Only be called by #TT_BYTE_ARRAY.
+    /// @attention Only be called via #TT_BYTE_ARRAY.
     Tag& setByteArray(const Vec<byte>& value)
     {
         assert(isByteArray());
@@ -1080,15 +1036,13 @@ public:
         if (value.empty() && !tagData_.bad)
             return *this;
 
-        if (tagData_.bad)
-            *tagData_.bad = value;
-        else
-            tagData_.bad = new Vec<byte>(value);
+        if (tagData_.bad)   *tagData_.bad = value;
+        else                tagData_.bad = new Vec<byte>(value);
 
         return *this;
     }
 
-    /// @attention Only be called by #TT_INT_ARRAY.
+    /// @attention Only be called via #TT_INT_ARRAY.
     Tag& setIntArray(const Vec<int32>& value)
     {
         assert(isIntArray());
@@ -1100,15 +1054,13 @@ public:
         if (value.empty() && !tagData_.iad)
             return *this;
 
-        if (tagData_.iad)
-            *tagData_.iad = value;
-        else
-            tagData_.iad = new Vec<int32>(value);
+        if (tagData_.iad)   *tagData_.iad = value;
+        else                tagData_.iad = new Vec<int32>(value);
 
         return *this;
     }
 
-    /// @attention Only be called by #TT_LONG_ARRAY.
+    /// @attention Only be called via #TT_LONG_ARRAY.
     Tag& setLongArray(const Vec<int64>& value)
     {
         assert(isLongArray());
@@ -1120,27 +1072,25 @@ public:
         if (value.empty() && !tagData_.lad)
             return *this;
 
-        if (tagData_.lad)
-            *tagData_.lad = value;
-        else
-            tagData_.lad = new Vec<int64>(value);
+        if (tagData_.lad)   *tagData_.lad = value;
+        else                tagData_.lad = new Vec<int64>(value);
 
         return *this;
     }
 
-    /// @attention Only be called by #TT_BYTE_ARRAY.
+    /// @attention Only be called via #TT_BYTE_ARRAY.
     Tag& setArray(const Vec<byte>& value) { return setByteArray(value); }
 
     /// @overload
-    /// @attention Only be called by #TT_INT_ARRAY.
+    /// @attention Only be called via #TT_INT_ARRAY.
     Tag& setArray(const Vec<int32>& value) { return setIntArray(value); }
 
     /// @overload
-    /// @attention Only be called by #TT_LONG_ARRAY.
+    /// @attention Only be called via #TT_LONG_ARRAY.
     Tag& setArray(const Vec<int64>& value) { return setLongArray(value); }
 
     /// @brief Add a value to the byte array.
-    /// @attention Only be called by #TT_BYTE_ARRAY.
+    /// @attention Only be called via #TT_BYTE_ARRAY.
     Tag& addByte(byte value)
     {
         assert(isByteArray());
@@ -1158,7 +1108,7 @@ public:
     }
 
     /// @brief Add a value to the int array.
-    /// @attention Only be called by #TT_INT_ARRAY.
+    /// @attention Only be called via #TT_INT_ARRAY.
     Tag& addInt(int32 value)
     {
         assert(isIntArray());
@@ -1176,7 +1126,7 @@ public:
     }
 
     /// @brief Add a value to the long array.
-    /// @attention Only be called by #TT_LONG_ARRAY.
+    /// @attention Only be called via #TT_LONG_ARRAY.
     Tag& addLong(int64 value)
     {
         assert(isLongArray());
@@ -1193,10 +1143,10 @@ public:
         return *this;
     }
 
-    /// @brief Add a tag to the initialized list or compound.
+    /// @brief Add a tag to the list or compound.
     /// @note Original tag will be moved to the new tag whether left-value or right-value reference,
     // and the original tag will invalid after this operation, but you can call #copy() function to avoid this.
-    /// @attention Only be called by #TT_LIST, #TT_COMPOUND.
+    /// @attention Only be called via #TT_LIST, #TT_COMPOUND.
     Tag& addTag(Tag&& tag)
     {
         assert(isContainer());
@@ -1217,12 +1167,15 @@ public:
             throw std::logic_error("Can't add parent to self.");
 #endif
 
-        if (isList()) {
+        // List
+        if (isList())
+        {
 #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
             if (itemType_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
 
-            if (tag.tagType_ != itemType_) {
+            if (tag.tagType_ != itemType_)
+            {
                 String errmsg = "Can't add the tag of " + getTagTypeString(tag.type());
                 errmsg += " to the list of " + getTagTypeString(itemType_);
 
@@ -1237,29 +1190,46 @@ public:
             tagData_.ld->emplace_back(std::move(tag));
 
             if (needShuffle)
-                for (auto& var : *tagData_.ld) var.parent_ = this;
+            {
+                for (auto& var : *tagData_.ld)
+                    var.parent_ = this;
+            }
             else
+            {
                 tagData_.ld->back().parent_ = this;
+            }
 
-            if (tagData_.ld->back().tagName_) {
+            if (tagData_.ld->back().tagName_)
+            {
                 delete tagData_.ld->back().tagName_;
                 tagData_.ld->back().tagName_ = nullptr;
             }
-        } else if (isCompound()) {
+        }
+        // Compound
+        else if (isCompound())
+        {
             if (!tagData_.cd)
                 tagData_.cd = new CompoundData();
 
-            if (hasTag(tag.name())) {
+            if (hasTag(tag.name()))
+            {
                 tagData_.cd->data[tagData_.cd->idxs[tag.name()]] = std::move(tag);
-            } else {
+            }
+            else
+            {
                 bool needShuffle = (tagData_.cd->data.capacity() - tagData_.cd->size()) == 0;
                 tagData_.cd->data.emplace_back(std::move(tag));
                 tagData_.cd->idxs.insert({ tagData_.cd->data.back().name(), tagData_.cd->data.size() - 1 });
 
                 if (needShuffle)
-                    for (auto& var : tagData_.cd->data) var.parent_ = this;
+                {
+                    for (auto& var : tagData_.cd->data)
+                        var.parent_ = this;
+                }
                 else
+                {
                     tagData_.cd->data.back().parent_ = this;
+                }
             }
         }
 
@@ -1269,11 +1239,9 @@ public:
     /// @overload
     Tag& addTag(Tag& tag) { return addTag(std::move(tag)); }
 
-    /*
-    * Functions for get value. Only be called by corresponding tag.
-    */
+    /// @brief Functions for get value. Only be called via corresponding tag.
 
-    /// @attention Only be called by #TT_BYTE.
+    /// @attention Only be called via #TT_BYTE.
     byte getByte() const
     {
         assert(isByte());
@@ -1285,7 +1253,7 @@ public:
         return tagData_.num.i8;
     }
 
-    /// @attention Only be called by #TT_SHORT.
+    /// @attention Only be called via #TT_SHORT.
     int16 getShort() const
     {
         assert(isShort());
@@ -1297,7 +1265,7 @@ public:
         return tagData_.num.i16;
     }
 
-    /// @attention Only be called by #TT_INT.
+    /// @attention Only be called via #TT_INT.
     int32 getInt() const
     {
         assert(isInt());
@@ -1309,7 +1277,7 @@ public:
         return tagData_.num.i32;
     }
 
-    /// @attention Only be called by #TT_LONG.
+    /// @attention Only be called via #TT_LONG.
     int64 getLong() const
     {
         assert(isLong());
@@ -1321,7 +1289,7 @@ public:
         return tagData_.num.i64;
     }
 
-    /// @attention Only be called by #TT_FLOAT.
+    /// @attention Only be called via #TT_FLOAT.
     fp32 getFloat() const
     {
         assert(isFloat());
@@ -1333,7 +1301,7 @@ public:
         return tagData_.num.f32;
     }
 
-    /// @attention Only be called by #TT_DOUBLE.
+    /// @attention Only be called via #TT_DOUBLE.
     fp64 getDouble() const
     {
         assert(isDouble());
@@ -1345,8 +1313,8 @@ public:
         return tagData_.num.f64;
     }
 
-    /// @brief Fast way of get the integer value. (auto check the tag type)
-    /// @attention Only be called by #TT_BYTE, #TT_SHORT, #TT_INT, #TT_LONG.
+    /// @brief Fast way of get the integer value.
+    /// @attention Only be called via #TT_BYTE, #TT_SHORT, #TT_INT, #TT_LONG.
     int64 getInteger() const
     {
         assert(isInteger());
@@ -1355,20 +1323,16 @@ public:
             throw std::logic_error("Can't get interger number for non-integer tag.");
 #endif
 
-        if (isByte())
-            return tagData_.num.i8;
-        if (isShort())
-            return tagData_.num.i16;
-        if (isInt())
-            return tagData_.num.i32;
-        if (isLong())
-            return tagData_.num.i64;
+        if (isByte())           return tagData_.num.i8;
+        if (isShort())          return tagData_.num.i16;
+        if (isInt())            return tagData_.num.i32;
+        if (isLong())           return tagData_.num.i64;
 
         return 0;
     }
 
-    /// @brief Fast way of get the float point value. (auto check the tag type)
-    /// @attention Only be called by #TT_FLOAT, #TT_DOUBLE.
+    /// @brief Fast way of get the float point value.
+    /// @attention Only be called via #TT_FLOAT, #TT_DOUBLE.
     fp64 getFloatPoint() const
     {
         assert(isFloatPoint());
@@ -1377,15 +1341,13 @@ public:
             throw std::logic_error("Can't get float point number value for non-float point tag.");
 #endif
 
-        if (isFloat())
-            return tagData_.num.f32;
-        else if (isDouble())
-            return tagData_.num.f64;
+        if (isFloat())          return tagData_.num.f32;
+        else if (isDouble())    return tagData_.num.f64;
 
         return 0;
     }
 
-    /// @attention Only be called by #TT_STRING.
+    /// @attention Only be called via #TT_STRING.
     String getString() const
     {
         assert(isString());
@@ -1394,13 +1356,10 @@ public:
             throw std::logic_error("Can't get string value for non-string tag.");
 #endif
 
-        if (!tagData_.str)
-            return String();
-
-        return *tagData_.str;
+        return tagData_.str ? *tagData_.str : "";
     }
 
-    /// @attention Only be called by #TT_BYTE_ARRAY.
+    /// @attention Only be called via #TT_BYTE_ARRAY.
     Vec<byte> getByteArray() const
     {
         assert(isByteArray());
@@ -1409,13 +1368,41 @@ public:
             throw std::logic_error("Can't get byte array value for non-byte array tag.");
 #endif
 
-        if (!tagData_.bad)
-            return Vec<byte>();
-
-        return *tagData_.bad;
+        return tagData_.bad ? *tagData_.bad : Vec<byte>();
     }
 
-    /// @attention Only be called by #TT_INT_ARRAY.
+//     const Vec<byte>& getByteArray() const
+//     {
+//         assert(isByteArray());
+// #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+//         if (!isByteArray())
+//             throw std::logic_error("Can't get byte array value for non-byte array tag.");
+// #endif
+// 
+//         if (!tagData_.bad)
+//         {
+//             static Vec<byte> placeHolder;
+//             return placeHolder;
+//         }
+// 
+//         return *tagData_.bad;
+//     }
+// 
+//     Vec<byte>& getByteArray()
+//     {
+//         assert(isByteArray());
+// #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+//         if (!isByteArray())
+//             throw std::logic_error("Can't get byte array value for non-byte array tag.");
+// #endif
+// 
+//         if (!tagData_.bad)
+//             tagData_.bad = new Vec<byte>();
+// 
+//         return *tagData_.bad;
+//     }
+
+    /// @attention Only be called via #TT_INT_ARRAY.
     Vec<int32> getIntArray() const
     {
         assert(isIntArray());
@@ -1424,13 +1411,10 @@ public:
             throw std::logic_error("Can't get int array value for non-int array tag.");
 #endif
 
-        if (!tagData_.iad)
-            return Vec<int32>();
-
-        return *tagData_.iad;
+        return tgaData_.iad ? *tgaData_.iad : Vec<int32>();
     }
 
-    /// @attention Only be called by #TT_LONG_ARRAY.
+    /// @attention Only be called via #TT_LONG_ARRAY.
     Vec<int64> getLongArray() const
     {
         assert(isLongArray());
@@ -1439,15 +1423,12 @@ public:
             throw std::logic_error("Can't get long array value for non-long array tag.");
 #endif
 
-        if (!tagData_.lad)
-            return Vec<int64>();
-
-        return *tagData_.lad;
+        return tgaData_.iad ? *tgaData_.iad : Vec<int64>();
     }
 
     /// @overload
     /// @brief Get a value from the byte array by index.
-    /// @attention Only be called by #TT_BYTE_ARRAY.
+    /// @attention Only be called via #TT_BYTE_ARRAY.
     byte getByte(size_t idx) const
     {
         assert(isByteArray());
@@ -1462,7 +1443,7 @@ public:
         return (*tagData_.bad)[idx];
     }
 
-    /// @attention Only be called by #TT_BYTE_ARRAY.
+    /// @attention Only be called via #TT_BYTE_ARRAY.
     byte getFrontByte() const
     {
         assert(isByteArray());
@@ -1477,7 +1458,7 @@ public:
         return tagData_.bad->front();
     }
 
-    /// @attention Only be called by #TT_BYTE_ARRAY.
+    /// @attention Only be called via #TT_BYTE_ARRAY.
     byte getBackByte() const
     {
         assert(isByteArray());
@@ -1494,7 +1475,7 @@ public:
 
     /// @overload
     /// @brief Get a value from the int array by index.
-    /// @attention Only be called by #TT_INT_ARRAY.
+    /// @attention Only be called via #TT_INT_ARRAY.
     int32 getInt(size_t idx) const
     {
         assert(isIntArray());
@@ -1509,7 +1490,7 @@ public:
         return (*tagData_.iad)[idx];
     }
 
-    /// @attention Only be called by #TT_INT_ARRAY.
+    /// @attention Only be called via #TT_INT_ARRAY.
     int32 getFrontInt() const
     {
         assert(isIntArray());
@@ -1524,7 +1505,7 @@ public:
         return tagData_.iad->front();
     }
 
-    /// @attention Only be called by #TT_INT_ARRAY.
+    /// @attention Only be called via #TT_INT_ARRAY.
     int32 getBackInt() const
     {
         assert(isIntArray());
@@ -1541,7 +1522,7 @@ public:
 
     /// @overload
     /// @brief Get a value from long array by index.
-    /// @attention Only be called by #TT_LONG_ARRAY.
+    /// @attention Only be called via #TT_LONG_ARRAY.
     int64 getLong(size_t idx) const
     {
         assert(isLongArray());
@@ -1556,7 +1537,7 @@ public:
         return (*tagData_.lad)[idx];
     }
 
-    /// @attention Only be called by #TT_LONG_ARRAY.
+    /// @attention Only be called via #TT_LONG_ARRAY.
     int64 getFrontLong() const
     {
         assert(isLongArray());
@@ -1571,7 +1552,7 @@ public:
         return tagData_.lad->front();
     }
 
-    /// @attention Only be called by #TT_LONG_ARRAY.
+    /// @attention Only be called via #TT_LONG_ARRAY.
     int64 getBackLong() const
     {
         assert(isLongArray());
@@ -1587,7 +1568,7 @@ public:
     }
 
     /// @brief Get the tag by index.
-    /// @attention Only be called by #TT_LIST, #TT_COMPOUND.
+    /// @attention Only be called via #TT_LIST, #TT_COMPOUND.
     Tag& getTag(size_t idx)
     {
         assert(isContainer());
@@ -1618,7 +1599,7 @@ public:
 
     /// @overload
     /// @brief Get the tag by name.
-    /// @attention Only be called by #TT_COMPOUND.
+    /// @attention Only be called via #TT_COMPOUND.
     Tag& getTag(const String& name)
     {
         assert(isCompound());
@@ -1637,7 +1618,7 @@ public:
         return tagData_.cd->data[tagData_.cd->idxs[name]];
     }
 
-    /// @attention Only be called by #TT_LIST, #TT_COMPOUND.
+    /// @attention Only be called via #TT_LIST, #TT_COMPOUND.
     Tag& getFrontTag()
     {
         assert(isContainer());
@@ -1666,7 +1647,7 @@ public:
         return *this;
     }
 
-    /// @attention Only be called by #TT_LIST, #TT_COMPOUND.
+    /// @attention Only be called via #TT_LIST, #TT_COMPOUND.
     Tag& getBackTag()
     {
         assert(isContainer());
@@ -1696,7 +1677,7 @@ public:
     }
 
     /// @brief Remove the element by index.
-    /// @attention Only be called by
+    /// @attention Only be called via
     // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
     Tag& remove(size_t idx)
     {
@@ -1752,7 +1733,7 @@ public:
 
     /// @overload
     /// @brief Remove the tag by name.
-    /// @attention Only be called by #TT_COMPOUND.
+    /// @attention Only be called via #TT_COMPOUND.
     Tag& remove(const String& name)
     {
         assert(isCompound());
@@ -1780,7 +1761,7 @@ public:
     }
 
     /// @brief Remove the first element.
-    /// @attention Only be called by
+    /// @attention Only be called via
     // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
     Tag& removeFront()
     {
@@ -1835,7 +1816,7 @@ public:
     }
 
     /// @brief Remove the last element.
-    /// @attention Only be called by
+    /// @attention Only be called via
     // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
     Tag& removeBack()
     {
@@ -1887,7 +1868,7 @@ public:
     }
 
     /// @brief Remove the all elements.
-    /// @attention Only be called by
+    /// @attention Only be called via
     // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
     Tag& removeAll()
     {
