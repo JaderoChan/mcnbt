@@ -4,9 +4,15 @@
 
 using namespace nbt;
 
-void out(const std::string& msg) { std::cout << msg << std::endl; }
+void out(const std::string& msg)
+{
+    std::cout << msg << std::endl;
+}
 
-void out(const Tag& tag) { std::cout << tag.toSnbt() << std::endl; }
+void out(const Tag& tag)
+{
+    std::cout << tag.toSnbt() << std::endl;
+}
 
 void test1()
 {
@@ -56,9 +62,12 @@ void test1()
     out("-Before Value: ");
     out(nested);
 
-    try {
+    try
+    {
         nested[0] = nested;
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         out(e.what());
     }
 
@@ -71,9 +80,12 @@ void test1()
     out("-Before Value: ");
     out(nested);
 
-    try {
+    try
+    {
         nested[0] = nested.copy();
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         out(e.what());
     }
 
@@ -86,9 +98,12 @@ void test1()
     out("-Before Value: ");
     out(nested);
 
-    try {
+    try
+    {
         nested = nested;
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         out(e.what());
     }
 
@@ -103,11 +118,14 @@ void test1()
     list << gInt(1) << gInt(2) << gInt(3);
     out(list);
 
-    try {
+    try
+    {
         list[0].setName("num1");
         list[1].setName("num2");
         list[2].setName("num3");
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         out(e.what());
     }
 
@@ -143,9 +161,12 @@ void test2()
     out("-Before Value: ");
     out(root);
 
-    try {
+    try
+    {
         root << root[0][0] << root[0][1] << root[0][2];
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         out(e.what());
     }
 
@@ -162,11 +183,14 @@ void test2()
     out("-Before Value: ");
     out(root);
 
-    try {
+    try
+    {
         root[0][0] = gInt(10, "num0");
         root[0] << gInt(11, "num2");
         root[0] << root[1];
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         out(e.what());
     }
 
@@ -179,7 +203,7 @@ void test2()
 void test3()
 {
     Tag lst(TT_LIST);
-    lst.initListElementType(TT_STRING);
+    lst.setListItemType(TT_STRING);
 
     Tag str1 = Tag(TT_STRING).setString("1");
     Tag str2 = Tag(TT_STRING).setString("2");

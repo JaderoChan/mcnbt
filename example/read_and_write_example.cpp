@@ -13,17 +13,23 @@ std::pair<std::string, bool> inputHint()
     std::cout << "Enter filename: ";
     std::getline(std::cin, filename);
 
-    while (true) {
+    while (true)
+    {
         std::cout << "Is the file big-endian? (y/n): ";
         std::string input;
         std::getline(std::cin, input);
-        if (input == "y" || input == "Y") {
+        if (input == "y" || input == "Y")
+        {
             isBigEndian = true;
             break;
-        } else if (input == "n" || input == "N") {
+        }
+        else if (input == "n" || input == "N")
+        {
             isBigEndian = false;
             break;
-        } else {
+        }
+        else
+        {
             std::cout << "Invalid input. Please enter 'y' or 'n'." << std::endl;
             continue;
         }

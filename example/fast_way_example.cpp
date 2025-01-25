@@ -48,19 +48,24 @@ Tag fastWayExample()
 
 int main()
 {
-    try {
+    try
+    {
         auto root = fastWayExample();
         // Fast way for get tag (#getTag) by name or index: operator[](name or index).
         std::cout << "EmptyList Size: " << root["EmptyList"].size() << std::endl;
         std::cout << "EmptyList Element Tag Type: "
-                  << getTagTypeString(root["EmptyList"].listElementType()) << std::endl;
+                  << getTagTypeString(root["EmptyList"].listItemType()) << std::endl;
         std::cout << "Root Size: " << root.size() << std::endl;
         std::cout << "Root[Box][0][0] Type: "
                   << getTagTypeString(root["Box"][0][0].type()) << std::endl;
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e)
+    {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
-    } catch (...) {
+    }
+    catch (...)
+    {
         std::cerr << "Unknown error." << std::endl;
         return 1;
     }

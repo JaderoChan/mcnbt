@@ -14,17 +14,23 @@ std::pair<std::string, bool> inputHint()
     std::cout << "Enter filename: ";
     std::getline(std::cin, filename);
 
-    while (true) {
+    while (true)
+    {
         std::cout << "Is the file big-endian? (y/n): ";
         std::cin.ignore();
         int key = std::cin.get();
-        if (key == 'y' || key == 'Y') {
+        if (key == 'y' || key == 'Y')
+        {
             isBigEndian = true;
             break;
-        } else if (key == 'n' || key == 'N') {
+        }
+        else if (key == 'n' || key == 'N')
+        {
             isBigEndian = false;
             break;
-        } else {
+        }
+        else
+        {
             std::cout << "Invalid input. Please enter 'y' or 'n'." << std::endl;
             continue;
         }
@@ -39,7 +45,8 @@ Tag getTestNbt()
 
     auto list = gList(TT_INT, "Fibonacci");
     int a = 0, b = 1;
-    for (size_t i = 0; i < 100; ++i) {
+    for (size_t i = 0; i < 100; ++i)
+    {
         int c = a + b;
         list << gInt(c);
         a = b;

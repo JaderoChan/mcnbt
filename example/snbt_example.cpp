@@ -51,20 +51,20 @@ int main()
     // Add all the exampels to the root compound.
     root << booleans << numbers << strings << arrays << lists << compounds;
 
-    /*
-    * Write the snbt without and with indent.
-    */
+    // Write the snbt without and with indent.
 
     // No indent.
     std::ofstream out1("snbt_example_no_indent.txt");
-    if (out1.is_open()) {
+    if (out1.is_open())
+    {
         out1 << root.toSnbt(false);
         out1.close();
     }
 
     // With indent.
     std::ofstream out2("snbt_example_with_indent.txt");
-    if (out2.is_open()) {
+    if (out2.is_open())
+    {
         out2 << root.toSnbt(true);
         out2.close();
     }
