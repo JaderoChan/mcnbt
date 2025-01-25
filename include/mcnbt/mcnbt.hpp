@@ -1206,7 +1206,7 @@ public:
             }
         }
         // Compound
-        else if (isCompound())
+        else
         {
             if (!tagData_.cd)
                 tagData_.cd = new CompoundData();
@@ -1577,7 +1577,9 @@ public:
             throw std::logic_error("Can't get tag from non-container tag.");
 #endif
 
-        if (isList()) {
+        // List
+        if (isList())
+        {
 #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
             if (itemType_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
@@ -1587,14 +1589,15 @@ public:
                 throw std::out_of_range("The specified index is out of range.");
 
             return (*tagData_.ld)[idx];
-        } else if (isCompound()) {
+        }
+        // Compound
+        else
+        {
             if (!tagData_.cd || idx >= tagData_.cd->size())
                 throw std::out_of_range("The specified index is out of range.");
 
             return tagData_.cd->data[idx];
         }
-
-        return *this;
     }
 
     /// @overload
@@ -1627,7 +1630,9 @@ public:
             throw std::logic_error("Can't get front tag from non-container tag.");
 #endif
 
-        if (isList()) {
+        // List
+        if (isList())
+        {
 #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
             if (itemType_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
@@ -1637,14 +1642,15 @@ public:
                 throw std::out_of_range("The front member is not exists.");
 
             return tagData_.ld->front();
-        } else if (isCompound()) {
+        }
+        // Compound
+        else
+        {
             if (!tagData_.cd || tagData_.cd->empty())
                 throw std::out_of_range("The front member is not exists.");
 
             return tagData_.cd->data.front();
         }
-
-        return *this;
     }
 
     /// @attention Only be called via #TT_LIST, #TT_COMPOUND.
@@ -1656,7 +1662,9 @@ public:
             throw std::logic_error("Can't get back tag from non-container tag.");
 #endif
 
-        if (isList()) {
+        // List
+        if (isList())
+        {
 #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
             if (itemType_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
@@ -1666,14 +1674,15 @@ public:
                 throw std::out_of_range("The back member is not exists.");
 
             return tagData_.ld->back();
-        } else if (isCompound()) {
+        }
+        // Compound
+        else
+        {
             if (!tagData_.cd || tagData_.cd->empty())
                 throw std::out_of_range("The back member is not exists.");
 
             return tagData_.cd->data.back();
         }
-
-        return *this;
     }
 
     /// @brief Remove the element by index.
@@ -1687,27 +1696,36 @@ public:
             throw std::logic_error("Can't remove element from non-string, non-array, non-container tag.");
 #endif
 
-        if (isString()) {
+        if (isString())
+        {
             if (!tagData_.str || idx >= tagData_.str->size())
                 throw std::out_of_range("The specified index is out of range.");
 
             tagData_.str->erase(tagData_.str->begin() + idx);
-        } else if (isByteArray()) {
+        }
+        else if (isByteArray())
+        {
             if (!tagData_.bad || idx >= tagData_.bad->size())
                 throw std::out_of_range("The specified index is out of range.");
 
             tagData_.bad->erase(tagData_.bad->begin() + idx);
-        } else if (isIntArray()) {
+        }
+        else if (isIntArray())
+        {
             if (!tagData_.iad || idx >= tagData_.iad->size())
                 throw std::out_of_range("The specified index is out of range.");
 
             tagData_.iad->erase(tagData_.iad->begin() + idx);
-        } else if (isLongArray()) {
+        }
+        else if (isLongArray())
+        {
             if (!tagData_.lad || idx >= tagData_.lad->size())
                 throw std::out_of_range("The specified index is out of range.");
 
             tagData_.lad->erase(tagData_.lad->begin() + idx);
-        } else if (isList()) {
+        }
+        else if (isList())
+        {
 #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
             if (itemType_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
@@ -1717,7 +1735,9 @@ public:
                 throw std::out_of_range("The specified index is out of range.");
 
             tagData_.ld->erase(tagData_.ld->begin() + idx);
-        } else if (isCompound()) {
+        }
+        else if (isCompound())
+        {
             if (!tagData_.cd || idx >= tagData_.cd->size())
                 throw std::out_of_range("The specified index is out of range.");
 
@@ -1725,7 +1745,8 @@ public:
             tagData_.cd->data.erase(tagData_.cd->data.begin() + idx);
 
             for (auto& var : tagData_.cd->idxs)
-                if (var.second > idx) var.second--;
+                if (var.second > idx)
+                    var.second--;
         }
 
         return *this;
@@ -1755,7 +1776,8 @@ public:
         tagData_.cd->idxs.erase(name);
 
         for (auto& var : tagData_.cd->idxs)
-            if (var.second > idx) var.second--;
+            if (var.second > idx)
+                var.second--;
 
         return *this;
     }
@@ -1771,27 +1793,36 @@ public:
             throw std::logic_error("Can't remove front element from non-string, non-array, non-container tag.");
 #endif
 
-        if (isString()) {
+        if (isString())
+        {
             if (!tagData_.str || tagData_.str->empty())
                 throw std::out_of_range("The front member is not exists.");
 
             tagData_.str->erase(tagData_.str->begin());
-        } else if (isByteArray()) {
+        }
+        else if (isByteArray())
+        {
             if (!tagData_.bad || tagData_.bad->empty())
                 throw std::out_of_range("The front member is not exists.");
 
             tagData_.bad->erase(tagData_.bad->begin());
-        } else if (isIntArray()) {
+        }
+        else if (isIntArray())
+        {
             if (!tagData_.iad || tagData_.iad->empty())
                 throw std::out_of_range("The front member is not exists.");
 
             tagData_.iad->erase(tagData_.iad->begin());
-        } else if (isLongArray()) {
+        }
+        else if (isLongArray())
+        {
             if (!tagData_.lad || tagData_.lad->empty())
                 throw std::out_of_range("The front member is not exists.");
 
             tagData_.lad->erase(tagData_.lad->begin());
-        } else if (isList()) {
+        }
+        else if (isList())
+        {
 #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
             if (itemType_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
@@ -1801,7 +1832,9 @@ public:
                 throw std::out_of_range("The front member is not exists.");
 
             tagData_.ld->erase(tagData_.ld->begin());
-        } else if (isCompound()) {
+        }
+        else if (isCompound())
+        {
             if (!tagData_.cd || tagData_.cd->empty())
                 throw std::out_of_range("The front member is not exists.");
 
@@ -1826,27 +1859,36 @@ public:
             throw std::logic_error("Can't remove back element from non-string, non-array, non-container tag.");
 #endif
 
-        if (isString()) {
+        if (isString())
+        {
             if (!tagData_.str || tagData_.str->empty())
                 throw std::out_of_range("The back member is not exists.");
 
             tagData_.str->pop_back();
-        } else if (isByteArray()) {
+        }
+        else if (isByteArray())
+        {
             if (!tagData_.bad || tagData_.bad->empty())
                 throw std::out_of_range("The back member is not exists.");
 
             tagData_.bad->pop_back();
-        } else if (isIntArray()) {
+        }
+        else if (isIntArray())
+        {
             if (!tagData_.iad || tagData_.iad->empty())
                 throw std::out_of_range("The back member is not exists.");
 
             tagData_.iad->pop_back();
-        } else if (isLongArray()) {
+        }
+        else if (isLongArray())
+        {
             if (!tagData_.lad || tagData_.lad->empty())
                 throw std::out_of_range("The back member is not exists.");
 
             tagData_.lad->pop_back();
-        } else if (isList()) {
+        }
+        else if (isList())
+        {
 #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
             if (itemType_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
@@ -1856,7 +1898,9 @@ public:
                 throw std::out_of_range("The back member is not exists.");
 
             tagData_.ld->pop_back();
-        } else if (isCompound()) {
+        }
+        else if (isCompound())
+        {
             if (!tagData_.cd || tagData_.cd->empty())
                 throw std::out_of_range("The back member is not exists.");
 
@@ -1878,19 +1922,28 @@ public:
             throw std::logic_error("Can't remove all elements from non-string, non-array, non-container tag.");
 #endif
 
-        if (isString()) {
+        if (isString())
+        {
             if (tagData_.str)
                 tagData_.str->clear();
-        } else if (isByteArray()) {
+        }
+        else if (isByteArray())
+        {
             if (tagData_.bad)
                 tagData_.bad->clear();
-        } else if (isIntArray()) {
+        }
+        else if (isIntArray())
+        {
             if (tagData_.iad)
                 tagData_.iad->clear();
-        } else if (isLongArray()) {
+        }
+        else if (isLongArray())
+        {
             if (tagData_.lad)
                 tagData_.lad->clear();
-        } else if (isList()) {
+        }
+        else if (isList())
+        {
 #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
             if (itemType_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
@@ -1898,7 +1951,9 @@ public:
 
             if (tagData_.ld)
                 tagData_.ld->clear();
-        } else if (isCompound()) {
+        }
+        else if (isCompound())
+        {
             if (tagData_.cd)
                 tagData_.cd->clear();
         }
@@ -1910,12 +1965,15 @@ public:
     /// @brief Write the tag to output stream.
     void write(OStream& os, bool isBigEndian, bool isCompressed = false) const
     {
-        if (isCompressed) {
+        if (isCompressed)
+        {
             SStream ss;
-            write_(ss, isBigEndian, (isListItem()));
+            write_(ss, isBigEndian, isListItem());
             os << gzip::compress(ss.str());
-        } else {
-            write_(os, isBigEndian, (isListItem()));
+        }
+        else
+        {
+            write_(os, isBigEndian, isListItem());
         }
     }
 
@@ -1924,26 +1982,22 @@ public:
     {
         OFStream ofs(filename, std::ios_base::binary);
 
-        if (ofs.is_open())
-            write(ofs, isBigEndian, isCompressed);
-        else
-            throw std::runtime_error("Failed to open file: " + filename);
+        if (ofs.is_open())      write(ofs, isBigEndian, isCompressed);
+        else                    throw std::runtime_error("Failed to open file: " + filename);
 
         ofs.close();
     }
 #else
     /// @brief Write the tag to output stream.
-    void write(OStream& os, bool isBigEndian) const { write_(os, isBigEndian, (isListItem())); }
+    void write(OStream& os, bool isBigEndian) const { write_(os, isBigEndian, isListItem()); }
 
     /// @overload
     void write(const String& filename, bool isBigEndian) const
     {
         OFStream ofs(filename, std::ios_base::binary);
 
-        if (ofs.is_open())
-            write(ofs, isBigEndian);
-        else
-            throw std::runtime_error("Failed to open file: " + filename);
+        if (ofs.is_open())      write(ofs, isBigEndian);
+        else                    throw std::runtime_error("Failed to open file: " + filename);
 
         ofs.close();
     }
@@ -1951,24 +2005,22 @@ public:
 
     /// @brief Get the SNBT (The string representation of NBT).
     /// @param isWrappedIndented If true, the output string will be wrapped and indented.
-    String toSnbt(bool isWrappedIndented = true) const { return toSnbt_(isWrappedIndented, (isListItem())); }
+    String toSnbt(bool isWrappedIndented = true) const { return toSnbt_(isWrappedIndented, isListItem()); }
 
-    /*
-    * Operators overloading.
-    */
+    /// @brief Operators overloading.
 
     /// @brief Fast way of get the tag by index.
-    Tag& operator[](size_t idx) { return getTag(idx); }
+    Tag& operator[](size_t idx)             { return getTag(idx); }
 
     /// @overload
     /// @brief Fast way of get the tag by name.
-    Tag& operator[](const String& name) { return getTag(name); }
+    Tag& operator[](const String& name)     { return getTag(name); }
 
     /// @brief Fast way of add the tag.
-    Tag& operator<<(Tag&& tag) { return addTag(std::move(tag)); }
+    Tag& operator<<(Tag&& tag)              { return addTag(std::move(tag)); }
 
     /// @overload
-    Tag& operator<<(Tag& tag) { return addTag(tag); }
+    Tag& operator<<(Tag& tag)               { return addTag(tag); }
 
 private:
     // Nums.
@@ -1991,13 +2043,13 @@ private:
         Vec<Tag> data;
         Map<String, size_t> idxs;
 
-        bool empty() const { return data.empty(); }
+        bool empty() const          { return data.empty(); }
 
-        size_t size() const { return data.size(); }
+        size_t size() const         { return data.size(); }
 
-        void reserve(size_t size) { data.reserve(size); idxs.reserve(size); }
+        void reserve(size_t size)   { data.reserve(size); idxs.reserve(size); }
 
-        void clear() { data.clear(); idxs.clear(); }
+        void clear()                { data.clear(); idxs.clear(); }
     };
 
     // Value of tag.
@@ -2025,7 +2077,7 @@ private:
     };
 
     /// @brief Get the tag from a binary input stream.
-    /// @param isListItem    Whether the parent is a List tag.
+    /// @param isListItem       Whether the parent is a List tag.
     /// @param parentType       If the parameter #isListItem is false, ignore this.
     // Else this must be set to same as the element tag type of parent List.
     static Tag fromBinStream_(IStream& is, bool isBigEndian, bool isListItem, TagType parentType = TT_END)
@@ -2035,10 +2087,8 @@ private:
         // Get the tag type.
         // If the parent is a List, that is this tag is a list element, get the tag type from parent.
         // Else get the tag type from stream.
-        if (isListItem)
-            tag.tagType_ = parentType;
-        else
-            tag.tagType_ = static_cast<TagType>(is.get());
+        if (isListItem)         tag.tagType_ = parentType;
+        else                    tag.tagType_ = static_cast<TagType>(is.get());
 
         if (tag.tagType_ == TT_END)
             return tag;
@@ -2154,9 +2204,11 @@ private:
                 }
                 break;
             }
-            case TT_COMPOUND: {
+            case TT_COMPOUND:
+            {
                 while (!is.eof()) {
-                    if (is.peek() == TT_END) {
+                    if (is.peek() == TT_END)
+                    {
                         // Give up End tag and move stream point to next byte.
                         is.get();
                         break;
@@ -2178,18 +2230,23 @@ private:
 
     void write_(OStream& os, bool isBigEndian, bool isListItem) const
     {
-        if (!isListItem) {
+        if (!isListItem)
+        {
             os.put(static_cast<byte>(tagType_));
 
-            if (!tagName_ || tagName_->empty()) {
+            if (!tagName_ || tagName_->empty())
+            {
                 _num2bytes<int16>(static_cast<int16>(0), os, isBigEndian);
-            } else {
+            }
+            else
+            {
                 _num2bytes<int16>(static_cast<int16>(tagName_->size()), os, isBigEndian);
                 os.write(tagName_->c_str(), tagName_->size());
             }
         }
 
-        switch (tagType_) {
+        switch (tagType_)
+        {
             case TT_END:
                 os.put(TT_END);
                 break;
@@ -2211,8 +2268,10 @@ private:
             case TT_DOUBLE:
                 _num2bytes<fp64>(tagData_.num.f64, os, isBigEndian);
                 break;
-            case TT_STRING: {
-                if (!tagData_.str || tagData_.str->empty()) {
+            case TT_STRING:
+            {
+                if (!tagData_.str || tagData_.str->empty())
+                {
                     _num2bytes<int16>(static_cast<int16>(0), os, isBigEndian);
                     break;
                 }
@@ -2222,8 +2281,10 @@ private:
 
                 break;
             }
-            case TT_BYTE_ARRAY: {
-                if (!tagData_.bad || tagData_.bad->empty()) {
+            case TT_BYTE_ARRAY:
+            {
+                if (!tagData_.bad || tagData_.bad->empty())
+                {
                     _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                     break;
                 }
@@ -2235,8 +2296,10 @@ private:
 
                 break;
             }
-            case TT_INT_ARRAY: {
-                if (!tagData_.iad || tagData_.iad->empty()) {
+            case TT_INT_ARRAY:
+            {
+                if (!tagData_.iad || tagData_.iad->empty())
+                {
                     _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                     break;
                 }
@@ -2248,8 +2311,10 @@ private:
 
                 break;
             }
-            case TT_LONG_ARRAY: {
-                if (!tagData_.lad || tagData_.lad->empty()) {
+            case TT_LONG_ARRAY:
+            {
+                if (!tagData_.lad || tagData_.lad->empty())
+                {
                     _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                     break;
                 }
@@ -2261,8 +2326,10 @@ private:
 
                 break;
             }
-            case TT_LIST: {
-                if (!tagData_.ld || tagData_.ld->empty()) {
+            case TT_LIST:
+            {
+                if (!tagData_.ld || tagData_.ld->empty())
+                {
                     os.put(static_cast<byte>(TT_END));
                     _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
                     break;
@@ -2276,8 +2343,10 @@ private:
 
                 break;
             }
-            case TT_COMPOUND: {
-                if (!tagData_.cd || tagData_.cd->data.empty()) {
+            case TT_COMPOUND:
+            {
+                if (!tagData_.cd || tagData_.cd->data.empty())
+                {
                     os.put(TT_END);
                     break;
                 }
