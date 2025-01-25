@@ -68,7 +68,8 @@ inline std::string compress(const std::string& data)
 
     uInt compressedSize = 0;
     uInt increaseSize = static_cast<uInt>(data.size()) / 2 + 1024;
-    do {
+    do
+    {
         if (compressed.size() < (compressedSize + increaseSize))
             compressed.resize(compressedSize + increaseSize);
 
@@ -76,7 +77,8 @@ inline std::string compress(const std::string& data)
         stream.next_out = reinterpret_cast<Bytef*>(&compressed[0] + compressedSize);
 
         ret = deflate(&stream, Z_FINISH);
-        if (ret != Z_STREAM_END && ret != Z_OK) {
+        if (ret != Z_STREAM_END && ret != Z_OK)
+        {
             std::string errmsg = stream.msg;
             deflateEnd(&stream);
             throw std::runtime_error("Failed to inflate data: " + errmsg);
@@ -124,14 +126,16 @@ inline std::string decompress(const std::string& data)
     stream.avail_in = static_cast<uInt>(data.size());
 
     uInt decompressedSize = 0;
-    do {
+    do
+    {
         decompressed.resize(data.size() * 2 + decompressedSize);
 
         stream.avail_out = static_cast<uInt>(decompressed.size() - decompressedSize);
         stream.next_out = reinterpret_cast<Bytef*>(&decompressed[0] + decompressedSize);
 
         ret = inflate(&stream, Z_FINISH);
-        if (ret != Z_STREAM_END && ret != Z_OK) {
+        if (ret != Z_STREAM_END && ret != Z_OK)
+        {
             std::string errmsg = stream.msg;
             inflateEnd(&stream);
             throw std::runtime_error("Failed to inflate data: " + errmsg);
