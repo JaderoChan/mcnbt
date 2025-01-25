@@ -711,7 +711,7 @@ public:
 
     /// @brief Get the list item type.
     /// @attention Only be called via #TT_LIST.
-    bool listItemType() const
+    TagType listItemType() const
     {
         assert(isList());
 #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1411,7 +1411,7 @@ public:
             throw std::logic_error("Can't get int array value for non-int array tag.");
 #endif
 
-        return tgaData_.iad ? *tgaData_.iad : Vec<int32>();
+        return tagData_.iad ? *tagData_.iad : Vec<int32>();
     }
 
     /// @attention Only be called via #TT_LONG_ARRAY.
@@ -1423,7 +1423,7 @@ public:
             throw std::logic_error("Can't get long array value for non-long array tag.");
 #endif
 
-        return tgaData_.iad ? *tgaData_.iad : Vec<int64>();
+        return tagData_.lad ? *tagData_.lad : Vec<int64>();
     }
 
     /// @overload
@@ -2200,7 +2200,7 @@ private:
                     tag.tagData_.ld->reserve(dsize);
 
                     for (int32 i = 0; i < dsize; ++i)
-                        tag.addTag(fromBinStream_(is, isBigEndian, true, tag.));
+                        tag.addTag(fromBinStream_(is, isBigEndian, true, tag.itemType_));
                 }
                 break;
             }
@@ -2641,7 +2641,7 @@ inline Tag gLongArray(const Vec<int64>& value, const String& name = "")
 inline Tag gList(TagType dtype, const String& name = "")
 {
     Tag tag(TT_LIST);
-    tag.initListElementType(dtype);
+    tag.setListItemType(dtype);
 
     if (!name.empty())
         tag.setName(name);
