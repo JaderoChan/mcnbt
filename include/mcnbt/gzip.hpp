@@ -7,7 +7,7 @@
 #include <stdexcept>    // runtime_error
 
 #ifndef ZLIB_CONST
-#define ZLIB_CONST
+    #define ZLIB_CONST
 #endif // !ZLIB_CONST
 #include <zlib.h>
 
