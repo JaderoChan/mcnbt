@@ -31,11 +31,11 @@ struct BlockEntityData
 
     /// @brief The savegame id of the block entity.
     String id;
-    /// @brief (May not exist) The custom name of the block entity.
+    /// @brief The custom name of the block entity.
+    /// @note Maybe not exist (that is empty).
     String customName;
     int32 pos[3]    = { 0, 0, 0 };
-    /// @brief 1 or 0 (true/false)
-    /// true if the block entity is movable with a piston.
+    /// @brief Wether the block entity is movable with a piston.
     bool isMovable  = true;
 
 protected:

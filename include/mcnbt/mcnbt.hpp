@@ -79,7 +79,7 @@ using Map       = std::unordered_map<K, V>;
 namespace nbt
 {
 
-// Enum of NBT tag type.
+/// @brief Enum of NBT tag type.
 enum TagType : uchar
 {
     TT_END          = 0,
