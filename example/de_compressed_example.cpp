@@ -75,9 +75,7 @@ void decompressExample(const std::string& filename, bool isBigEndian)
 int main()
 {
     auto rtn = inputHint();
-
     compressExample(rtn.first, rtn.second);
-
     decompressExample(rtn.first, rtn.second);
 
     return 0;
