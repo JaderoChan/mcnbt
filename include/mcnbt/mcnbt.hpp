@@ -305,7 +305,6 @@ template <typename T>
 void _num2bytes(T num, OStream& os, bool isBigEndian = false)
 {
     size_t size = sizeof(T);
-
     static byte buffer[sizeof(T)] = {};
 
     // Convert the number to bytes. (reinterpreting memory bytes)
@@ -530,7 +529,6 @@ public:
     static Tag fromFile(const String& filename, bool isBigEndian, size_t headerSize = 0)
     {
         IFStream ifs(filename, std::ios::binary);
-
         if (!ifs.is_open())
             throw std::runtime_error("Failed to open file: " + filename);
 
@@ -554,7 +552,6 @@ public:
     {
         SStream ss;
         ss << snbt;
-
         return fromSnbt(ss);
     }
 
@@ -638,8 +635,10 @@ public:
 
         if (!parent_)
         {
-            if (tagName_)       *tagName_ = name;
-            else                tagName_ = new String(name);
+            if (tagName_)
+                *tagName_ = name;
+            else
+                tagName_ = new String(name);
 
             return *this;
         }
@@ -651,8 +650,10 @@ public:
 
             Tag& t = (*p)[oldname];
 
-            if (t.tagName_)     *t.tagName_ = name;
-            else                t.tagName_ = new String(name);
+            if (t.tagName_)
+                *t.tagName_ = name;
+            else
+                t.tagName_ = new String(name);
 
             size_t idx = p->tagData_.cd->idxs[oldname];
 
@@ -683,7 +684,6 @@ public:
         {
             if (p == &container)
                 return true;
-
             p = p->parent_;
         }
 
@@ -752,7 +752,6 @@ public:
         {
             String errmsg = "Can't assign the tag of " + getTagTypeString(tag.type());
             errmsg += " to the list of " + getTagTypeString(itemType_);
-
             throw std::logic_error(errmsg);
         }
     #endif
@@ -829,42 +828,36 @@ public:
         {
             if (!tagData_.str)
                 tagData_.str = new String();
-
             tagData_.str->reserve(size);
         }
         else if (isByteArray())
         {
             if (!tagData_.bad)
                 tagData_.bad = new Vec<byte>();
-
             tagData_.bad->reserve(size);
         }
         else if (isIntArray())
         {
             if (!tagData_.iad)
                 tagData_.iad = new Vec<int32>();
-
             tagData_.iad->reserve(size);
         }
         else if (isLongArray())
         {
             if (!tagData_.lad)
                 tagData_.lad = new Vec<int64>();
-
             tagData_.lad->reserve(size);
         }
         else if (isList())
         {
             if (!tagData_.ld)
                 tagData_.ld = new Vec<Tag>();
-
             tagData_.ld->reserve(size);
         }
         else if (isCompound())
         {
             if (!tagData_.cd)
                 tagData_.cd = new CompoundData();
-
             tagData_.cd->reserve(size);
         }
     }
@@ -983,8 +976,10 @@ public:
             throw std::logic_error("Can't set float point number value for non-float point tag.");
     #endif
 
-        if (isFloat())          setFloat(static_cast<fp32>(value));
-        else if (isDouble())    setDouble(value);
+        if (isFloat())
+            setFloat(static_cast<fp32>(value));
+        else if (isDouble())
+            setDouble(value);
 
         return *this;
     }
@@ -1092,7 +1087,6 @@ public:
 
         if (!tagData_.bad)
             tagData_.bad = new Vec<byte>();
-
         tagData_.bad->emplace_back(value);
 
         return *this;
@@ -1110,7 +1104,6 @@ public:
 
         if (!tagData_.iad)
             tagData_.iad = new Vec<int32>();
-
         tagData_.iad->emplace_back(value);
 
         return *this;
@@ -1128,7 +1121,6 @@ public:
 
         if (!tagData_.lad)
             tagData_.lad = new Vec<int64>();
-
         tagData_.lad->emplace_back(value);
 
         return *this;
@@ -1169,7 +1161,6 @@ public:
             {
                 String errmsg = "Can't add the tag of " + getTagTypeString(tag.type());
                 errmsg += " to the list of " + getTagTypeString(itemType_);
-
                 throw std::logic_error(errmsg);
             }
         #endif
@@ -1769,8 +1760,10 @@ public:
         tagData_.cd->idxs.erase(name);
 
         for (auto& var : tagData_.cd->idxs)
+        {
             if (var.second > idx)
-                var.second--;
+            var.second--;
+        }
 
         return *this;
     }
@@ -1975,8 +1968,10 @@ public:
     {
         OFStream ofs(filename, std::ios_base::binary);
 
-        if (ofs.is_open())      write(ofs, isBigEndian, isCompressed);
-        else                    throw std::runtime_error("Failed to open file: " + filename);
+        if (ofs.is_open())
+            write(ofs, isBigEndian, isCompressed);
+        else
+            throw std::runtime_error("Failed to open file: " + filename);
 
         ofs.close();
     }
@@ -1989,8 +1984,10 @@ public:
     {
         OFStream ofs(filename, std::ios_base::binary);
 
-        if (ofs.is_open())      write(ofs, isBigEndian);
-        else                    throw std::runtime_error("Failed to open file: " + filename);
+        if (ofs.is_open())
+            write(ofs, isBigEndian);
+        else
+            throw std::runtime_error("Failed to open file: " + filename);
 
         ofs.close();
     }
@@ -2080,8 +2077,10 @@ private:
         // Get the tag type.
         // If the parent is a List, that is this tag is a list element, get the tag type from parent.
         // Else get the tag type from stream.
-        if (isListItem)         tag.tagType_ = parentType;
-        else                    tag.tagType_ = static_cast<TagType>(is.get());
+        if (isListItem)
+            tag.tagType_ = parentType;
+        else
+            tag.tagType_ = static_cast<TagType>(is.get());
 
         if (tag.tagType_ == TT_END)
             return tag;
@@ -2534,7 +2533,6 @@ namespace nbt
 inline Tag gByte(byte value, const String& name = "")
 {
     Tag tag(TT_BYTE);
-
     if (!name.empty())
         tag.setName(name);
 
@@ -2544,7 +2542,6 @@ inline Tag gByte(byte value, const String& name = "")
 inline Tag gShort(int16 value, const String& name = "")
 {
     Tag tag(TT_SHORT);
-
     if (!name.empty())
         tag.setName(name);
 
@@ -2554,7 +2551,6 @@ inline Tag gShort(int16 value, const String& name = "")
 inline Tag gInt(int32 value, const String& name = "")
 {
     Tag tag(TT_INT);
-
     if (!name.empty())
         tag.setName(name);
 
@@ -2564,7 +2560,6 @@ inline Tag gInt(int32 value, const String& name = "")
 inline Tag gLong(int64 value, const String& name = "")
 {
     Tag tag(TT_LONG);
-
     if (!name.empty())
         tag.setName(name);
 
@@ -2574,7 +2569,6 @@ inline Tag gLong(int64 value, const String& name = "")
 inline Tag gFloat(fp32 value, const String& name = "")
 {
     Tag tag(TT_FLOAT);
-
     if (!name.empty())
         tag.setName(name);
 
@@ -2584,7 +2578,6 @@ inline Tag gFloat(fp32 value, const String& name = "")
 inline Tag gDouble(fp64 value, const String& name = "")
 {
     Tag tag(TT_DOUBLE);
-
     if (!name.empty())
         tag.setName(name);
 
@@ -2594,7 +2587,6 @@ inline Tag gDouble(fp64 value, const String& name = "")
 inline Tag gString(const String& value, const String& name = "")
 {
     Tag tag(TT_STRING);
-
     if (!name.empty())
         tag.setName(name);
 
@@ -2604,7 +2596,6 @@ inline Tag gString(const String& value, const String& name = "")
 inline Tag gByteArray(const Vec<byte>& value, const String& name = "")
 {
     Tag tag(TT_BYTE_ARRAY);
-
     if (!name.empty())
         tag.setName(name);
 
@@ -2614,7 +2605,6 @@ inline Tag gByteArray(const Vec<byte>& value, const String& name = "")
 inline Tag gIntArray(const Vec<int32>& value, const String& name = "")
 {
     Tag tag(TT_INT_ARRAY);
-
     if (!name.empty())
         tag.setName(name);
 
@@ -2624,7 +2614,6 @@ inline Tag gIntArray(const Vec<int32>& value, const String& name = "")
 inline Tag gLongArray(const Vec<int64>& value, const String& name = "")
 {
     Tag tag(TT_LONG_ARRAY);
-
     if (!name.empty())
         tag.setName(name);
 
@@ -2635,7 +2624,6 @@ inline Tag gList(TagType dtype, const String& name = "")
 {
     Tag tag(TT_LIST);
     tag.setListItemType(dtype);
-
     if (!name.empty())
         tag.setName(name);
 
@@ -2645,7 +2633,6 @@ inline Tag gList(TagType dtype, const String& name = "")
 inline Tag gCompound(const String& name = "")
 {
     Tag tag(TT_COMPOUND);
-
     if (!name.empty())
         tag.setName(name);
 

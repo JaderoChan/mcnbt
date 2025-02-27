@@ -10,11 +10,11 @@ namespace nbt
 
 struct BlockEntityData
 {
-    BlockEntityData() {}
+    BlockEntityData() = default;
 
     BlockEntityData(const String& id, const String& customeName = "") : id(id), customName(customeName) {}
 
-    virtual ~BlockEntityData() {}
+    virtual ~BlockEntityData() = default;
 
     Tag getTag() const
     {

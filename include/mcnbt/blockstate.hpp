@@ -10,15 +10,14 @@ namespace nbt
 
 struct BlockStateData
 {
-    BlockStateData() {}
+    BlockStateData() = default;
 
-    virtual ~BlockStateData() {}
+    virtual ~BlockStateData() = default;
 
     Tag getTag() const
     {
         Tag tag = gCompound("states");
         assemble(tag);
-
         return tag;
     };
 
@@ -71,7 +70,8 @@ protected:
 private:
     String modestr_() const
     {
-        switch (mode) {
+        switch (mode)
+        {
             case MODE_SAVE:     return "save";
             case MODE_LOAD:     return "load";
             case MODE_CORNER:   return "corner";
