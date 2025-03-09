@@ -47,13 +47,13 @@ namespace nbt
 namespace nbt
 {
 
-using uchar     = unsigned char;
-using byte      = char;
-using int16     = int16_t;
-using int32     = int32_t;
-using int64     = int64_t;
-using fp32      = float;
-using fp64      = double;
+using UChar     = unsigned char;
+using Byte      = char;
+using Int16     = int16_t;
+using Int32     = int32_t;
+using Int64     = int64_t;
+using Fp32      = float;
+using Fp64      = double;
 
 using String    = std::string;
 
@@ -80,7 +80,7 @@ namespace nbt
 {
 
 /// @brief Enum of NBT tag type.
-enum TagType : uchar
+enum TagType : UChar
 {
     TT_END          = 0,
     TT_BYTE         = 1,
@@ -102,7 +102,7 @@ enum TagType : uchar
 */
 
 constexpr size_t _SNBT_INDENT_WIDTH     = 2;
-constexpr char _SNBT_INDENT_CHAR        = 0x20;
+constexpr char _SNBT_INDENT_CHAR        = 0x20;     // Space.
 static const String _SNBT_INDENT_STR    = String(_SNBT_INDENT_WIDTH, _SNBT_INDENT_CHAR);
 
 /*
@@ -278,7 +278,7 @@ T _bytes2num(IStream& is, bool isBigEndian = false, bool resumeCursor = false)
     auto begpos = is.tellg();
 
     // Read the bytes from input stream.
-    static byte buffer[sizeof(T)] = {};
+    static Byte buffer[sizeof(T)] = {};
     is.read(buffer, size);
 
     size = static_cast<size_t>(is.gcount());
@@ -305,7 +305,7 @@ template <typename T>
 void _num2bytes(T num, OStream& os, bool isBigEndian = false)
 {
     size_t size = sizeof(T);
-    static byte buffer[sizeof(T)] = {};
+    static Byte buffer[sizeof(T)] = {};
 
     // Convert the number to bytes. (reinterpreting memory bytes)
     std::memcpy(buffer, &num, size);
@@ -341,9 +341,9 @@ public:
     {
         if (other.isNum())                                      tagData_.num = other.tagData_.num;
         else if (other.isString() && other.tagData_.str)        tagData_.str = new String(*other.tagData_.str);
-        else if (other.isArray() && other.tagData_.bad)         tagData_.bad = new Vec<byte>(*other.tagData_.bad);
-        else if (other.isIntArray() && other.tagData_.iad)      tagData_.iad = new Vec<int32>(*other.tagData_.iad);
-        else if (other.isLongArray() && other.tagData_.lad)     tagData_.lad = new Vec<int64>(*other.tagData_.lad);
+        else if (other.isArray() && other.tagData_.bad)         tagData_.bad = new Vec<Byte>(*other.tagData_.bad);
+        else if (other.isIntArray() && other.tagData_.iad)      tagData_.iad = new Vec<Int32>(*other.tagData_.iad);
+        else if (other.isLongArray() && other.tagData_.lad)     tagData_.lad = new Vec<Int64>(*other.tagData_.lad);
         else if (other.isList() && other.tagData_.ld)
         {
             tagData_.ld = new Vec<Tag>();
@@ -410,9 +410,9 @@ public:
 
         if (other.isNum())                                      tagData_.num = other.tagData_.num;
         else if (other.isString() && other.tagData_.str)        tagData_.str = new String(*other.tagData_.str);
-        else if (other.isArray() && other.tagData_.bad)         tagData_.bad = new Vec<byte>(*other.tagData_.bad);
-        else if (other.isIntArray() && other.tagData_.iad)      tagData_.iad = new Vec<int32>(*other.tagData_.iad);
-        else if (other.isLongArray() && other.tagData_.lad)     tagData_.lad = new Vec<int64>(*other.tagData_.lad);
+        else if (other.isArray() && other.tagData_.bad)         tagData_.bad = new Vec<Byte>(*other.tagData_.bad);
+        else if (other.isIntArray() && other.tagData_.iad)      tagData_.iad = new Vec<Int32>(*other.tagData_.iad);
+        else if (other.isLongArray() && other.tagData_.lad)     tagData_.lad = new Vec<Int64>(*other.tagData_.lad);
         else if (other.isList() && other.tagData_.ld)
         {
             tagData_.ld = new Vec<Tag>();
@@ -609,7 +609,7 @@ public:
     String name() const         { return tagName_ ? *tagName_ : ""; }
 
     /// @brief Get the name length of tag.
-    int16 nameLength() const    { return static_cast<int16>(name().size()); }
+    Int16 nameLength() const    { return static_cast<Int16>(name().size()); }
 
     /// @brief Set the name of tag.
     /// @note If the new name already exist in parent, cover it.
@@ -833,19 +833,19 @@ public:
         else if (isByteArray())
         {
             if (!tagData_.bad)
-                tagData_.bad = new Vec<byte>();
+                tagData_.bad = new Vec<Byte>();
             tagData_.bad->reserve(size);
         }
         else if (isIntArray())
         {
             if (!tagData_.iad)
-                tagData_.iad = new Vec<int32>();
+                tagData_.iad = new Vec<Int32>();
             tagData_.iad->reserve(size);
         }
         else if (isLongArray())
         {
             if (!tagData_.lad)
-                tagData_.lad = new Vec<int64>();
+                tagData_.lad = new Vec<Int64>();
             tagData_.lad->reserve(size);
         }
         else if (isList())
@@ -865,7 +865,7 @@ public:
     /// @brief Functions for set value. Only be called via corresponding tag.
 
     /// @attention Only be called via #TT_BYTE.
-    Tag& setByte(byte value)
+    Tag& setByte(Byte value)
     {
         assert(isByte());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -879,7 +879,7 @@ public:
     }
 
     /// @attention Only be called via #TT_SHORT.
-    Tag& setShort(int16 value)
+    Tag& setShort(Int16 value)
     {
         assert(isShort());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -893,7 +893,7 @@ public:
     }
 
     /// @attention Only be called via #TT_INT.
-    Tag& setInt(int32 value)
+    Tag& setInt(Int32 value)
     {
         assert(isInt());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -907,7 +907,7 @@ public:
     }
 
     /// @attention Only be called via #TT_LONG.
-    Tag& setLong(int64 value)
+    Tag& setLong(Int64 value)
     {
         assert(isLong());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -921,7 +921,7 @@ public:
     }
 
     /// @attention Only be called via #TT_FLOAT.
-    Tag& setFloat(fp32 value)
+    Tag& setFloat(Fp32 value)
     {
         assert(isFloat());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -935,7 +935,7 @@ public:
     }
 
     /// @attention Only be called via #TT_DOUBLE.
-    Tag& setDouble(fp64 value)
+    Tag& setDouble(Fp64 value)
     {
         assert(isDouble());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -950,7 +950,7 @@ public:
 
     /// @brief Fast way of set the integer value.
     /// @attention Only be called via #TT_BYTE, #TT_SHORT, #TT_INT, #TT_LONG.
-    Tag& setInteger(int64 value)
+    Tag& setInteger(Int64 value)
     {
         assert(isInteger());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -958,9 +958,9 @@ public:
             throw std::logic_error("Can't set interger number for non-integer tag.");
     #endif
 
-        if (isByte())           setByte(static_cast<byte>(value));
-        else if (isShort())     setShort(static_cast<int16>(value));
-        else if (isInt())       setInt(static_cast<int32>(value));
+        if (isByte())           setByte(static_cast<Byte>(value));
+        else if (isShort())     setShort(static_cast<Int16>(value));
+        else if (isInt())       setInt(static_cast<Int32>(value));
         else if (isLong())      setLong(value);
 
         return *this;
@@ -968,7 +968,7 @@ public:
 
     /// @brief Fast way of set the float point value.
     /// @attention Only be called via #TT_FLOAT, #TT_DOUBLE.
-    Tag& setFloatPoint(fp64 value)
+    Tag& setFloatPoint(Fp64 value)
     {
         assert(isFloatPoint());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -977,7 +977,7 @@ public:
     #endif
 
         if (isFloat())
-            setFloat(static_cast<fp32>(value));
+            setFloat(static_cast<Fp32>(value));
         else if (isDouble())
             setDouble(value);
 
@@ -1005,12 +1005,12 @@ public:
     }
 
     /// @attention Only be called via #TT_BYTE_ARRAY.
-    Tag& setByteArray(const Vec<byte>& value)
+    Tag& setByteArray(const Vec<Byte>& value)
     {
         assert(isByteArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
         if (!isByteArray())
-            throw std::logic_error("Can't set byte array value for non-byte array tag.");
+            throw std::logic_error("Can't set Byte array value for non-Byte array tag.");
     #endif
 
         if (value.empty() && !tagData_.bad)
@@ -1019,13 +1019,13 @@ public:
         if (tagData_.bad)
             *tagData_.bad = value;
         else
-            tagData_.bad = new Vec<byte>(value);
+            tagData_.bad = new Vec<Byte>(value);
 
         return *this;
     }
 
     /// @attention Only be called via #TT_INT_ARRAY.
-    Tag& setIntArray(const Vec<int32>& value)
+    Tag& setIntArray(const Vec<Int32>& value)
     {
         assert(isIntArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1039,13 +1039,13 @@ public:
         if (tagData_.iad)
             *tagData_.iad = value;
         else
-            tagData_.iad = new Vec<int32>(value);
+            tagData_.iad = new Vec<Int32>(value);
 
         return *this;
     }
 
     /// @attention Only be called via #TT_LONG_ARRAY.
-    Tag& setLongArray(const Vec<int64>& value)
+    Tag& setLongArray(const Vec<Int64>& value)
     {
         assert(isLongArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1059,25 +1059,25 @@ public:
         if (tagData_.lad)
             *tagData_.lad = value;
         else
-            tagData_.lad = new Vec<int64>(value);
+            tagData_.lad = new Vec<Int64>(value);
 
         return *this;
     }
 
     /// @attention Only be called via #TT_BYTE_ARRAY.
-    Tag& setArray(const Vec<byte>& value) { return setByteArray(value); }
+    Tag& setArray(const Vec<Byte>& value) { return setByteArray(value); }
 
     /// @overload
     /// @attention Only be called via #TT_INT_ARRAY.
-    Tag& setArray(const Vec<int32>& value) { return setIntArray(value); }
+    Tag& setArray(const Vec<Int32>& value) { return setIntArray(value); }
 
     /// @overload
     /// @attention Only be called via #TT_LONG_ARRAY.
-    Tag& setArray(const Vec<int64>& value) { return setLongArray(value); }
+    Tag& setArray(const Vec<Int64>& value) { return setLongArray(value); }
 
     /// @brief Add a value to the byte array.
     /// @attention Only be called via #TT_BYTE_ARRAY.
-    Tag& addByte(byte value)
+    Tag& addByte(Byte value)
     {
         assert(isByteArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1086,7 +1086,7 @@ public:
     #endif
 
         if (!tagData_.bad)
-            tagData_.bad = new Vec<byte>();
+            tagData_.bad = new Vec<Byte>();
         tagData_.bad->emplace_back(value);
 
         return *this;
@@ -1094,7 +1094,7 @@ public:
 
     /// @brief Add a value to the int array.
     /// @attention Only be called via #TT_INT_ARRAY.
-    Tag& addInt(int32 value)
+    Tag& addInt(Int32 value)
     {
         assert(isIntArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1103,7 +1103,7 @@ public:
     #endif
 
         if (!tagData_.iad)
-            tagData_.iad = new Vec<int32>();
+            tagData_.iad = new Vec<Int32>();
         tagData_.iad->emplace_back(value);
 
         return *this;
@@ -1111,7 +1111,7 @@ public:
 
     /// @brief Add a value to the long array.
     /// @attention Only be called via #TT_LONG_ARRAY.
-    Tag& addLong(int64 value)
+    Tag& addLong(Int64 value)
     {
         assert(isLongArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1120,7 +1120,7 @@ public:
     #endif
 
         if (!tagData_.lad)
-            tagData_.lad = new Vec<int64>();
+            tagData_.lad = new Vec<Int64>();
         tagData_.lad->emplace_back(value);
 
         return *this;
@@ -1224,7 +1224,7 @@ public:
     /// @brief Functions for get value. Only be called via corresponding tag.
 
     /// @attention Only be called via #TT_BYTE.
-    byte getByte() const
+    Byte getByte() const
     {
         assert(isByte());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1236,7 +1236,7 @@ public:
     }
 
     /// @attention Only be called via #TT_SHORT.
-    int16 getShort() const
+    Int16 getShort() const
     {
         assert(isShort());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1248,7 +1248,7 @@ public:
     }
 
     /// @attention Only be called via #TT_INT.
-    int32 getInt() const
+    Int32 getInt() const
     {
         assert(isInt());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1260,7 +1260,7 @@ public:
     }
 
     /// @attention Only be called via #TT_LONG.
-    int64 getLong() const
+    Int64 getLong() const
     {
         assert(isLong());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1272,7 +1272,7 @@ public:
     }
 
     /// @attention Only be called via #TT_FLOAT.
-    fp32 getFloat() const
+    Fp32 getFloat() const
     {
         assert(isFloat());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1284,7 +1284,7 @@ public:
     }
 
     /// @attention Only be called via #TT_DOUBLE.
-    fp64 getDouble() const
+    Fp64 getDouble() const
     {
         assert(isDouble());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1297,7 +1297,7 @@ public:
 
     /// @brief Fast way of get the integer value.
     /// @attention Only be called via #TT_BYTE, #TT_SHORT, #TT_INT, #TT_LONG.
-    int64 getInteger() const
+    Int64 getInteger() const
     {
         assert(isInteger());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1315,7 +1315,7 @@ public:
 
     /// @brief Fast way of get the float point value.
     /// @attention Only be called via #TT_FLOAT, #TT_DOUBLE.
-    fp64 getFloatPoint() const
+    Fp64 getFloatPoint() const
     {
         assert(isFloatPoint());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1344,7 +1344,7 @@ public:
     }
 
     /// @attention Only be called via #TT_BYTE_ARRAY.
-    Vec<byte> getByteArray() const
+    Vec<Byte> getByteArray() const
     {
         assert(isByteArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1352,10 +1352,10 @@ public:
             throw std::logic_error("Can't get byte array value for non-byte array tag.");
     #endif
 
-        return tagData_.bad ? *tagData_.bad : Vec<byte>();
+        return tagData_.bad ? *tagData_.bad : Vec<Byte>();
     }
 
-//     const Vec<byte>& getByteArray() const
+//     const Vec<Byte>& getByteArray() const
 //     {
 //         assert(isByteArray());
 //     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1365,14 +1365,14 @@ public:
 // 
 //         if (!tagData_.bad)
 //         {
-//             static Vec<byte> placeHolder;
+//             static Vec<Byte> placeHolder;
 //             return placeHolder;
 //         }
 // 
 //         return *tagData_.bad;
 //     }
 // 
-//     Vec<byte>& getByteArray()
+//     Vec<Byte>& getByteArray()
 //     {
 //         assert(isByteArray());
 //     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1381,13 +1381,13 @@ public:
 //     #endif
 // 
 //         if (!tagData_.bad)
-//             tagData_.bad = new Vec<byte>();
+//             tagData_.bad = new Vec<Byte>();
 // 
 //         return *tagData_.bad;
 //     }
 
     /// @attention Only be called via #TT_INT_ARRAY.
-    Vec<int32> getIntArray() const
+    Vec<Int32> getIntArray() const
     {
         assert(isIntArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1395,11 +1395,11 @@ public:
             throw std::logic_error("Can't get int array value for non-int array tag.");
     #endif
 
-        return tagData_.iad ? *tagData_.iad : Vec<int32>();
+        return tagData_.iad ? *tagData_.iad : Vec<Int32>();
     }
 
     /// @attention Only be called via #TT_LONG_ARRAY.
-    Vec<int64> getLongArray() const
+    Vec<Int64> getLongArray() const
     {
         assert(isLongArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1407,13 +1407,13 @@ public:
             throw std::logic_error("Can't get long array value for non-long array tag.");
     #endif
 
-        return tagData_.lad ? *tagData_.lad : Vec<int64>();
+        return tagData_.lad ? *tagData_.lad : Vec<Int64>();
     }
 
     /// @overload
     /// @brief Get a value from the byte array by index.
     /// @attention Only be called via #TT_BYTE_ARRAY.
-    byte getByte(size_t idx) const
+    Byte getByte(size_t idx) const
     {
         assert(isByteArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1428,7 +1428,7 @@ public:
     }
 
     /// @attention Only be called via #TT_BYTE_ARRAY.
-    byte getFrontByte() const
+    Byte getFrontByte() const
     {
         assert(isByteArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1443,7 +1443,7 @@ public:
     }
 
     /// @attention Only be called via #TT_BYTE_ARRAY.
-    byte getBackByte() const
+    Byte getBackByte() const
     {
         assert(isByteArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1460,7 +1460,7 @@ public:
     /// @overload
     /// @brief Get a value from the int array by index.
     /// @attention Only be called via #TT_INT_ARRAY.
-    int32 getInt(size_t idx) const
+    Int32 getInt(size_t idx) const
     {
         assert(isIntArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1475,7 +1475,7 @@ public:
     }
 
     /// @attention Only be called via #TT_INT_ARRAY.
-    int32 getFrontInt() const
+    Int32 getFrontInt() const
     {
         assert(isIntArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1490,7 +1490,7 @@ public:
     }
 
     /// @attention Only be called via #TT_INT_ARRAY.
-    int32 getBackInt() const
+    Int32 getBackInt() const
     {
         assert(isIntArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1507,7 +1507,7 @@ public:
     /// @overload
     /// @brief Get a value from long array by index.
     /// @attention Only be called via #TT_LONG_ARRAY.
-    int64 getLong(size_t idx) const
+    Int64 getLong(size_t idx) const
     {
         assert(isLongArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1522,7 +1522,7 @@ public:
     }
 
     /// @attention Only be called via #TT_LONG_ARRAY.
-    int64 getFrontLong() const
+    Int64 getFrontLong() const
     {
         assert(isLongArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -1537,7 +1537,7 @@ public:
     }
 
     /// @attention Only be called via #TT_LONG_ARRAY.
-    int64 getBackLong() const
+    Int64 getBackLong() const
     {
         assert(isLongArray());
     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
@@ -2019,12 +2019,12 @@ private:
     {
         Num() : i64(0) {}
 
-        byte    i8;
-        int16   i16;
-        int32   i32;
-        int64   i64;
-        fp32    f32;
-        fp64    f64;
+        Byte    i8;
+        Int16   i16;
+        Int32   i32;
+        Int64   i64;
+        Fp32    f32;
+        Fp64    f64;
     };
 
     // A simple wrapper of std::vector<tag> and std::map<string, size_t>.
@@ -2055,11 +2055,11 @@ private:
         // String data
         String*         str;
         // Byte Array data
-        Vec<byte>*      bad;
+        Vec<Byte>*      bad;
         // Int Array data
-        Vec<int32>*     iad;
+        Vec<Int32>*     iad;
         // Long Array data
-        Vec<int64>*     lad;
+        Vec<Int64>*     lad;
         // List data
         Vec<Tag>*       ld;
         // Compound data
@@ -2089,10 +2089,10 @@ private:
         // If the tag not is a list element obtain the name from stream.
         if (!isListItem)
         {
-            int16 nameLen = _bytes2num<int16>(is, isBigEndian);
+            Int16 nameLen = _bytes2num<Int16>(is, isBigEndian);
             if (nameLen != 0)
             {
-                byte* bytes = new byte[nameLen];
+                Byte* bytes = new Byte[nameLen];
 
                 is.read(bytes, nameLen);
                 tag.tagName_ = new String();
@@ -2106,30 +2106,30 @@ private:
         switch (tag.tagType_)
         {
             case TT_BYTE:
-                tag.tagData_.num.i8 = _bytes2num<byte>(is, isBigEndian);
+                tag.tagData_.num.i8 = _bytes2num<Byte>(is, isBigEndian);
                 break;
             case TT_SHORT:
-                tag.tagData_.num.i16 = _bytes2num<int16>(is, isBigEndian);
+                tag.tagData_.num.i16 = _bytes2num<Int16>(is, isBigEndian);
                 break;
             case TT_INT:
-                tag.tagData_.num.i32 = _bytes2num<int32>(is, isBigEndian);
+                tag.tagData_.num.i32 = _bytes2num<Int32>(is, isBigEndian);
                 break;
             case TT_LONG:
-                tag.tagData_.num.i64 = _bytes2num<int64>(is, isBigEndian);
+                tag.tagData_.num.i64 = _bytes2num<Int64>(is, isBigEndian);
                 break;
             case TT_FLOAT:
-                tag.tagData_.num.f32 = _bytes2num<fp32>(is, isBigEndian);
+                tag.tagData_.num.f32 = _bytes2num<Fp32>(is, isBigEndian);
                 break;
             case TT_DOUBLE:
-                tag.tagData_.num.f64 = _bytes2num<fp64>(is, isBigEndian);
+                tag.tagData_.num.f64 = _bytes2num<Fp64>(is, isBigEndian);
                 break;
             case TT_STRING:
             {
-                int16 strlen = _bytes2num<int16>(is, isBigEndian);
+                Int16 strlen = _bytes2num<Int16>(is, isBigEndian);
 
                 if (strlen != 0)
                 {
-                    byte* bytes = new byte[strlen];
+                    Byte* bytes = new Byte[strlen];
 
                     is.read(bytes, strlen);
                     tag.tagData_.str = new String();
@@ -2141,57 +2141,57 @@ private:
             }
             case TT_BYTE_ARRAY:
             {
-                int32 dsize = _bytes2num<int32>(is, isBigEndian);
+                Int32 dsize = _bytes2num<Int32>(is, isBigEndian);
 
                 if (dsize != 0)
                 {
-                    tag.tagData_.bad = new Vec<byte>();
+                    tag.tagData_.bad = new Vec<Byte>();
                     tag.tagData_.bad->reserve(dsize);
 
-                    for (int32 i = 0; i < dsize; ++i)
-                        tag.addByte(_bytes2num<byte>(is, isBigEndian));
+                    for (Int32 i = 0; i < dsize; ++i)
+                        tag.addByte(_bytes2num<Byte>(is, isBigEndian));
                 }
                 break;
             }
             case TT_INT_ARRAY:
             {
-                int32 dsize = _bytes2num<int32>(is, isBigEndian);
+                Int32 dsize = _bytes2num<Int32>(is, isBigEndian);
 
                 if (dsize != 0)
                 {
-                    tag.tagData_.iad = new Vec<int32>();
+                    tag.tagData_.iad = new Vec<Int32>();
                     tag.tagData_.iad->reserve(dsize);
 
-                    for (int32 i = 0; i < dsize; ++i)
-                        tag.addInt(_bytes2num<int32>(is, isBigEndian));
+                    for (Int32 i = 0; i < dsize; ++i)
+                        tag.addInt(_bytes2num<Int32>(is, isBigEndian));
                 }
                 break;
             }
             case TT_LONG_ARRAY:
             {
-                int32 dsize = _bytes2num<int32>(is, isBigEndian);
+                Int32 dsize = _bytes2num<Int32>(is, isBigEndian);
 
                 if (dsize != 0)
                 {
-                    tag.tagData_.lad = new Vec<int64>();
+                    tag.tagData_.lad = new Vec<Int64>();
                     tag.tagData_.lad->reserve(dsize);
 
-                    for (int32 i = 0; i < dsize; ++i)
-                        tag.addLong(_bytes2num<int64>(is, isBigEndian));
+                    for (Int32 i = 0; i < dsize; ++i)
+                        tag.addLong(_bytes2num<Int64>(is, isBigEndian));
                 }
                 break;
             }
             case TT_LIST:
             {
                 tag.itemType_ = static_cast<TagType>(is.get());
-                int32 dsize = _bytes2num<int32>(is, isBigEndian);
+                Int32 dsize = _bytes2num<Int32>(is, isBigEndian);
 
                 if (dsize != 0)
                 {
                     tag.tagData_.ld = new Vec<Tag>();
                     tag.tagData_.ld->reserve(dsize);
 
-                    for (int32 i = 0; i < dsize; ++i)
+                    for (Int32 i = 0; i < dsize; ++i)
                         tag.addTag(fromBinStream_(is, isBigEndian, true, tag.itemType_));
                 }
                 break;
@@ -2201,7 +2201,7 @@ private:
                 while (!is.eof()) {
                     if (is.peek() == TT_END)
                     {
-                        // Give up End tag and move stream point to next byte.
+                        // Give up End tag and move stream point to next Byte.
                         is.get();
                         break;
                     }
@@ -2224,15 +2224,15 @@ private:
     {
         if (!isListItem)
         {
-            os.put(static_cast<byte>(tagType_));
+            os.put(static_cast<Byte>(tagType_));
 
             if (!tagName_ || tagName_->empty())
             {
-                _num2bytes<int16>(static_cast<int16>(0), os, isBigEndian);
+                _num2bytes<Int16>(static_cast<Int16>(0), os, isBigEndian);
             }
             else
             {
-                _num2bytes<int16>(static_cast<int16>(tagName_->size()), os, isBigEndian);
+                _num2bytes<Int16>(static_cast<Int16>(tagName_->size()), os, isBigEndian);
                 os.write(tagName_->c_str(), tagName_->size());
             }
         }
@@ -2246,29 +2246,29 @@ private:
                 os.put(tagData_.num.i8);
                 break;
             case TT_SHORT:
-                _num2bytes<int16>(tagData_.num.i16, os, isBigEndian);
+                _num2bytes<Int16>(tagData_.num.i16, os, isBigEndian);
                 break;
             case TT_INT:
-                _num2bytes<int32>(tagData_.num.i32, os, isBigEndian);
+                _num2bytes<Int32>(tagData_.num.i32, os, isBigEndian);
                 break;
             case TT_LONG:
-                _num2bytes<int64>(tagData_.num.i64, os, isBigEndian);
+                _num2bytes<Int64>(tagData_.num.i64, os, isBigEndian);
                 break;
             case TT_FLOAT:
-                _num2bytes<fp32>(tagData_.num.f32, os, isBigEndian);
+                _num2bytes<Fp32>(tagData_.num.f32, os, isBigEndian);
                 break;
             case TT_DOUBLE:
-                _num2bytes<fp64>(tagData_.num.f64, os, isBigEndian);
+                _num2bytes<Fp64>(tagData_.num.f64, os, isBigEndian);
                 break;
             case TT_STRING:
             {
                 if (!tagData_.str || tagData_.str->empty())
                 {
-                    _num2bytes<int16>(static_cast<int16>(0), os, isBigEndian);
+                    _num2bytes<Int16>(static_cast<Int16>(0), os, isBigEndian);
                     break;
                 }
 
-                _num2bytes<int16>(static_cast<int16>(tagData_.str->size()), os, isBigEndian);
+                _num2bytes<Int16>(static_cast<Int16>(tagData_.str->size()), os, isBigEndian);
                 os.write(tagData_.str->c_str(), tagData_.str->size());
 
                 break;
@@ -2277,11 +2277,11 @@ private:
             {
                 if (!tagData_.bad || tagData_.bad->empty())
                 {
-                    _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
+                    _num2bytes<Int32>(static_cast<Int32>(0), os, isBigEndian);
                     break;
                 }
 
-                _num2bytes<int32>(static_cast<int32>(tagData_.bad->size()), os, isBigEndian);
+                _num2bytes<Int32>(static_cast<Int32>(tagData_.bad->size()), os, isBigEndian);
 
                 for (const auto& var : *tagData_.bad)
                     os.put(var);
@@ -2292,14 +2292,14 @@ private:
             {
                 if (!tagData_.iad || tagData_.iad->empty())
                 {
-                    _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
+                    _num2bytes<Int32>(static_cast<Int32>(0), os, isBigEndian);
                     break;
                 }
 
-                _num2bytes<int32>(static_cast<int32>(tagData_.iad->size()), os, isBigEndian);
+                _num2bytes<Int32>(static_cast<Int32>(tagData_.iad->size()), os, isBigEndian);
 
                 for (const auto& var : *tagData_.iad)
-                    _num2bytes<int32>(var, os, isBigEndian);
+                    _num2bytes<Int32>(var, os, isBigEndian);
 
                 break;
             }
@@ -2307,14 +2307,14 @@ private:
             {
                 if (!tagData_.lad || tagData_.lad->empty())
                 {
-                    _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
+                    _num2bytes<Int32>(static_cast<Int32>(0), os, isBigEndian);
                     break;
                 }
 
-                _num2bytes<int32>(static_cast<int32>(tagData_.lad->size()), os, isBigEndian);
+                _num2bytes<Int32>(static_cast<Int32>(tagData_.lad->size()), os, isBigEndian);
 
                 for (const auto& var : *tagData_.lad)
-                    _num2bytes<int64>(var, os, isBigEndian);
+                    _num2bytes<Int64>(var, os, isBigEndian);
 
                 break;
             }
@@ -2322,13 +2322,13 @@ private:
             {
                 if (!tagData_.ld || tagData_.ld->empty())
                 {
-                    os.put(static_cast<byte>(TT_END));
-                    _num2bytes<int32>(static_cast<int32>(0), os, isBigEndian);
+                    os.put(static_cast<Byte>(TT_END));
+                    _num2bytes<Int32>(static_cast<Int32>(0), os, isBigEndian);
                     break;
                 }
 
-                os.put(static_cast<byte>(itemType_));
-                _num2bytes<int32>(static_cast<int32>(tagData_.ld->size()), os, isBigEndian);
+                os.put(static_cast<Byte>(itemType_));
+                _num2bytes<Int32>(static_cast<Int32>(tagData_.ld->size()), os, isBigEndian);
 
                 for (const auto& var : *tagData_.ld)
                     var.write_(os, isBigEndian, true);
@@ -2530,7 +2530,7 @@ private:
 namespace nbt
 {
 
-inline Tag gByte(byte value, const String& name = "")
+inline Tag gByte(Byte value, const String& name = "")
 {
     Tag tag(TT_BYTE);
     if (!name.empty())
@@ -2539,7 +2539,7 @@ inline Tag gByte(byte value, const String& name = "")
     return tag.setByte(value);
 }
 
-inline Tag gShort(int16 value, const String& name = "")
+inline Tag gShort(Int16 value, const String& name = "")
 {
     Tag tag(TT_SHORT);
     if (!name.empty())
@@ -2548,7 +2548,7 @@ inline Tag gShort(int16 value, const String& name = "")
     return tag.setShort(value);
 }
 
-inline Tag gInt(int32 value, const String& name = "")
+inline Tag gInt(Int32 value, const String& name = "")
 {
     Tag tag(TT_INT);
     if (!name.empty())
@@ -2557,7 +2557,7 @@ inline Tag gInt(int32 value, const String& name = "")
     return tag.setInt(value);
 }
 
-inline Tag gLong(int64 value, const String& name = "")
+inline Tag gLong(Int64 value, const String& name = "")
 {
     Tag tag(TT_LONG);
     if (!name.empty())
@@ -2566,7 +2566,7 @@ inline Tag gLong(int64 value, const String& name = "")
     return tag.setLong(value);
 }
 
-inline Tag gFloat(fp32 value, const String& name = "")
+inline Tag gFloat(Fp32 value, const String& name = "")
 {
     Tag tag(TT_FLOAT);
     if (!name.empty())
@@ -2575,7 +2575,7 @@ inline Tag gFloat(fp32 value, const String& name = "")
     return tag.setFloat(value);
 }
 
-inline Tag gDouble(fp64 value, const String& name = "")
+inline Tag gDouble(Fp64 value, const String& name = "")
 {
     Tag tag(TT_DOUBLE);
     if (!name.empty())
@@ -2593,7 +2593,7 @@ inline Tag gString(const String& value, const String& name = "")
     return tag.setString(value);
 }
 
-inline Tag gByteArray(const Vec<byte>& value, const String& name = "")
+inline Tag gByteArray(const Vec<Byte>& value, const String& name = "")
 {
     Tag tag(TT_BYTE_ARRAY);
     if (!name.empty())
@@ -2602,7 +2602,7 @@ inline Tag gByteArray(const Vec<byte>& value, const String& name = "")
     return tag.setByteArray(value);
 }
 
-inline Tag gIntArray(const Vec<int32>& value, const String& name = "")
+inline Tag gIntArray(const Vec<Int32>& value, const String& name = "")
 {
     Tag tag(TT_INT_ARRAY);
     if (!name.empty())
@@ -2611,7 +2611,7 @@ inline Tag gIntArray(const Vec<int32>& value, const String& name = "")
     return tag.setIntArray(value);
 }
 
-inline Tag gLongArray(const Vec<int64>& value, const String& name = "")
+inline Tag gLongArray(const Vec<Int64>& value, const String& name = "")
 {
     Tag tag(TT_LONG_ARRAY);
     if (!name.empty())

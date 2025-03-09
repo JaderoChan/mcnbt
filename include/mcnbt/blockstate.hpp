@@ -28,7 +28,7 @@ protected:
 struct CommandBlockSD final : BlockStateData
 {
     /// @brief Block facing direction.
-    enum FacingDirection : uchar
+    enum FacingDirection : UChar
     {
         FD_DOWN,
         FD_UP,
@@ -46,14 +46,14 @@ struct CommandBlockSD final : BlockStateData
 protected:
     void assemble(Tag& tag) const override
     {
-        tag << gByte(static_cast<byte>(isConditional), "conditional_bit");
-        tag << gInt(static_cast<int32>(fd), "facing_direction");
+        tag << gByte(static_cast<Byte>(isConditional), "conditional_bit");
+        tag << gInt(static_cast<Int32>(fd), "facing_direction");
     };
 };
 
 struct StructureBlockSD final : BlockStateData
 {
-    enum Mode : uchar
+    enum Mode : UChar
     {
         MODE_SAVE,
         MODE_LOAD,

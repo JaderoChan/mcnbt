@@ -11,7 +11,7 @@ namespace nbt
 
 struct MCStructure
 {
-    MCStructure(int32 formatVersion = 1, int32 sizeX = 1, int32 sizeY = 1, int32 sizeZ = 1) :
+    MCStructure(Int32 formatVersion = 1, Int32 sizeX = 1, Int32 sizeY = 1, Int32 sizeZ = 1) :
         root(gCompound())
     {
         // Write format version.
@@ -74,7 +74,7 @@ struct MCStructure
 
 inline Tag createSingleBlockStructure(const std::string& blockId,
                                       const BlockEntityData& bed, const BlockStateData& bsd,
-                                      int32 version = 18105860)
+                                      Int32 version = 18105860)
 {
     MCStructure mcs;
     mcs.blockIndices1() << gInt(0);
