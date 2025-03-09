@@ -71,15 +71,15 @@ nbt::Tag tag3 = nbt::gInt(1, "Tag3");
 
 所有的便利函数：
 
-- nbt::gByte(nbt::byte value, const std::string& name)
-- nbt::gShort(nbt::int16 value, const std::string& name)
-- nbt::gInt(nbt::int32 value, const std::string& name)
-- nbt::gLong(nbt::int64 value, const std::string& name)
-- nbt::gFloat(nbt::fp32 value, const std::string& name)
-- nbt::gDouble(nbt::fp64 value, const std::string& name)
-- nbt::gByteArray(const std::vector\<nbt::byte\>& value, const std::string& name)
-- nbt::gIntArray(const std::vector\<nbt::int32\>& value, const std::string& name)
-- nbt::gLongArray(const std::vector\<nbt::int64\>& value, const std::string& name)
+- nbt::gByte(nbt::Byte value, const std::string& name)
+- nbt::gShort(nbt::Int16 value, const std::string& name)
+- nbt::gInt(nbt::Int32 value, const std::string& name)
+- nbt::gLong(nbt::Int64 value, const std::string& name)
+- nbt::gFloat(nbt::Fp32 value, const std::string& name)
+- nbt::gDouble(nbt::Fp64 value, const std::string& name)
+- nbt::gByteArray(const std::vector\<nbt::Byte\>& value, const std::string& name)
+- nbt::gIntArray(const std::vector\<nbt::Int32\>& value, const std::string& name)
+- nbt::gLongArray(const std::vector\<nbt::Int64\>& value, const std::string& name)
 - nbt::gList(const std::vector\<nbt::Tag\>& value, const std::string& name)
 - nbt::gCompound(const std::string& name)
 
@@ -102,7 +102,7 @@ num.getInt();   // return 10.
 
 ```cpp
 //...
-// 通过一个空的std::vector<nbt::int32>初始化int类型数组。
+// 通过一个空的std::vector<nbt::Int32>初始化int类型数组。
 nbt::Tag intArray = nbt::gIntArray({}, "Nums");
 intArray.addInt(1);     // 添加值。
 intArray.addInt(2);
