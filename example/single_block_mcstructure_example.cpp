@@ -1,7 +1,5 @@
 #include <iostream>
 
-#define NDEBUG
-
 #include <mcnbt/mcstructure.hpp>
 
 int main()
