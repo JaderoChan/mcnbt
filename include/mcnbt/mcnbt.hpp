@@ -10,8 +10,8 @@
 // Note:
 // Move the tag (not copy) is default when add tag to list or compound. (use #copy() function if need)
 
-#ifndef MCNBT_HPP
-#define MCNBT_HPP
+#ifndef MCNBT_MCNBT_HPP
+#define MCNBT_MCNBT_HPP
 
 // Whether to use GZip to un/compress MCNBT.
 // #define MCNBT_USE_GZIP
@@ -2641,4 +2641,4 @@ inline Tag gCompound(const String& name = "")
 
 } // namespace nbt
 
-#endif // !MCNBT_HPP
+#endif // !MCNBT_MCNBT_HPP
