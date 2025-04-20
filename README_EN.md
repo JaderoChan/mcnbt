@@ -2,7 +2,7 @@
 
 **[简体中文](README.md) | English**
 
-An NBT read-write library written in C++ (header-only library).
+An easy-to-use Header-Only read and write library in MC NBT format. High performance, supports decompression, supports Java edition and Bedrock edition, BE entity data structure.
 
 ## :earth_africa: Dependency
 
