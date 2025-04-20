@@ -1,6 +1,6 @@
-**简体中文 | [English](README_EN.md)**
-
 # MCNBT
+
+**简体中文 | [English](README_EN.md)**
 
  一个使用C++编写的NBT读写库（仅头文件库）。
 

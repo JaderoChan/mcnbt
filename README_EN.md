@@ -1,6 +1,6 @@
-**[简体中文](README.md) | English**
-
 # MCNBT
+
+**[简体中文](README.md) | English**
 
 An NBT read-write library written in C++ (header-only library).
 
