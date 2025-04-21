@@ -1,10 +1,8 @@
-#ifndef MCNBT_MCSTRUCTURE_HPP
-#define MCNBT_MCSTRUCTURE_HPP
+#ifndef MCNBT_BE_MCSTRUCTURE_HPP
+#define MCNBT_BE_MCSTRUCTURE_HPP
 
-// Only usable for Minecraft bedrock edition.
-
-#include "blockentity.hpp"
-#include "blockstate.hpp"
+#include "block_entitys.hpp"
+#include "block_states.hpp"
 
 namespace nbt
 {
@@ -93,4 +91,4 @@ inline Tag createSingleBlockStructure(const std::string& blockId,
 
 } // namespace nbt
 
-#endif // !MCNBT_MCSTRUCTURE_HPP
+#endif // !MCNBT_BE_MCSTRUCTURE_HPP
