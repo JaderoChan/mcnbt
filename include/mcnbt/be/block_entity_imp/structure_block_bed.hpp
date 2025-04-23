@@ -1,12 +1,12 @@
 #ifndef MCNBT_BE_STRUCTURE_BLOCK_BED_HPP
 #define MCNBT_BE_STRUCTURE_BLOCK_BED_HPP
 
-#include "block_entity_data.hpp"
+#include "common_block_entity_data.hpp"
 
 namespace nbt
 {
 
-struct StructureBlockBED final : BlockEntityData
+struct StructureBlockBED final : CommonBlockEntityData
 {
     enum Mode : UChar
     {
@@ -47,10 +47,10 @@ struct StructureBlockBED final : BlockEntityData
         RSM_DISK
     };
 
-    StructureBlockBED() : BlockEntityData("StructureBlock") {}
+    StructureBlockBED() : CommonBlockEntityData("StructureBlock") {}
 
     StructureBlockBED(const String& structureName, Mode mode = MODE_LOAD, bool ignoreEntities = false) :
-        BlockEntityData("StructureBlock"), structureName(structureName), ignoreEntities(ignoreEntities)
+        CommonBlockEntityData("StructureBlock"), structureName(structureName), ignoreEntities(ignoreEntities)
     {}
 
     String structureName;
@@ -98,6 +98,6 @@ protected:
     };
 };
 
-}
+} // namespace nbt
 
 #endif // !MCNBT_BE_STRUCTURE_BLOCK_BED_HPP
