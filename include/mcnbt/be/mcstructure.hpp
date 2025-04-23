@@ -1,8 +1,8 @@
 #ifndef MCNBT_BE_MCSTRUCTURE_HPP
 #define MCNBT_BE_MCSTRUCTURE_HPP
 
-#include "block_entitys.hpp"
-#include "block_states.hpp"
+#include "block_entity.hpp"
+#include "block_state.hpp"
 
 namespace nbt
 {
@@ -71,7 +71,7 @@ struct MCStructure
 };
 
 inline Tag createSingleBlockStructure(const std::string& blockId,
-                                      const BlockEntityData& bed, const BlockStateData& bsd,
+                                      const CommonBlockEntityData& bed, const CommonBlockStateData& bsd,
                                       Int32 version = 18105860)
 {
     MCStructure mcs;

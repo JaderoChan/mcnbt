@@ -1,12 +1,12 @@
 #ifndef MCNBT_BE_COMMAND_BLOCK_BSD_HPP
 #define MCNBT_BE_COMMAND_BLOCK_BSD_HPP
 
-#include "block_state_data.hpp"
+#include "common_block_state_data.hpp"
 
 namespace nbt
 {
 
-struct CommandBlockBSD final : BlockStateData
+struct CommandBlockBSD final : CommonBlockStateData
 {
     /// @brief Block facing direction.
     enum FacingDirection : UChar
@@ -32,6 +32,6 @@ protected:
     };
 };
 
-}
+} // namespace nbt
 
 #endif // !MCNBT_BE_COMMAND_BLOCK_BSD_HPP

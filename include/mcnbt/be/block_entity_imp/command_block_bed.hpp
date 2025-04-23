@@ -1,19 +1,19 @@
 #ifndef MCNBT_BE_COMMAND_BLOCK_BED_HPP
 #define MCNBT_BE_COMMAND_BLOCK_BED_HPP
 
-#include "block_entity_data.hpp"
+#include "common_block_entity_data.hpp"
 
 namespace nbt
 {
 
-struct CommandBlockBED final : BlockEntityData
+struct CommandBlockBED final : CommonBlockEntityData
 {
-    CommandBlockBED() : BlockEntityData("CommandBlock") {}
+    CommandBlockBED() : CommonBlockEntityData("CommandBlock") {}
 
     CommandBlockBED(const String& command, Int32 tickDelay = 0,
                    bool isAuto = false, bool isPowered = true,
                    bool conditionMet = false) :
-        BlockEntityData("CommandBlock"), command(command), tickDelay(tickDelay),
+        CommonBlockEntityData("CommandBlock"), command(command), tickDelay(tickDelay),
         isAuto(isAuto), isPowered(isPowered), conditionMet(conditionMet)
     {}
 
@@ -71,6 +71,6 @@ protected:
     };
 };
 
-}
+} // namespace nbt
 
 #endif // !MCNBT_BE_COMMAND_BLOCK_BED_HPP
