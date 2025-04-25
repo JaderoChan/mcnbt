@@ -21,13 +21,13 @@ struct CommonBlockEntityData
         return tag;
     };
 
-    /// @brief The savegame id of the block entity.
+    /// The savegame id of the block entity.
     String id;
-    /// @brief The custom name of the block entity.
-    /// @note Maybe not exist (that is empty).
+    /// The custom name of the block entity.
+    /// Maybe not exist (that is empty).
     String customName;
     Int32 pos[3]    = { 0, 0, 0 };
-    /// @brief Wether the block entity is movable with a piston.
+    /// Wether the block entity is movable with a piston.
     bool isMovable  = true;
 
 protected:
