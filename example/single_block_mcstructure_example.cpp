@@ -2,12 +2,14 @@
 
 #include <mcnbt/be/mcstructure.hpp>
 
+namespace be = nbt::be;
+
 int main()
 {
     // Create a single block structure of command block. (Bedrock Edition)
-    nbt::CommandBlockBED bed("say hello world!", 20, true, true, false);
-    nbt::CommandBlockBSD bsd(false, nbt::CommandBlockBSD::FD_UP);
-    auto structure = nbt::createSingleBlockStructure("minecraft:command_block", bed, bsd);
+    be::CommandBlockBED bed("say hello world!", 20, true, true, false);
+    be::CommandBlockBSD bsd(false, be::CommandBlockBSD::FD_UP);
+    auto structure = be::createSingleBlockStructure("minecraft:command_block", bed, bsd);
 
     // Save the structure to a file. (Bedrock Edition, Little Endian)
     std::cout << structure.toSnbt() << std::endl;
