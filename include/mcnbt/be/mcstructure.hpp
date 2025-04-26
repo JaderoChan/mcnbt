@@ -7,6 +7,9 @@
 namespace nbt
 {
 
+namespace be
+{
+
 struct MCStructure
 {
     MCStructure(Int32 formatVersion = 1, Int32 sizeX = 1, Int32 sizeY = 1, Int32 sizeZ = 1) :
@@ -88,6 +91,8 @@ inline Tag createSingleBlockStructure(const std::string& blockId,
 
     return mcs.root;
 }
+
+} // namespace be
 
 } // namespace nbt
 

@@ -6,6 +6,9 @@
 namespace nbt
 {
 
+namespace be
+{
+
 struct CommonBlockStateData
 {
     CommonBlockStateData() = default;
@@ -22,6 +25,8 @@ struct CommonBlockStateData
 protected:
     virtual void assemble(Tag& tag) const {};
 };
+
+} // namespace be
 
 } // namespace nbt
 

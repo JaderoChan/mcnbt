@@ -6,6 +6,9 @@
 namespace nbt
 {
 
+namespace be
+{
+
 struct StructureBlockBSD final : CommonBlockStateData
 {
     enum Mode : UChar
@@ -20,10 +23,10 @@ struct StructureBlockBSD final : CommonBlockStateData
     Mode mode = MODE_LOAD;
 
 protected:
-    void assemble(Tag& tag) const override { tag << gString(modestr_(), "structure_block_type"); };
+    void assemble(Tag& tag) const override { tag << gString(modeStr_(mode), "structure_block_type"); };
 
 private:
-    String modestr_() const
+    static String modeStr_(Mode mode)
     {
         switch (mode)
         {
@@ -34,6 +37,8 @@ private:
         }
     };
 };
+
+} // namespace be
 
 } // namespace nbt
 

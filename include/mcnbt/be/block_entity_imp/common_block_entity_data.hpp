@@ -6,6 +6,9 @@
 namespace nbt
 {
 
+namespace be
+{
+
 struct CommonBlockEntityData
 {
     CommonBlockEntityData() = default;
@@ -39,6 +42,8 @@ protected:
         tag << gInt(pos[0], "x") << gInt(pos[1], "y") << gInt(pos[2], "z");
     }
 };
+
+} // namespace be
 
 } // namespace nbt
 

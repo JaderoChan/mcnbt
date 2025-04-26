@@ -6,6 +6,9 @@
 namespace nbt
 {
 
+namespace be
+{
+
 struct StructureBlockBED final : CommonBlockEntityData
 {
     enum Mode : UChar
@@ -96,6 +99,8 @@ protected:
         tag << gInt(size[2], "zStructureSize");
     };
 };
+
+} // namespace be
 
 } // namespace nbt
 

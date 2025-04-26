@@ -6,6 +6,9 @@
 namespace nbt
 {
 
+namespace be
+{
+
 struct CommandBlockBED final : CommonBlockEntityData
 {
     CommandBlockBED() : CommonBlockEntityData("CommandBlock") {}
@@ -69,6 +72,8 @@ protected:
         tag << gByte(static_cast<Byte>(isPowered), "powered");
     };
 };
+
+} // namespace be
 
 } // namespace nbt
 

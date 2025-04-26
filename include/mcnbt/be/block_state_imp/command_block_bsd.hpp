@@ -6,6 +6,9 @@
 namespace nbt
 {
 
+namespace be
+{
+
 struct CommandBlockBSD final : CommonBlockStateData
 {
     /// @brief Block facing direction.
@@ -31,6 +34,8 @@ protected:
         tag << gInt(static_cast<Int32>(fd), "facing_direction");
     };
 };
+
+} // namespace be
 
 } // namespace nbt
 
