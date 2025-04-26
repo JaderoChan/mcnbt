@@ -20,7 +20,14 @@ struct CommonBlockEntityData
     Tag getTag() const
     {
         Tag tag = gCompound("block_entity_data");
+
+        tag << gString(id, "id");
+        if (!customName.empty())
+            tag << gString(customName, "CustomName");
+        tag << gByte(static_cast<Byte>(isMovable), "isMovable");
+        tag << gInt(pos[0], "x") << gInt(pos[1], "y") << gInt(pos[2], "z");
         assemble(tag);
+
         return tag;
     };
 
@@ -34,13 +41,7 @@ struct CommonBlockEntityData
     bool isMovable  = true;
 
 protected:
-    virtual void assemble(Tag& tag) const
-    {
-        tag << gString(id, "id");
-        tag << gString(customName, "CustomName");
-        tag << gByte(static_cast<Byte>(isMovable), "isMovable");
-        tag << gInt(pos[0], "x") << gInt(pos[1], "y") << gInt(pos[2], "z");
-    }
+    virtual void assemble(Tag& tag) const {}
 };
 
 } // namespace be
