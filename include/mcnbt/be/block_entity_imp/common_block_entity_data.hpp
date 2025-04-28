@@ -34,7 +34,6 @@ struct CommonBlockEntityData
     /// The savegame id of the block entity.
     String id;
     /// The custom name of the block entity.
-    /// Maybe not exist (that is empty).
     String customName;
     Int32 pos[3]    = { 0, 0, 0 };
     /// Wether the block entity is movable with a piston.

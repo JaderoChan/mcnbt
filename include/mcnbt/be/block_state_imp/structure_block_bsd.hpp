@@ -11,22 +11,18 @@ namespace be
 
 struct StructureBlockBSD final : CommonBlockStateData
 {
-    enum Mode : UChar
+    enum Mode
     {
         MODE_SAVE,
         MODE_LOAD,
         MODE_CORNER
     };
 
-    StructureBlockBSD(Mode mode = MODE_LOAD) : mode(mode) {}
+    StructureBlockBSD() = default;
 
-    Mode mode = MODE_LOAD;
+    StructureBlockBSD(const String& mode) : mode(mode) {}
 
-protected:
-    void assemble(Tag& tag) const override { tag << gString(modeStr_(mode), "structure_block_type"); };
-
-private:
-    static String modeStr_(Mode mode)
+    static String modeStr(Mode mode)
     {
         switch (mode)
         {
@@ -36,6 +32,11 @@ private:
             default:            return "";
         }
     };
+
+    String mode = modeStr(MODE_LOAD);
+
+protected:
+    void assemble(Tag& tag) const override { tag << gString(mode, "structure_block_type"); };
 };
 
 } // namespace be

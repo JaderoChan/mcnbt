@@ -11,7 +11,7 @@ namespace be
 
 struct StructureBlockBED final : CommonBlockEntityData
 {
-    enum Mode : UChar
+    enum Mode : Int32
     {
         MODE_DATA,
         MODE_SAVE,
@@ -21,7 +21,7 @@ struct StructureBlockBED final : CommonBlockEntityData
         MODE_EXPORT
     };
 
-    enum Mirror : UChar
+    enum Mirror : Byte
     {
         MIRROR_NO   = 0x00,
         MIRROR_X    = 0x01,
@@ -29,7 +29,7 @@ struct StructureBlockBED final : CommonBlockEntityData
         MIRROR_XY   = 0x03
     };
 
-    enum Rotation : UChar
+    enum Rotation : Byte
     {
         ROT_0,
         ROT_90,
@@ -37,14 +37,14 @@ struct StructureBlockBED final : CommonBlockEntityData
         ROT_270
     };
 
-    enum Animation : UChar
+    enum Animation : Byte
     {
         ANIMATION_NO,
         ANIMATION_BY_LAYER,
         ANIMATION_BY_BLOCK
     };
 
-    enum RedstoneSaveMode : UChar
+    enum RedstoneSaveMode : Int32
     {
         RSM_MEMORY,
         RSM_DISK
@@ -52,16 +52,16 @@ struct StructureBlockBED final : CommonBlockEntityData
 
     StructureBlockBED() : CommonBlockEntityData("StructureBlock") {}
 
-    StructureBlockBED(const String& structureName, Mode mode = MODE_LOAD, bool ignoreEntities = false) :
-        CommonBlockEntityData("StructureBlock"), structureName(structureName), data(mode),
+    StructureBlockBED(const String& structureName, Int32 mode = MODE_LOAD, bool ignoreEntities = false) :
+        CommonBlockEntityData("StructureBlock"), structureName(structureName), mode(mode),
         ignoreEntities(ignoreEntities) {}
 
     String structureName;
-    Mode data                           = MODE_LOAD;
-    Animation animationMode             = ANIMATION_NO;
-    Rotation rotation                   = ROT_0;
-    Mirror mirror                       = MIRROR_NO;
-    RedstoneSaveMode redstoneSaveMode   = RSM_MEMORY;
+    Int32 mode                          = MODE_LOAD;
+    Byte animationMode                  = ANIMATION_NO;
+    Byte rotation                       = ROT_0;
+    Byte mirror                         = MIRROR_NO;
+    Int32 redstoneSaveMode              = RSM_MEMORY;
     bool ignoreEntities                 = false;
     bool removeBlocks                   = false;
     bool isPowered                      = true;
@@ -75,21 +75,19 @@ struct StructureBlockBED final : CommonBlockEntityData
 protected:
     void assemble(Tag& tag) const override
     {
-        tag << gByte(static_cast<Byte>(animationMode), "animationMode");
+        tag << gByte(animationMode, "animationMode");
         tag << gFloat(animationSeconds, "animationSeconds");
-        tag << gInt(static_cast<Int32>(data), "data");
-        tag << gString(String(), "dataField");
-        tag << gString(id, "id");
+        tag << gInt(mode, "data");
+        tag << gString("", "dataField");
         tag << gByte(static_cast<Byte>(ignoreEntities), "ignoreEntities");
         tag << gByte(0, "includePlayers");
         tag << gFloat(integrity, "integrity");
-        tag << gByte(static_cast<Byte>(isMovable), "isMovable");
         tag << gByte(static_cast<Byte>(isPowered), "isPowered");
-        tag << gByte(static_cast<Byte>(mirror), "mirror");
-        tag << gInt(static_cast<Int32>(redstoneSaveMode), "redstoneSaveMode");
+        tag << gByte(mirror, "mirror");
+        tag << gInt(redstoneSaveMode, "redstoneSaveMode");
         tag << gByte(static_cast<Byte>(removeBlocks), "removeBlcoks");
-        tag << gByte(static_cast<Byte>(rotation), "rotation");
-        tag << gByte(static_cast<Byte>(seed), "seed");
+        tag << gByte(rotation, "rotation");
+        tag << gByte(seed, "seed");
         tag << gByte(static_cast<Byte>(showBoundingBox), "showBoundingBox");
         tag << gString(structureName, "structureName");
         tag << gInt(offset[0], "xStructureOffset");

@@ -11,8 +11,7 @@ namespace be
 
 struct CommandBlockBSD final : CommonBlockStateData
 {
-    /// @brief Block facing direction.
-    enum FacingDirection : UChar
+    enum FacingDirection : Int32
     {
         FD_DOWN,
         FD_UP,
@@ -22,16 +21,18 @@ struct CommandBlockBSD final : CommonBlockStateData
         FD_EAST
     };
 
-    CommandBlockBSD(bool isConditional = false, FacingDirection fd = FD_UP) : isConditional(isConditional), fd(fd) {}
+    CommandBlockBSD() = default;
 
-    bool isConditional;
-    FacingDirection fd = FD_UP;
+    CommandBlockBSD(bool isConditional, Int32 fd) : isConditional(isConditional), fd(fd) {}
+
+    bool isConditional  = false;
+    Int32 fd            = FD_UP;
 
 protected:
     void assemble(Tag& tag) const override
     {
         tag << gByte(static_cast<Byte>(isConditional), "conditional_bit");
-        tag << gInt(static_cast<Int32>(fd), "facing_direction");
+        tag << gInt(fd, "facing_direction");
     };
 };
 
