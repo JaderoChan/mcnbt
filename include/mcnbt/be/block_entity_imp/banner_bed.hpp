@@ -122,10 +122,12 @@ struct BannerBED final : public CommonBlockEntityData
             }
         }
 
-        void assemble(Tag& tag) const
+        Tag getTag() const
         {
+            Tag tag(TT_COMPOUND);
             tag << gInt(color, "Color");
             tag << gString(id, "Pattern");
+            return tag;
         }
 
         String id       = patternIdStr(PTRNID_BASE);
@@ -147,15 +149,13 @@ protected:
         tag << gInt(baseColor, "Base");
         tag << gInt(type, "Type");
 
-        auto patternsTag = gList(TT_COMPOUND, "Patterns");
-        for (const auto& pattern : patterns)
+        if (!patterns.empty())
         {
-            Tag compound = Tag(TT_COMPOUND);
-            pattern.assemble(compound);
-            patternsTag << compound;
+            auto patternsTag = gList(TT_COMPOUND, "Patterns");
+            for (const auto& pattern : patterns)
+                patternsTag << pattern.getTag();
+            tag << patternsTag;
         }
-
-        tag << patternsTag;
     }
 };
 
