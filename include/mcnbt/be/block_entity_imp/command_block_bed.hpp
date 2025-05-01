@@ -49,11 +49,11 @@ protected:
         tag << gByte(0, "LPCondionalMode");
         tag << gByte(0, "LPRedstoneMode");
         tag << gLong(lastExecution, "LastExecution");
-        tag << gString(lastOutput, "LastOuTut");
-        tag << gList(TT_END, "LastOuTuTarams");
+        tag << gString(lastOutput, "LastOutput");
+        tag << gList(TT_END, "LastOutputParams");
         tag << gInt(successCount, "SuccessCount");
         tag << gInt(tickDelay, "TickDelay");
-        tag << gByte(static_cast<Byte>(trackOutput), "TrackOuTut");
+        tag << gByte(static_cast<Byte>(trackOutput), "TrackOutput");
         tag << gInt(version, "Version");
         tag << gByte(static_cast<Byte>(isAuto), "auto");
         tag << gByte(static_cast<Byte>(conditionMet), "conditionMet");
