@@ -17,9 +17,9 @@ struct CommonBlockEntityData
 
     virtual ~CommonBlockEntityData() = default;
 
-    Tag getTag() const
+    Tag getTag(const String& tagName = "block_entity_data") const
     {
-        Tag tag = gCompound("block_entity_data");
+        Tag tag = gCompound(tagName);
 
         tag << gString(id, "id");
         if (!customName.empty())

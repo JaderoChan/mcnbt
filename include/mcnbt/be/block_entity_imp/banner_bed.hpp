@@ -122,9 +122,9 @@ struct BannerBED final : public CommonBlockEntityData
             }
         }
 
-        Tag getTag() const
+        Tag getTag(const String& tagName = "") const
         {
-            Tag tag(TT_COMPOUND);
+            Tag tag = gCompound(tagName);
             tag << gInt(color, "Color");
             tag << gString(id, "Pattern");
             return tag;
@@ -141,6 +141,7 @@ struct BannerBED final : public CommonBlockEntityData
 
     Int32 baseColor     = COLOR_WHITE;
     Int32 type          = TYPE_NORMAL;
+    /// @sa #BannerBED::Pattern
     Vec<Pattern> patterns;
 
 protected:

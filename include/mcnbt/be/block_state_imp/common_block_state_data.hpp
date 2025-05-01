@@ -15,9 +15,9 @@ struct CommonBlockStateData
 
     virtual ~CommonBlockStateData() = default;
 
-    Tag getTag() const
+    Tag getTag(const String& tagName = "states") const
     {
-        Tag tag = gCompound("states");
+        Tag tag = gCompound(tagName);
         assemble(tag);
         return tag;
     };
