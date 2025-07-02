@@ -6,10 +6,10 @@
 #include <limits>       // numeric_limits
 #include <stdexcept>    // runtime_error
 
+#include <zlib.h>
 #ifndef ZLIB_CONST
     #define ZLIB_CONST
 #endif // !ZLIB_CONST
-#include <zlib.h>
 
 namespace nbt
 {

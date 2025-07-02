@@ -522,14 +522,12 @@ public:
         SStream buf;
         buf << is.rdbuf();
         String content = buf.str();
-        buf.clear();
 
         SStream ss;
         if (gzip::isCompressed(content))
             content = gzip::decompress(content);
 
         ss << content;
-        content.clear();
 
         if (headerSize != 0)
             ss.seekg(headerSize, ss.cur);
