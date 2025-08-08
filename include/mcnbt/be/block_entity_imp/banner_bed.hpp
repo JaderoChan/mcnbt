@@ -136,8 +136,12 @@ struct BannerBED final : public CommonBlockEntityData
 
     BannerBED() : CommonBlockEntityData("Banner") {}
 
-    BannerBED(Int32 baseColor, Int32 type = TYPE_NORMAL, const Vec<Pattern>& patterns = {}) :
-        CommonBlockEntityData("Banner"), baseColor(baseColor), type(type), patterns(patterns) {}
+    BannerBED(Int32 baseColor, Int32 type = TYPE_NORMAL, const Vec<Pattern>& patterns = {})
+        : CommonBlockEntityData("Banner"),
+        baseColor(baseColor),
+        type(type),
+        patterns(patterns)
+    {}
 
     Int32 baseColor     = COLOR_WHITE;
     Int32 type          = TYPE_NORMAL;

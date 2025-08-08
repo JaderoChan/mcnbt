@@ -12,8 +12,8 @@ namespace be
 
 struct MCStructure
 {
-    MCStructure(Int32 formatVersion = 1, Int32 sizeX = 1, Int32 sizeY = 1, Int32 sizeZ = 1) :
-        root(gCompound())
+    MCStructure(Int32 formatVersion = 1, Int32 sizeX = 1, Int32 sizeY = 1, Int32 sizeZ = 1)
+        : root(gCompound())
     {
         // Write format version.
         root << gInt(formatVersion, "format_version");
@@ -73,9 +73,10 @@ struct MCStructure
     Tag root;
 };
 
-inline Tag createSingleBlockStructure(const std::string& blockId,
-                                      const CommonBlockEntityData& bed, const CommonBlockStateData& bsd,
-                                      Int32 version = 18105860)
+inline Tag createSingleBlockStructure(
+    const std::string& blockId,
+    const CommonBlockEntityData& bed, const CommonBlockStateData& bsd,
+    Int32 version = 18105860)
 {
     MCStructure mcs;
     mcs.blockIndices1() << gInt(0);

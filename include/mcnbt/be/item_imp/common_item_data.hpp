@@ -13,8 +13,7 @@ struct CommonItemData
 {
     CommonItemData() = default;
 
-    CommonItemData(const String& itemId, Byte count) :
-        itemId(itemId), count(count) {}
+    CommonItemData(const String& itemId, Byte count) : itemId(itemId), count(count) {}
 
     virtual ~CommonItemData() = default;
 

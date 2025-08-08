@@ -14,7 +14,11 @@ struct BellBED : public CommonBlockEntityData
     BellBED() : CommonBlockEntityData("Bell") {}
 
     BellBED(Int32 direction, Int32 ticks, bool isRinging)
-        : CommonBlockEntityData("Bell"), direction(direction), ticks(ticks), isRinging(isRinging) {}
+        : CommonBlockEntityData("Bell"),
+        direction(direction),
+        ticks(ticks),
+        isRinging(isRinging)
+    {}
 
     Int32 direction = 0;
     Int32 ticks     = 45;   ///< The time in ticks of the bell's ringing duration.

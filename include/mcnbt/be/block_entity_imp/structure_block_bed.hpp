@@ -52,9 +52,12 @@ struct StructureBlockBED final : CommonBlockEntityData
 
     StructureBlockBED() : CommonBlockEntityData("StructureBlock") {}
 
-    StructureBlockBED(const String& structureName, Int32 mode = MODE_LOAD, bool ignoreEntities = false) :
-        CommonBlockEntityData("StructureBlock"), structureName(structureName), mode(mode),
-        ignoreEntities(ignoreEntities) {}
+    StructureBlockBED(const String& structureName, Int32 mode = MODE_LOAD, bool ignoreEntities = false)
+        : CommonBlockEntityData("StructureBlock"),
+        structureName(structureName),
+        mode(mode),
+        ignoreEntities(ignoreEntities)
+    {}
 
     String structureName;
     Int32 mode                          = MODE_LOAD;

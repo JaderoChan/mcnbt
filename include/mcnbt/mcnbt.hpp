@@ -354,8 +354,8 @@ public:
     }
 
     /// @note Deep copy but not copy the other's parent.
-    Tag(const Tag& other) :
-        tagType_(other.tagType_), itemType_(other.itemType_)
+    Tag(const Tag& other)
+        : tagType_(other.tagType_), itemType_(other.itemType_)
     {
         if (other.isNum())                                      tagData_.num = other.tagData_.num;
         else if (other.isString() && other.tagData_.str)        tagData_.str = new String(*other.tagData_.str);
@@ -391,8 +391,8 @@ public:
     }
 
     /// @note Copy the other's parent.
-    Tag(Tag&& other) noexcept :
-        tagType_(other.tagType_), itemType_(other.itemType_), tagData_(other.tagData_), tagName_(other.tagName_)
+    Tag(Tag&& other) noexcept
+        : tagType_(other.tagType_), itemType_(other.itemType_), tagData_(other.tagData_), tagName_(other.tagName_)
     {
         if (isList() && tagData_.ld)
         {

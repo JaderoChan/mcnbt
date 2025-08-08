@@ -13,11 +13,15 @@ struct CommandBlockBED final : CommonBlockEntityData
 {
     CommandBlockBED() : CommonBlockEntityData("CommandBlock") {}
 
-    CommandBlockBED(const String& command, Int32 tickDelay = 0,
-                    bool isAuto = false, bool isPowered = true,
-                    bool conditionMet = false) :
-        CommonBlockEntityData("CommandBlock"), command(command), tickDelay(tickDelay),
-        isAuto(isAuto), isPowered(isPowered), conditionMet(conditionMet) {}
+    CommandBlockBED(
+        const String& command, Int32 tickDelay = 0,
+        bool isAuto = false, bool isPowered = true,
+        bool conditionMet = false)
+        : CommonBlockEntityData("CommandBlock"),
+        command(command), tickDelay(tickDelay),
+        isAuto(isAuto), isPowered(isPowered),
+        conditionMet(conditionMet)
+    {}
 
     String command;
     /// The last output information of the command.

@@ -31,9 +31,13 @@ struct BrewingStandBED : public CommonBlockEntityData
 
     BrewingStandBED() : CommonBlockEntityData("BrewingStand") {}
 
-    BrewingStandBED(Int16 cookTime, Int16 fuelAmount, Int16 fuelTotal, const Vec<ItemStack>& items) :
-        CommonBlockEntityData("BrewingStand"), cookTime(cookTime), fuelAmount(fuelAmount), fuelTotal(fuelTotal),
-        items(items) {}
+    BrewingStandBED(Int16 cookTime, Int16 fuelAmount, Int16 fuelTotal, const Vec<ItemStack>& items)
+        : CommonBlockEntityData("BrewingStand"),
+        cookTime(cookTime),
+        fuelAmount(fuelAmount),
+        fuelTotal(fuelTotal),
+        items(items)
+    {}
 
     Int16 cookTime;         ///< The number of ticks until the potions are finished.
     Int16 fuelAmount;       ///< Remaining fuel for the brewing stand.

@@ -14,8 +14,11 @@ struct BeaconBED final : public CommonBlockEntityData
 {
     BeaconBED() : CommonBlockEntityData("Beacon") {}
 
-    BeaconBED(Int32 primaryEffect, Int32 secondaryEffect) :
-        CommonBlockEntityData("Beacon"), primaryEffect(primaryEffect), secondaryEffect(secondaryEffect) {}
+    BeaconBED(Int32 primaryEffect, Int32 secondaryEffect)
+        : CommonBlockEntityData("Beacon"),
+        primaryEffect(primaryEffect),
+        secondaryEffect(secondaryEffect)
+    {}
 
     Int32 primaryEffect     = EFFECT_NONE;
     Int32 secondaryEffect   = EFFECT_NONE;

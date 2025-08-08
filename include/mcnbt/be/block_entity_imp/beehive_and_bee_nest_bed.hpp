@@ -15,8 +15,11 @@ struct BeehiveAndBeeNestBED final : public CommonBlockEntityData
     {
         Occupant() = default;
 
-        Occupant(const String& actorId, Int32 ticksLeftToStay, const Tag& entityData) :
-            actorId(actorId), ticksLeftToStay(ticksLeftToStay), entityData(entityData) {}
+        Occupant(const String& actorId, Int32 ticksLeftToStay, const Tag& entityData)
+            : actorId(actorId),
+            ticksLeftToStay(ticksLeftToStay),
+            entityData(entityData)
+        {}
 
         Tag getTag(const String& tagName = "") const
         {
@@ -35,8 +38,11 @@ struct BeehiveAndBeeNestBED final : public CommonBlockEntityData
 
     BeehiveAndBeeNestBED() : CommonBlockEntityData("Beehive") {}
 
-    BeehiveAndBeeNestBED(bool shouldSpawnBees, const Vec<Occupant>& occupants) :
-        CommonBlockEntityData("Beehive"), shouldSpawnBees(shouldSpawnBees), occupants(occupants) {}
+    BeehiveAndBeeNestBED(bool shouldSpawnBees, const Vec<Occupant>& occupants)
+        : CommonBlockEntityData("Beehive"),
+        shouldSpawnBees(shouldSpawnBees),
+        occupants(occupants)
+    {}
 
     bool shouldSpawnBees = false;
     Vec<Occupant> occupants;
