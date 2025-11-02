@@ -1,6 +1,6 @@
 # MCNBT
 
-**简体中文 | [English](./doc/README_EN.md)**
+**简体中文 | [English](README_EN.md)**
 
  易于使用的MC NBT格式Header-Only读写库。高性能，支持解压缩，支持Java版与基岩版，基岩版实体数据结构。
 
