@@ -1,6 +1,6 @@
 # MCNBT
 
-**[简体中文](README_CN.md) | English**
+**[简体中文](README_ZH.md) | English**
 
 An easy-to-use Header-Only read and write library in MC NBT format. High performance, supports decompression, supports Java edition and Bedrock edition, BE entity data structure.
 
