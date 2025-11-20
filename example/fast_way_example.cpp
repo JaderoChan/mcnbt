@@ -6,7 +6,7 @@
 using namespace nbt;
 
 // Fast way for construct tag: nbt::g.*(value, name) and nbt::gCompound(name).
-// Fast way for add tag (#addTag) to list or compound: operator<<(tag).
+// Fast way for add tag (#addTag()) to list or compound: operator<<(tag).
 Tag fastWayExample()
 {
     auto emptyList = gList(TT_END, "EmptyList");
@@ -31,7 +31,7 @@ Tag fastWayExample()
     // Add a nested list.
     pack << (gList(TT_LIST, "ListValue")
              << emptyList.copy().setName("EmptyList1")
-             << emptyList.copy().setName("EmptyList2"));   // Invalid #setName, #addTag process will delete them name.
+             << emptyList.copy().setName("EmptyList2"));   // Invalid #setName(), #addTag() process will delete them name.
     // Nested self.
     pack << pack.copy();
 
@@ -51,7 +51,7 @@ int main()
     try
     {
         auto root = fastWayExample();
-        // Fast way for get tag (#getTag) by name or index: operator[](name or index).
+        // Fast way for get tag (#getTag()) by name or index: operator[](name or index).
         std::cout << "EmptyList Size: " << root["EmptyList"].size() << std::endl;
         std::cout << "EmptyList Element Tag Type: "
                   << getTagTypeString(root["EmptyList"].listItemType()) << std::endl;

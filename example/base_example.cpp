@@ -15,9 +15,9 @@ void numExample()
 
     // Test set value.
     std::cout << "--Test set value--" << std::endl;
-    std::cout << "#byteNum value before set: " << (int) byteNum.getByte() << std::endl;
+    std::cout << "byteNum value before set: " << (int) byteNum.getByte() << std::endl;
     byteNum.setByte(127);
-    std::cout << "#byteNum value after set 127: " << (int) byteNum.getByte() << std::endl;
+    std::cout << "byteNum value after set 127: " << (int) byteNum.getByte() << std::endl;
     std::cout << '\n';
 
     // Test get value.
@@ -27,23 +27,23 @@ void numExample()
 
     // Test continuous set value.
     std::cout << "--Test continuous set value--" << std::endl;
-    std::cout << "#intNum value before continuous set: " << intNum.getInt() << std::endl;
+    std::cout << "intNum value before continuous set: " << intNum.getInt() << std::endl;
     intNum.setInt(1).setInt(2);
-    std::cout << "#intNum value after continuous set 1, 2: " << intNum.getInt() << std::endl;
+    std::cout << "intNum value after continuous set 1, 2: " << intNum.getInt() << std::endl;
     std::cout << '\n';
 
     // Test type check.
     std::cout << "--Test check type--" << std::endl;
-    std::cout << "#floatNum value: " << floatNum.getFloat() << std::endl;
+    std::cout << "floatNum value: " << floatNum.getFloat() << std::endl;
     bool isFloatPointNum = floatNum.isFloatPoint();
-    std::cout << "#floatNum.isFloatPoint(): " << (isFloatPointNum ? "true" : "false") << std::endl;
+    std::cout << "floatNum.isFloatPoint(): " << (isFloatPointNum ? "true" : "false") << std::endl;
     std::cout << '\n';
 
     // Test get and set name.
     std::cout << "--Test get and set name--" << std::endl;
-    std::cout << "#doubleNum name before set: " << doubleNum.name() << std::endl;
+    std::cout << "doubleNum name before set: " << doubleNum.name() << std::endl;
     doubleNum.setName("double num");
-    std::cout << "#doubleNum name after set: " << doubleNum.name() << std::endl;
+    std::cout << "doubleNum name after set: " << doubleNum.name() << std::endl;
     std::cout << '\n';
 }
 
@@ -53,29 +53,29 @@ void stringExample()
 
     // Test set and get value.
     std::cout << "--Test set and get value--" << std::endl;
-    std::cout << "#str value before set: " << str.getString() << std::endl;
+    std::cout << "str value before set: " << str.getString() << std::endl;
     str.setString("Hello, World!");
-    std::cout << "#str value after set: " << str.getString() << std::endl;
+    std::cout << "str value after set: " << str.getString() << std::endl;
     std::cout << '\n';
 
     // Test set and get name.
     std::cout << "--Test set and get name--" << std::endl;
-    std::cout << "#str name before set: " << str.name() << std::endl;
+    std::cout << "str name before set: " << str.name() << std::endl;
     str.setName("string");
-    std::cout << "#str name after set: " << str.name() << std::endl;
+    std::cout << "str name after set: " << str.name() << std::endl;
     std::cout << '\n';
 
     // Test get the name length, string length.
     std::cout << "--Test get name length, string length and size--" << std::endl;
-    std::cout << "#str name length: " << str.nameLength() << std::endl;
-    std::cout << "#str size: " << str.size() << std::endl;
+    std::cout << "str name length: " << str.nameLength() << std::endl;
+    std::cout << "str size: " << str.size() << std::endl;
     std::cout << '\n';
 
     // Test clear value.
     std::cout << "--Test clear value--" << std::endl;
-    std::cout << "#str value before clear: " << str.getString() << std::endl;
+    std::cout << "str value before clear: " << str.getString() << std::endl;
     str.removeAll();
-    std::cout << "#str value after clear: " << str.getString() << std::endl;
+    std::cout << "str value after clear: " << str.getString() << std::endl;
     std::cout << '\n';
 }
 
@@ -93,15 +93,15 @@ void arrayExample()
     }
     catch (std::exception& e)
     {
-        std::cout << "Error, remove front from #byteArr that is empty: " << e.what() << std::endl;
+        std::cout << "Error, remove front from byteArr that is empty: " << e.what() << std::endl;
     }
     std::cout << '\n';
 
     // Test set and get value.
     std::cout << "--Test set and get value--" << std::endl;
-    std::cout << "#byteArr value before set: ";
+    std::cout << "byteArr value before set: ";
     std::cout << byteArr.toSnbt() << std::endl;
-    std::cout << "#byteArr value after set {1, 2, 3, 4, 5}: ";
+    std::cout << "byteArr value after set {1, 2, 3, 4, 5}: ";
     byteArr.setByteArray({ 1, 2, 3, 4, 5 });
     std::cout << byteArr.toSnbt() << std::endl;
     std::cout << '\n';
@@ -109,49 +109,49 @@ void arrayExample()
     // Test get size.
     std::cout << "--Test get size--" << std::endl;
     intArr.setIntArray({ -1, -2, -3, -4, -5 });
-    std::cout << "#intArr value: ";
+    std::cout << "intArr value: ";
     std::cout << intArr.toSnbt() << std::endl;
-    std::cout << "#intArr size: " << intArr.size() << std::endl;
+    std::cout << "intArr size: " << intArr.size() << std::endl;
     std::cout << '\n';
 
     // Test get item by index.
     std::cout << "--Test get item by index--" << std::endl;
-    std::cout << "#intArr value: ";
+    std::cout << "intArr value: ";
     std::cout << intArr.toSnbt() << std::endl;
-    std::cout << "#intArr item at index 2: " << intArr.getInt(2) << std::endl;
+    std::cout << "intArr item at index 2: " << intArr.getInt(2) << std::endl;
     std::cout << '\n';
 
     // Test add item.
     std::cout << "--Test add item--" << std::endl;
-    std::cout << "#intArr value before add 100: ";
+    std::cout << "intArr value before add 100: ";
     std::cout << intArr.toSnbt() << std::endl;
     intArr.addInt(100);
-    std::cout << "#intArr value after add 100: ";
+    std::cout << "intArr value after add 100: ";
     std::cout << intArr.toSnbt() << std::endl;
     std::cout << '\n';
 
     // Test remove item.
     std::cout << "--Test remove all items--" << std::endl;
-    std::cout << "#intArr value before remove all: ";
+    std::cout << "intArr value before remove all: ";
     std::cout << intArr.toSnbt() << std::endl;
     intArr.removeAll();
-    std::cout << "#intArr value after remove all: ";
+    std::cout << "intArr value after remove all: ";
     std::cout << intArr.toSnbt() << std::endl;
     std::cout << '\n';
 
     // Test remove item by index.
     std::cout << "--Test remove item by index--" << std::endl;
     longArr.setLongArray({ 100000000, 20000000, 30000000, 40000000, 50000000 });
-    std::cout << "#longArr value before remove: ";
+    std::cout << "longArr value before remove: ";
     std::cout << longArr.toSnbt() << std::endl;
-    std::cout << "#longArr value after remove 3rd item: ";
+    std::cout << "longArr value after remove 3rd item: ";
     longArr.remove(2);
     std::cout << longArr.toSnbt() << std::endl;
     std::cout << '\n';
 
     // Test error handling when remove item out of range.
     std::cout << "--Test error handling--" << std::endl;
-    std::cout << "#longArr value: ";
+    std::cout << "longArr value: ";
     std::cout << longArr.toSnbt() << std::endl;
     try
     {
@@ -159,14 +159,14 @@ void arrayExample()
     }
     catch (std::exception& e)
     {
-        std::cout << "Error, remove item out of range (#longArr.removeLong(10)): " << e.what() << std::endl;
+        std::cout << "Error, remove item out of range (longArr.removeLong(10)): " << e.what() << std::endl;
     }
     std::cout << '\n';
 
     // Test get front and back item.
     std::cout << "--Test get front and back item--" << std::endl;
-    std::cout << "#longArr front item: " << longArr.getFrontLong() << std::endl;
-    std::cout << "#longArr back item: " << longArr.getBackLong() << std::endl;
+    std::cout << "longArr front item: " << longArr.getFrontLong() << std::endl;
+    std::cout << "longArr back item: " << longArr.getBackLong() << std::endl;
     std::cout << '\n';
 }
 
@@ -176,16 +176,16 @@ void listExample()
 
     // Test set list item type.
     std::cout << "--Test set list item type--" << std::endl;
-    std::cout << "#lst item type before set: " << getTagTypeString(lst.listItemType()) << std::endl;
+    std::cout << "lst item type before set: " << getTagTypeString(lst.listItemType()) << std::endl;
     lst.setListItemType(TT_STRING);
-    std::cout << "#lst item type after set: " << getTagTypeString(lst.listItemType()) << std::endl;
+    std::cout << "lst item type after set: " << getTagTypeString(lst.listItemType()) << std::endl;
     std::cout << '\n';
 
     // Test add and get item.
     std::cout << "--Test add and get item--" << std::endl;
-    std::cout << "#lst value before add strings: ";
+    std::cout << "lst value before add strings: ";
     std::cout << lst.toSnbt() << std::endl;
-    std::cout << "#lst value after add strings ('Hello', 'World', '!!!'): ";
+    std::cout << "lst value after add strings ('Hello', 'World', '!!!'): ";
     Tag str1 = Tag(TT_STRING).setString("Hello");
     Tag str2 = Tag(TT_STRING).setString("World");
     Tag str3 = Tag(TT_STRING).setString("!!!");
@@ -207,14 +207,14 @@ void listExample()
 
     // Test get size.
     std::cout << "--Test get size--" << std::endl;
-    std::cout << "#lst size: " << lst.size() << std::endl;
+    std::cout << "lst size: " << lst.size() << std::endl;
     std::cout << '\n';
 
     // Test add item with << operator.
     std::cout << "--Test add item with << operator--" << std::endl;
-    std::cout << "#lst value before add strings: ";
+    std::cout << "lst value before add strings: ";
     std::cout << lst.toSnbt() << std::endl;
-    std::cout << "#lst value after add strings ('  ', 'Bye', '...') with << operator: ";
+    std::cout << "lst value after add strings ('  ', 'Bye', '...') with << operator: ";
     Tag str4 = Tag(TT_STRING).setString("  ");
     Tag str5 = Tag(TT_STRING).setString("Bye");
     Tag str6 = Tag(TT_STRING).setString("...");
@@ -224,20 +224,20 @@ void listExample()
 
     // Test get front and back item.
     std::cout << "--Test get front and back item--" << std::endl;
-    std::cout << "#lst front item: " << lst.getFrontTag().getString() << std::endl;
-    std::cout << "#lst back item: " << lst.getBackTag().getString() << std::endl;
+    std::cout << "lst front item: " << lst.getFrontTag().getString() << std::endl;
+    std::cout << "lst back item: " << lst.getBackTag().getString() << std::endl;
     std::cout << '\n';
 
     // Test get item by index.
     std::cout << "--Test get item by index--" << std::endl;
-    std::cout << "#lst item at index 2: " << lst.getTag(2).getString() << std::endl;
+    std::cout << "lst item at index 2: " << lst.getTag(2).getString() << std::endl;
     std::cout << '\n';
 
     // Test remove item by index.
     std::cout << "--Test remove item by index--" << std::endl;
-    std::cout << "#lst value before remove item at index 2: ";
+    std::cout << "lst value before remove item at index 2: ";
     std::cout << lst.toSnbt() << std::endl;
-    std::cout << "#lst value after remove item at index 2: ";
+    std::cout << "lst value after remove item at index 2: ";
     lst.remove(2);
     std::cout << lst.toSnbt() << std::endl;
     std::cout << '\n';
@@ -245,43 +245,43 @@ void listExample()
     // Test copy list.
     std::cout << "--Test copy list--" << std::endl;
     Tag lst2 = lst;
-    std::cout << "#lst value: ";
+    std::cout << "lst value: ";
     std::cout << lst.toSnbt() << std::endl;
-    std::cout << "#lst2 value: ";
+    std::cout << "lst2 value: ";
     std::cout << lst.toSnbt() << std::endl;
     std::cout << '\n';
 
     // Test remove all items.
     std::cout << "--Test remove all items--" << std::endl;
-    std::cout << "#lst value before remove all: ";
+    std::cout << "lst value before remove all: ";
     std::cout << lst.toSnbt() << std::endl;
-    std::cout << "#lst value after remove all: ";
+    std::cout << "lst value after remove all: ";
     lst.removeAll();
     std::cout << lst.toSnbt() << std::endl;
     std::cout << '\n';
 
     // Test reset list item type.
     std::cout << "--Test reset list item type--" << std::endl;
-    std::cout << "#lst item type before reset again: " << getTagTypeString(lst.listItemType()) << std::endl;
+    std::cout << "lst item type before reset again: " << getTagTypeString(lst.listItemType()) << std::endl;
     lst.setListItemType(TT_LIST);
-    std::cout << "#lst item type after reset again: " << getTagTypeString(lst.listItemType()) << std::endl;
+    std::cout << "lst item type after reset again: " << getTagTypeString(lst.listItemType()) << std::endl;
     std::cout << '\n';
 
     // Test nested add list.
     std::cout << "--Test nested add list--" << std::endl;
-    std::cout << "#lst value before add list: ";
+    std::cout << "lst value before add list: ";
     std::cout << lst.toSnbt() << std::endl;
-    std::cout << "#lst1 value: ";
+    std::cout << "lst1 value: ";
     Tag lst1 = Tag(TT_LIST).setListItemType(TT_INT);
     lst1 << Tag(TT_INT).setInt(1) << Tag(TT_INT).setInt(2) << Tag(TT_INT).setInt(3);
     std::cout << lst1.toSnbt() << std::endl;
     lst.addTag(lst1);           // default move constructor. (lst1 is invalid after this operation)
     lst.addTag(lst2.copy());    // copy constructor. (lst2 is still valid after this operation)
-    std::cout << "#lst value after add list (#lst1, #lst2): ";
+    std::cout << "lst value after add list (lst1, lst2): ";
     std::cout << lst.toSnbt() << std::endl;
-    std::cout << "#lst1 value: ";
+    std::cout << "lst1 value: ";
     std::cout << lst1.toSnbt() << std::endl;
-    std::cout << "#lst2 value: ";
+    std::cout << "lst2 value: ";
     std::cout << lst2.toSnbt() << std::endl;
     std::cout << '\n';
 }
@@ -316,18 +316,18 @@ void compoundExample()
     root << lst;
 
     std::cout << "--Test get tag by name--" << std::endl;
-    std::cout << "#root value: ";
+    std::cout << "root value: ";
     std::cout << root.toSnbt() << std::endl;
-    std::cout << "#max byte value: " << root.getFrontTag().getByte() << std::endl;
-    std::cout << "#max short value: " << root.getTag("max short").getShort() << std::endl;
-    std::cout << "#max int value: " << root["max int"].getInt() << std::endl;
-    std::cout << "#max long value: " << root[3].getLong() << std::endl;
-    std::cout << "#pi value: " << root.getTag("pi").getFloat() << std::endl;
-    std::cout << "#e value: " << root.getTag("e").getDouble() << std::endl;
-    std::cout << "#greeting value: " << root.getTag("greeting").getString() << std::endl;
-    std::cout << "#byte array value: ";
+    std::cout << "max byte value: " << root.getFrontTag().getByte() << std::endl;
+    std::cout << "max short value: " << root.getTag("max short").getShort() << std::endl;
+    std::cout << "max int value: " << root["max int"].getInt() << std::endl;
+    std::cout << "max long value: " << root[3].getLong() << std::endl;
+    std::cout << "pi value: " << root.getTag("pi").getFloat() << std::endl;
+    std::cout << "e value: " << root.getTag("e").getDouble() << std::endl;
+    std::cout << "greeting value: " << root.getTag("greeting").getString() << std::endl;
+    std::cout << "byte array value: ";
     std::cout << root["byte array"].toSnbt() << std::endl;
-    std::cout << "#nested list value: ";
+    std::cout << "nested list value: ";
     std::cout << root.getBackTag().toSnbt() << std::endl;
     std::cout << '\n';
 }

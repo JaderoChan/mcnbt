@@ -65,7 +65,7 @@ void compressExample(const std::string& filename, bool isBigEndian)
 
 void decompressExample(const std::string& filename, bool isBigEndian)
 {
-    // #fromFile function automatically detects if the file is compressed.
+    // #fromFile() function automatically detects if the file is compressed.
     auto root = Tag::fromFile(filename, isBigEndian);
     std::cout << root.toSnbt() << std::endl;
 }

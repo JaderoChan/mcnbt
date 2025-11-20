@@ -247,7 +247,7 @@ namespace nbt
 
 /// @brief Reverse a C style string.
 /// @param size The size of need reversed range, and if it is 0 reverse all bytes until \0 char.
-/// @note The #srcStr can be equal to the #dstStr.
+/// @note The srcStr can be equal to the dstStr.
 inline void _reverse(char* srcStr, char* dstStr, size_t size = 0)
 {
     if (size == 0)
@@ -629,7 +629,7 @@ public:
 
     /// @brief Set the name of tag.
     /// @note If the new name already exist in parent, cover it.
-    /// @attention Only be called via #non-ListItem.
+    /// @attention Only be called via non-ListItem.
     Tag& setName(const String& name)
     {
         assert(!isListItem());
