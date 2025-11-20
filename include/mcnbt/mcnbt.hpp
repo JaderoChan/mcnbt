@@ -53,7 +53,7 @@
     #include "gzip.hpp"
 #endif // MCNBT_USE_GZIP
 
-// McNbt namespace.
+// McNbt namespace
 namespace nbt
 {
 
@@ -61,7 +61,7 @@ namespace nbt
 
 }
 
-// Type alias.
+// Type alias
 namespace nbt
 {
 
@@ -93,11 +93,11 @@ using Map       = std::unordered_map<K, V>;
 
 } // namespace nbt
 
-// Enum, constants and aux functions.
+// Enum, constants and aux functions
 namespace nbt
 {
 
-/// @brief Enum of NBT tag type.
+/// @brief The enum of NBT tag type.
 enum TagType : UChar
 {
     TT_END          = 0,
@@ -120,7 +120,7 @@ enum TagType : UChar
 */
 
 constexpr size_t _SNBT_INDENT_WIDTH     = 2;
-constexpr char _SNBT_INDENT_CHAR        = 0x20;     // Space.
+constexpr char _SNBT_INDENT_CHAR        = 0x20;     // Space
 static const String _SNBT_INDENT_STR    = String(_SNBT_INDENT_WIDTH, _SNBT_INDENT_CHAR);
 
 /*
@@ -337,7 +337,7 @@ void _num2bytes(T num, OStream& os, bool isBigEndian = false)
 
 } // namespace nbt
 
-// Main.
+// Main
 namespace nbt
 {
 
@@ -642,7 +642,7 @@ public:
         if (name.empty() && this->name().empty())
             return *this;
 
-        // If the new name is equal to the old name, do nothing. 
+        // If the new name is equal to the old name, do nothing.
         String oldname = this->name();
         if (name == oldname)
             return *this;
@@ -1378,16 +1378,16 @@ public:
 //         if (!isByteArray())
 //             throw std::logic_error("Can't get byte array value for non-byte array tag.");
 //     #endif
-// 
+//
 //         if (!tagData_.bad)
 //         {
 //             static Vec<Byte> placeHolder;
 //             return placeHolder;
 //         }
-// 
+//
 //         return *tagData_.bad;
 //     }
-// 
+//
 //     Vec<Byte>& getByteArray()
 //     {
 //         assert(isByteArray());
@@ -1395,10 +1395,10 @@ public:
 //         if (!isByteArray())
 //             throw std::logic_error("Can't get byte array value for non-byte array tag.");
 //     #endif
-// 
+//
 //         if (!tagData_.bad)
 //             tagData_.bad = new Vec<Byte>();
-// 
+//
 //         return *tagData_.bad;
 //     }
 
@@ -2233,7 +2233,7 @@ private:
         return tag;
     }
 
-    // TODO
+    /// @todo
     static Tag fromSnbt_(IStream& snbtSs, TagType parentType);
 
     void write_(OStream& os, bool isBigEndian, bool isListItem) const
@@ -2456,7 +2456,7 @@ private:
                 }
 
                 if (result.back() == ',')
-                    result.pop_back();                
+                    result.pop_back();
 
                 result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
                 result += ']';
