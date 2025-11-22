@@ -290,7 +290,7 @@ template <typename T>
 T _bytes2num(IStream& is, bool isBigEndian = false, bool resumeCursor = false)
 {
     size_t size = sizeof(T);
-    T result = T();
+    T num = T();
 
     // Store the begin position of read data used to resume cursor.
     auto begpos = is.tellg();
@@ -306,13 +306,13 @@ T _bytes2num(IStream& is, bool isBigEndian = false, bool resumeCursor = false)
         _reverse(buffer, buffer, size);
 
     // Convert the bytes to number. (reinterpreting memory bytes)
-    std::memcpy(&result, buffer, size);
+    std::memcpy(&num, buffer, size);
 
     // Resume the cursor position of input stream if needed.
     if (resumeCursor)
         is.seekg(begpos);
 
-    return result;
+    return num;
 }
 
 /// @brief Convert the number to bytes, and write it to output stream.
@@ -2397,23 +2397,23 @@ private:
                     return key + "[B;]";
 
                 // If has indent add the newline character and indent string.
-                String result = key + '[';
-                result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-                result += "B;";
+                String snbt = key + '[';
+                snbt += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
+                snbt += "B;";
 
                 for (const auto& var : *tagData_.bad)
                 {
-                    result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-                    result += std::to_string(static_cast<int>(var)) + "b,";
+                    snbt += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
+                    snbt += std::to_string(static_cast<int>(var)) + "b,";
                 }
 
-                if (result.back() == ',')
-                    result.pop_back();
+                if (snbt.back() == ',')
+                    snbt.pop_back();
 
-                result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
-                result += ']';
+                snbt += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
+                snbt += ']';
 
-                return result;
+                return snbt;
             }
             case TT_INT_ARRAY:
             {
@@ -2421,23 +2421,23 @@ private:
                     return key + "[I;]";
 
                 // If has indent add the newline character and indent string.
-                String result = key + '[';
-                result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-                result += "I;";
+                String snbt = key + '[';
+                snbt += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
+                snbt += "I;";
 
                 for (const auto& var : *tagData_.iad)
                 {
-                    result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-                    result += std::to_string(var) + ",";
+                    snbt += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
+                    snbt += std::to_string(var) + ",";
                 }
 
-                if (result.back() == ',')
-                    result.pop_back();
+                if (snbt.back() == ',')
+                    snbt.pop_back();
 
-                result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
-                result += ']';
+                snbt += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
+                snbt += ']';
 
-                return result;
+                return snbt;
             }
             case TT_LONG_ARRAY:
             {
@@ -2445,69 +2445,69 @@ private:
                     return key + "[L;]";
 
                 // If has indent add the newline character and indent string.
-                String result = key + '[';
-                result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-                result += "L;";
+                String snbt = key + '[';
+                snbt += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
+                snbt += "L;";
 
                 for (const auto& var : *tagData_.lad)
                 {
-                    result += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-                    result += std::to_string(var) + "l,";
+                    snbt += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
+                    snbt += std::to_string(var) + "l,";
                 }
 
-                if (result.back() == ',')
-                    result.pop_back();
+                if (snbt.back() == ',')
+                    snbt.pop_back();
 
-                result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
-                result += ']';
+                snbt += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
+                snbt += ']';
 
-                return result;
+                return snbt;
             }
             case TT_LIST:
             {
                 if (!tagData_.ld || tagData_.ld->empty())
                     return key + "[]";
 
-                String result = key + '[';
+                String snbt = key + '[';
 
                 indentCount++;
                 for (const auto& var : *tagData_.ld)
                 {
-                    result += isWrappedIndented ? "\n" : "";
-                    result += var.toSnbt_(isWrappedIndented, true) + ",";
+                    snbt += isWrappedIndented ? "\n" : "";
+                    snbt += var.toSnbt_(isWrappedIndented, true) + ",";
                 }
                 indentCount--;
 
-                if (result.back() == ',')
-                    result.pop_back();
+                if (snbt.back() == ',')
+                    snbt.pop_back();
 
-                result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
-                result += ']';
+                snbt += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
+                snbt += ']';
 
-                return result;
+                return snbt;
             }
             case TT_COMPOUND:
             {
                 if (!tagData_.cd || tagData_.cd->data.empty())
                     return key + "{}";
 
-                String result = key + "{";
+                String snbt = key + "{";
 
                 indentCount++;
                 for (const auto& var : tagData_.cd->data)
                 {
-                    result += isWrappedIndented ? "\n" : "";
-                    result += var.toSnbt_(isWrappedIndented, false) + ",";
+                    snbt += isWrappedIndented ? "\n" : "";
+                    snbt += var.toSnbt_(isWrappedIndented, false) + ",";
                 }
                 indentCount--;
 
-                if (result.back() == ',')
-                    result.pop_back();
+                if (snbt.back() == ',')
+                    snbt.pop_back();
 
-                result += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
-                result += '}';
+                snbt += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
+                snbt += '}';
 
-                return result;
+                return snbt;
             }
             default:
                 throw std::runtime_error("Invalid tag type.");
