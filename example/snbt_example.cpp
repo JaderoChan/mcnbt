@@ -68,4 +68,6 @@ int main()
         out2 << root.toSnbt(true);
         out2.close();
     }
+
+    return 0;
 }
