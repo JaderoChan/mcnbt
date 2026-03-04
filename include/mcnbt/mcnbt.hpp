@@ -559,7 +559,7 @@ public:
     /// @brief Get the tag from a text input stream.
     /// @note - The root tag must be a compound tag.
     /// @note - The tag name (key of key-value) must valid, it can't contains {, }, [,] and so on key characters.
-    static Tag fromSnbt(IStream& is);
+    static Tag fromSnbt(IStream& is) {};
 
     /// @brief Get the tag from a string.
     /// @note - The root tag must be a compound tag.
