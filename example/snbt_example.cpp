@@ -54,7 +54,7 @@ int main()
     // Write the snbt without and with indent.
 
     // No indent.
-    std::ofstream out1("snbt_example_no_indent.txt");
+    std::ofstream out1("./snbt_example_no_indent.txt");
     if (out1.is_open())
     {
         out1 << root.toSnbt(false);
@@ -62,7 +62,7 @@ int main()
     }
 
     // With indent.
-    std::ofstream out2("snbt_example_with_indent.txt");
+    std::ofstream out2("./snbt_example_with_indent.txt");
     if (out2.is_open())
     {
         out2 << root.toSnbt(true);
