@@ -1,0 +1,15 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+if(MCNBT_ENABLE_GZIP)
+    find_dependency(zlib Required)
+endif()
+
+include(${CMAKE_CURRENT_LIST_DIR}/mcnbtTargets.cmake)
+
+set_and_check(mcnbt_INCLUDE_DIRS @PACKAGE_CMAKE_INSTALL_INCLUDEDIR@)
+set(mcnbt_VERSION @PROJECT_VERSION@)
+set(mcnbt_FOUND TRUE)
+set(mcnbt_ENABLE_GZIP @MCNBT_ENABLE_GZIP@)
+
+check_required_components(mcnbt)

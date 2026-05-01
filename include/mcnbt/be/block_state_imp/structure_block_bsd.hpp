@@ -1,7 +1,7 @@
 #ifndef MCNBT_BE_STRUCTURE_BLOCK_BSD_HPP
 #define MCNBT_BE_STRUCTURE_BLOCK_BSD_HPP
 
-#include "common_block_state_data.hpp"
+#include "common_block_bsd.hpp"
 
 namespace nbt
 {

@@ -1,8 +1,11 @@
 #include <iostream>
 #include <utility> // std::pair
 
-#define MCNBT_USE_GZIP
 #include <mcnbt/mcnbt.hpp>
+
+#ifndef MCNBT_ENABLE_GZIP
+    #error "Can't build this project without GZip"
+#endif // !MCNBT_ENABLE_GZIP
 
 using namespace nbt;
 

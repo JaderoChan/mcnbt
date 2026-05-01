@@ -31,9 +31,6 @@
 #ifndef MCNBT_MCNBT_HPP
 #define MCNBT_MCNBT_HPP
 
-// Whether to use GZip to un/compress MCNBT.
-// #define MCNBT_USE_GZIP
-
 // Whether to disable throw logic exception check (for performance).
 // #define MCNBT_DISABLE_LOGIC_EXCEPTION
 
@@ -49,9 +46,11 @@
 #include <stdexcept>        // runtime_error, logic_error, out_of_range
 #include <cassert>          // assert()
 
-#ifdef MCNBT_USE_GZIP
+#include <mcnbt/config.hpp>
+
+#ifdef MCNBT_ENABLE_GZIP
     #include "gzip.hpp"
-#endif // MCNBT_USE_GZIP
+#endif // MCNBT_ENABLE_GZIP
 
 // McNbt namespace
 namespace nbt
@@ -518,7 +517,7 @@ public:
     // (usually is 0, but bedrock edition map file is 8, some useless dat)
     static Tag fromBinStream(IFStream& is, bool isBigEndian, size_t headerSize = 0)
     {
-    #ifdef MCNBT_USE_GZIP
+    #ifdef MCNBT_ENABLE_GZIP
         SStream buf;
         buf << is.rdbuf();
         String content = buf.str();
@@ -538,7 +537,7 @@ public:
             is.seekg(headerSize, is.cur);
 
         return fromBinStream_(is, isBigEndian, false);
-    #endif // MCNBT_USE_GZIP
+    #endif // MCNBT_ENABLE_GZIP
     }
 
     /// @brief Get the tag from a nbt file.
@@ -559,7 +558,7 @@ public:
     /// @brief Get the tag from a text input stream.
     /// @note - The root tag must be a compound tag.
     /// @note - The tag name (key of key-value) must valid, it can't contains {, }, [,] and so on key characters.
-    static Tag fromSnbt(IStream& is) {};
+    static Tag fromSnbt(IStream& is) { return Tag(); };
 
     /// @brief Get the tag from a string.
     /// @note - The root tag must be a compound tag.
@@ -1963,7 +1962,7 @@ public:
         return *this;
     }
 
-#ifdef MCNBT_USE_GZIP
+#ifdef MCNBT_ENABLE_GZIP
     /// @brief Write the tag to output stream.
     void write(OStream& os, bool isBigEndian, bool isCompressed = false) const
     {
@@ -2007,7 +2006,7 @@ public:
 
         ofs.close();
     }
-#endif // MCNBT_USE_GZIP
+#endif // MCNBT_ENABLE_GZIP
 
     /// @brief Get the SNBT (The string representation of NBT).
     /// @param isWrappedIndented If true, the output string will be wrapped and indented.
