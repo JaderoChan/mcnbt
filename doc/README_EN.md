@@ -37,7 +37,13 @@ cd mcnbt
 cmake -B build
 ```
 
-#### Build options
+### Install
+
+```cmd
+cmake --install build [--prefix YourInstallPath]
+```
+
+### Build options
 
 - `MCNBT_ENABLE_GZIP` Enable GZip to support compress/decompress NBT data. Default is on.
 - `MCNBT_USE_INBUILD_ZLIB` Use inbuild Zlib submodule to build. Default is on. If you use other ZLib library, you can turn off it.
