@@ -11,5 +11,6 @@ set_and_check(mcnbt_INCLUDE_DIRS @PACKAGE_CMAKE_INSTALL_INCLUDEDIR@)
 set(mcnbt_VERSION @PROJECT_VERSION@)
 set(mcnbt_FOUND TRUE)
 set(mcnbt_ENABLE_GZIP @MCNBT_ENABLE_GZIP@)
+set(mcnbt_DISABLE_EXCEPTION @MCNBT_DISABLE_EXCEPTION@)
 
 check_required_components(mcnbt)

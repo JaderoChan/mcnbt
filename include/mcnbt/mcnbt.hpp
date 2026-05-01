@@ -31,9 +31,6 @@
 #ifndef MCNBT_MCNBT_HPP
 #define MCNBT_MCNBT_HPP
 
-// Whether to disable throw logic exception check (for performance).
-// #define MCNBT_DISABLE_LOGIC_EXCEPTION
-
 #include <cstdint>          // int16_t, int32_t, int64_t
 #include <cstddef>          // size_t
 #include <cstring>          // strlen(), memcpy()
@@ -52,17 +49,10 @@
     #include "gzip.hpp"
 #endif // MCNBT_ENABLE_GZIP
 
-// McNbt namespace
 namespace nbt
 {
-
-// Just for the intellisense better show "tip about namespace". :)
-
-}
 
 // Type alias
-namespace nbt
-{
 
 using UChar     = unsigned char;
 using Byte      = char;
@@ -92,9 +82,10 @@ using Map       = std::unordered_map<K, V>;
 
 } // namespace nbt
 
-// Enum, constants and aux functions
 namespace nbt
 {
+
+// Enum, constants and aux functions
 
 /// @brief The enum of NBT tag type.
 enum TagType : UChar
@@ -114,107 +105,67 @@ enum TagType : UChar
     TT_LONG_ARRAY   = 12
 };
 
-/*
-* Constants about the indent of snbt.
-*/
+// Constants about the indent of snbt.
 
 constexpr size_t _SNBT_INDENT_WIDTH     = 2;
 constexpr char _SNBT_INDENT_CHAR        = 0x20;     // Space
 static const String _SNBT_INDENT_STR    = String(_SNBT_INDENT_WIDTH, _SNBT_INDENT_CHAR);
 
-/*
-* Aux functions about the tag type.
-*/
+// Aux functions about the tag type.
 
 inline bool isEnd(TagType type)
-{
-    return type == TT_END;
-}
+{ return type == TT_END; }
 
 inline bool isByte(TagType type)
-{
-    return type == TT_BYTE;
-}
+{ return type == TT_BYTE; }
 
 inline bool isShort(TagType type)
-{
-    return type == TT_SHORT;
-}
+{ return type == TT_SHORT; }
 
 inline bool isInt(TagType type)
-{
-    return type == TT_INT;
-}
+{ return type == TT_INT; }
 
 inline bool isLong(TagType type)
-{
-    return type == TT_LONG;
-}
+{ return type == TT_LONG; }
 
 inline bool isFloat(TagType type)
-{
-    return type == TT_FLOAT;
-}
+{ return type == TT_FLOAT; }
 
 inline bool isDouble(TagType type)
-{
-    return type == TT_DOUBLE;
-}
+{ return type == TT_DOUBLE; }
 
 inline bool isString(TagType type)
-{
-    return type == TT_STRING;
-}
+{ return type == TT_STRING; }
 
 inline bool isByteArray(TagType type)
-{
-    return type == TT_BYTE_ARRAY;
-}
+{ return type == TT_BYTE_ARRAY;}
 
 inline bool isIntArray(TagType type)
-{
-    return type == TT_INT_ARRAY;
-}
+{ return type == TT_INT_ARRAY; }
 
 inline bool isLongArray(TagType type)
-{
-    return type == TT_LONG_ARRAY;
-}
+{ return type == TT_LONG_ARRAY; }
 
 inline bool isList(TagType type)
-{
-    return type == TT_LIST;
-}
+{ return type == TT_LIST; }
 
 inline bool isCompound(TagType type)
-{
-    return type == TT_COMPOUND;
-}
+{ return type == TT_COMPOUND; }
 
 inline bool isInteger(TagType type)
-{
-    return isByte(type) || isShort(type) || isInt(type) || isLong(type);
-}
+{ return isByte(type) || isShort(type) || isInt(type) || isLong(type); }
 
 inline bool isFloatPoint(TagType type)
-{
-    return isFloat(type) || isDouble(type);
-}
+{ return isFloat(type) || isDouble(type); }
 
 inline bool isNum(TagType type)
-{
-    return isInteger(type) || isFloatPoint(type);
-}
+{ return isInteger(type) || isFloatPoint(type); }
 
 inline bool isArray(TagType type)
-{
-    return isByteArray(type) || isIntArray(type) || isLongArray(type);
-}
+{ return isByteArray(type) || isIntArray(type) || isLongArray(type); }
 
 inline bool isContainer(TagType type)
-{
-    return isList(type) || isCompound(type);
-}
+{ return isList(type) || isCompound(type); }
 
 /// @brief Get the string text of the tag type.
 inline String getTagTypeString(TagType type)
@@ -240,9 +191,10 @@ inline String getTagTypeString(TagType type)
 
 } // namespace nbt
 
-// Functions of read and write binary data.
 namespace nbt
 {
+
+// Functions of read and write binary data.
 
 /// @brief Reverse a C style string.
 /// @param size The size of need reversed range, and if it is 0 reverse all bytes until \0 char.
@@ -412,7 +364,7 @@ public:
     Tag& operator=(const Tag& other)
     {
         assert(!(isListItem() && (type() != other.type())));
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (isListItem() && (type() != other.type()))
             throw std::logic_error("Can't assign a tag of incorrect tag type to list element.");
     #endif
@@ -464,13 +416,13 @@ public:
     Tag& operator=(Tag&& other)
     {
         assert(!isContained(other));
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (isContained(other))
             throw std::logic_error("Can't assign parent to self.");
     #endif
 
         assert(!(isListItem() && (type() != other.type())));
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (isListItem() && (type() != other.type()))
             throw std::logic_error("Can't assign a tag of incorrect tag type to list element");
     #endif
@@ -608,7 +560,7 @@ public:
 
     bool isContainer() const    { return nbt::isContainer(tagType_); }
 
-    /// @brief Functions of common to all tag.
+    /// Functions of common to all tag.
 
     /// @brief Make a copy.
     // Usually used for add tag to list or compound. (because default is move when add tag to list or compound)
@@ -632,7 +584,7 @@ public:
     Tag& setName(const String& name)
     {
         assert(!isListItem());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (isListItem())
             throw std::logic_error("Can't set name for list element.");
     #endif
@@ -712,7 +664,7 @@ public:
     TagType listItemType() const
     {
         assert(isList());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isList())
             throw std::logic_error("Can't get the list item type for non-list tag.");
     #endif
@@ -733,7 +685,7 @@ public:
     Tag& setListItemType(TagType type)
     {
         assert(isList());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isList())
             throw std::logic_error("Can't set the list item type for non-list tag.");
     #endif
@@ -756,7 +708,7 @@ public:
     Tag& assign(size_t size, const Tag& tag)
     {
         assert(isList());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isList())
             throw std::logic_error("Can't assign multiple tags to non-list tag.");
 
@@ -789,7 +741,7 @@ public:
     bool hasTag(const String& name) const
     {
         assert(isCompound());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isCompound())
             throw std::logic_error("Can't check tag existence for non-compound tag.");
     #endif
@@ -808,7 +760,7 @@ public:
     size_t size() const
     {
         assert(isString() || isArray() || isContainer());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isString() && !isArray() && !isContainer())
             throw std::logic_error("Can't get size for non-string, non-array, non-container tag.");
     #endif
@@ -834,7 +786,7 @@ public:
     void reserve(size_t size)
     {
         assert(isString() || isArray() || isContainer());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isString() && !isArray() && !isContainer())
             throw std::logic_error("Can't reserve space for non-string, non-array, non-container tag.");
     #endif
@@ -883,7 +835,7 @@ public:
     Tag& setByte(Byte value)
     {
         assert(isByte());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isByte())
             throw std::logic_error("Can't set byte value for non-byte tag.");
     #endif
@@ -897,7 +849,7 @@ public:
     Tag& setShort(Int16 value)
     {
         assert(isShort());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isShort())
             throw std::logic_error("Can't set short value for non-short tag.");
     #endif
@@ -911,7 +863,7 @@ public:
     Tag& setInt(Int32 value)
     {
         assert(isInt());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isInt())
             throw std::logic_error("Can't set int value for non-int tag.");
     #endif
@@ -925,7 +877,7 @@ public:
     Tag& setLong(Int64 value)
     {
         assert(isLong());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isLong())
             throw std::logic_error("Can't set long value for non-long tag.");
     #endif
@@ -939,7 +891,7 @@ public:
     Tag& setFloat(Fp32 value)
     {
         assert(isFloat());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isFloat())
             throw std::logic_error("Can't set float value for non-float tag.");
     #endif
@@ -953,7 +905,7 @@ public:
     Tag& setDouble(Fp64 value)
     {
         assert(isDouble());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isDouble())
             throw std::logic_error("Can't set double value for non-double tag.");
     #endif
@@ -968,7 +920,7 @@ public:
     Tag& setInteger(Int64 value)
     {
         assert(isInteger());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isInteger())
             throw std::logic_error("Can't set interger number for non-integer tag.");
     #endif
@@ -986,7 +938,7 @@ public:
     Tag& setFloatPoint(Fp64 value)
     {
         assert(isFloatPoint());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isFloatPoint())
             throw std::logic_error("Can't set float point number value for non-float point tag.");
     #endif
@@ -1003,7 +955,7 @@ public:
     Tag& setString(const String& value)
     {
         assert(isString());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isString())
             throw std::logic_error("Can't set string value for non-string tag.");
     #endif
@@ -1023,7 +975,7 @@ public:
     Tag& setByteArray(const Vec<Byte>& value)
     {
         assert(isByteArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isByteArray())
             throw std::logic_error("Can't set Byte array value for non-Byte array tag.");
     #endif
@@ -1043,7 +995,7 @@ public:
     Tag& setIntArray(const Vec<Int32>& value)
     {
         assert(isIntArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isIntArray())
             throw std::logic_error("Can't set int array value for non-int array tag.");
     #endif
@@ -1063,7 +1015,7 @@ public:
     Tag& setLongArray(const Vec<Int64>& value)
     {
         assert(isLongArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isLongArray())
             throw std::logic_error("Can't set long array value for non-long array tag.");
     #endif
@@ -1095,7 +1047,7 @@ public:
     Tag& addByte(Byte value)
     {
         assert(isByteArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isByteArray())
             throw std::logic_error("Can't add byte value to non-byte array tag.");
     #endif
@@ -1112,7 +1064,7 @@ public:
     Tag& addInt(Int32 value)
     {
         assert(isIntArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isIntArray())
             throw std::logic_error("Can't add int value to non-int array tag.");
     #endif
@@ -1129,7 +1081,7 @@ public:
     Tag& addLong(Int64 value)
     {
         assert(isLongArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isLongArray())
             throw std::logic_error("Can't add long value to non-long array tag.");
     #endif
@@ -1148,19 +1100,19 @@ public:
     Tag& addTag(Tag&& tag)
     {
         assert(isContainer());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isContainer())
             throw std::logic_error("Can't add tag to non-container tag.");
     #endif
 
         assert(this != &tag);
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (this == &tag)
             throw std::logic_error("Can't add self to self.");
     #endif
 
         assert(!isContained(tag));
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (isContained(tag))
             throw std::logic_error("Can't add parent to self.");
     #endif
@@ -1168,7 +1120,7 @@ public:
         // List
         if (isList())
         {
-        #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        #ifndef MCNBT_DISABLE_EXCEPTION
             if (itemType_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
 
@@ -1242,7 +1194,7 @@ public:
     Byte getByte() const
     {
         assert(isByte());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isByte())
             throw std::logic_error("Can't get byte value for non-byte tag.");
     #endif
@@ -1254,7 +1206,7 @@ public:
     Int16 getShort() const
     {
         assert(isShort());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isShort())
             throw std::logic_error("Can't get short value for non-short tag.");
     #endif
@@ -1266,7 +1218,7 @@ public:
     Int32 getInt() const
     {
         assert(isInt());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isInt())
             throw std::logic_error("Can't get int value for non-int tag.");
     #endif
@@ -1278,7 +1230,7 @@ public:
     Int64 getLong() const
     {
         assert(isLong());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isLong())
             throw std::logic_error("Can't get long value for non-long tag.");
     #endif
@@ -1290,7 +1242,7 @@ public:
     Fp32 getFloat() const
     {
         assert(isFloat());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isFloat())
             throw std::logic_error("Can't get float value for non-float tag.");
     #endif
@@ -1302,7 +1254,7 @@ public:
     Fp64 getDouble() const
     {
         assert(isDouble());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isDouble())
             throw std::logic_error("Can't get double value for non-double tag.");
     #endif
@@ -1315,7 +1267,7 @@ public:
     Int64 getInteger() const
     {
         assert(isInteger());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isInteger())
             throw std::logic_error("Can't get interger number for non-integer tag.");
     #endif
@@ -1333,7 +1285,7 @@ public:
     Fp64 getFloatPoint() const
     {
         assert(isFloatPoint());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isFloatPoint())
             throw std::logic_error("Can't get float point number value for non-float point tag.");
     #endif
@@ -1350,7 +1302,7 @@ public:
     String getString() const
     {
         assert(isString());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isString())
             throw std::logic_error("Can't get string value for non-string tag.");
     #endif
@@ -1362,7 +1314,7 @@ public:
     Vec<Byte> getByteArray() const
     {
         assert(isByteArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isByteArray())
             throw std::logic_error("Can't get byte array value for non-byte array tag.");
     #endif
@@ -1370,42 +1322,11 @@ public:
         return tagData_.bad ? *tagData_.bad : Vec<Byte>();
     }
 
-//     const Vec<Byte>& getByteArray() const
-//     {
-//         assert(isByteArray());
-//     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
-//         if (!isByteArray())
-//             throw std::logic_error("Can't get byte array value for non-byte array tag.");
-//     #endif
-//
-//         if (!tagData_.bad)
-//         {
-//             static Vec<Byte> placeHolder;
-//             return placeHolder;
-//         }
-//
-//         return *tagData_.bad;
-//     }
-//
-//     Vec<Byte>& getByteArray()
-//     {
-//         assert(isByteArray());
-//     #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
-//         if (!isByteArray())
-//             throw std::logic_error("Can't get byte array value for non-byte array tag.");
-//     #endif
-//
-//         if (!tagData_.bad)
-//             tagData_.bad = new Vec<Byte>();
-//
-//         return *tagData_.bad;
-//     }
-
     /// @attention Only be called via #TT_INT_ARRAY.
     Vec<Int32> getIntArray() const
     {
         assert(isIntArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isIntArray())
             throw std::logic_error("Can't get int array value for non-int array tag.");
     #endif
@@ -1417,7 +1338,7 @@ public:
     Vec<Int64> getLongArray() const
     {
         assert(isLongArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isLongArray())
             throw std::logic_error("Can't get long array value for non-long array tag.");
     #endif
@@ -1431,7 +1352,7 @@ public:
     Byte getByte(size_t idx) const
     {
         assert(isByteArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isByteArray())
             throw std::logic_error("Can't get byte value from non-byte array tag.");
     #endif
@@ -1446,7 +1367,7 @@ public:
     Byte getFrontByte() const
     {
         assert(isByteArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isByteArray())
             throw std::logic_error("Can't get front byte value from non-byte array tag.");
     #endif
@@ -1461,7 +1382,7 @@ public:
     Byte getBackByte() const
     {
         assert(isByteArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isByteArray())
             throw std::logic_error("Can't get back byte value from non-byte array tag.");
     #endif
@@ -1478,7 +1399,7 @@ public:
     Int32 getInt(size_t idx) const
     {
         assert(isIntArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isIntArray())
             throw std::logic_error("Can't get int value from non-int array tag.");
     #endif
@@ -1493,7 +1414,7 @@ public:
     Int32 getFrontInt() const
     {
         assert(isIntArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isIntArray())
             throw std::logic_error("Can't get front int value from non-int array tag.");
     #endif
@@ -1508,7 +1429,7 @@ public:
     Int32 getBackInt() const
     {
         assert(isIntArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isIntArray())
             throw std::logic_error("Can't get back int value from non-int array tag.");
     #endif
@@ -1525,7 +1446,7 @@ public:
     Int64 getLong(size_t idx) const
     {
         assert(isLongArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isLongArray())
             throw std::logic_error("Can't get long value from non-long array tag.");
     #endif
@@ -1540,7 +1461,7 @@ public:
     Int64 getFrontLong() const
     {
         assert(isLongArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isLongArray())
             throw std::logic_error("Can't get front long value from non-long array tag.");
     #endif
@@ -1555,7 +1476,7 @@ public:
     Int64 getBackLong() const
     {
         assert(isLongArray());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isLongArray())
             throw std::logic_error("Can't get back long value from non-long array tag.");
     #endif
@@ -1571,7 +1492,7 @@ public:
     Tag& getTag(size_t idx)
     {
         assert(isContainer());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isContainer())
             throw std::logic_error("Can't get tag from non-container tag.");
     #endif
@@ -1579,7 +1500,7 @@ public:
         // List
         if (isList())
         {
-        #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        #ifndef MCNBT_DISABLE_EXCEPTION
             if (itemType_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
         #endif
@@ -1606,7 +1527,7 @@ public:
     {
         assert(isCompound());
         assert(hasTag(name));
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isCompound())
             throw std::logic_error("Can't get tag from non-compound tag.");
 
@@ -1624,7 +1545,7 @@ public:
     Tag& getFrontTag()
     {
         assert(isContainer());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isContainer())
             throw std::logic_error("Can't get front tag from non-container tag.");
     #endif
@@ -1632,7 +1553,7 @@ public:
         // List
         if (isList())
         {
-        #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        #ifndef MCNBT_DISABLE_EXCEPTION
             if (itemType_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
         #endif
@@ -1656,7 +1577,7 @@ public:
     Tag& getBackTag()
     {
         assert(isContainer());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isContainer())
             throw std::logic_error("Can't get back tag from non-container tag.");
     #endif
@@ -1664,7 +1585,7 @@ public:
         // List
         if (isList())
         {
-        #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        #ifndef MCNBT_DISABLE_EXCEPTION
             if (itemType_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
         #endif
@@ -1690,7 +1611,7 @@ public:
     Tag& remove(size_t idx)
     {
         assert(isString() || isArray() || isContainer());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isString() && !isArray() && !isContainer())
             throw std::logic_error("Can't remove element from non-string, non-array, non-container tag.");
     #endif
@@ -1725,7 +1646,7 @@ public:
         }
         else if (isList())
         {
-        #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        #ifndef MCNBT_DISABLE_EXCEPTION
             if (itemType_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
         #endif
@@ -1758,7 +1679,7 @@ public:
     {
         assert(isCompound());
         assert(hasTag(name));
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isCompound())
             throw std::logic_error("Can't remove tag from non-compound tag.");
 
@@ -1789,7 +1710,7 @@ public:
     Tag& removeFront()
     {
         assert(isString() || isArray() || isContainer());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isString() && !isArray() && !isContainer())
             throw std::logic_error("Can't remove front element from non-string, non-array, non-container tag.");
     #endif
@@ -1824,7 +1745,7 @@ public:
         }
         else if (isList())
         {
-        #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        #ifndef MCNBT_DISABLE_EXCEPTION
             if (itemType_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
         #endif
@@ -1855,7 +1776,7 @@ public:
     Tag& removeBack()
     {
         assert(isString() || isArray() || isContainer());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isString() && !isArray() && !isContainer())
             throw std::logic_error("Can't remove back element from non-string, non-array, non-container tag.");
     #endif
@@ -1890,7 +1811,7 @@ public:
         }
         else if (isList())
         {
-        #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        #ifndef MCNBT_DISABLE_EXCEPTION
             if (itemType_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
         #endif
@@ -1918,7 +1839,7 @@ public:
     Tag& removeAll()
     {
         assert(isString() || isArray() || isContainer());
-    #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+    #ifndef MCNBT_DISABLE_EXCEPTION
         if (!isString() && !isArray() && !isContainer())
             throw std::logic_error("Can't remove all elements from non-string, non-array, non-container tag.");
     #endif
@@ -1945,7 +1866,7 @@ public:
         }
         else if (isList())
         {
-        #if !defined(_DEBUG) && !defined(MCNBT_DISABLE_LOGIC_EXCEPTION)
+        #ifndef MCNBT_DISABLE_EXCEPTION
             if (itemType_ == TT_END)
                 throw std::logic_error("Can't read or write a uninitialized list.");
         #endif

@@ -1,7 +1,7 @@
 #ifndef MCNBT_BE_ENTITY_IMP_COMMON_ENTITY_DATA_HPP
 #define MCNBT_BE_ENTITY_IMP_COMMON_ENTITY_DATA_HPP
 
-#include "../../mcnbt.hpp"
+#include <mcnbt/mcnbt.hpp>
 
 namespace nbt
 {

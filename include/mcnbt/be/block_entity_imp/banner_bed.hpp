@@ -2,7 +2,7 @@
 #define MCNBT_BE_BANNER_BED_HPP
 
 #include "common_block_entity_data.hpp"
-#include "../enums/color.hpp"
+#include <mcnbt/be/enums/color.hpp>
 
 namespace nbt
 {

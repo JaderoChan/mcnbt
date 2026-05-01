@@ -2,7 +2,7 @@
 #define MCNBT_BE_BEACON_BED_HPP
 
 #include "common_block_entity_data.hpp"
-#include "../enums/effect.hpp"
+#include <mcnbt/be/enums/effect.hpp>
 
 namespace nbt
 {

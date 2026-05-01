@@ -1,7 +1,7 @@
 #ifndef MCNBT_BE_ITEM_IMP_COMMON_ITEM_DATA_HPP
 #define MCNBT_BE_ITEM_IMP_COMMON_ITEM_DATA_HPP
 
-#include "../../mcnbt.hpp"
+#include <mcnbt/mcnbt.hpp>
 
 namespace nbt
 {

@@ -1,7 +1,7 @@
-#ifndef MCNBT_BE_COMMON_BLOCK_BSD_HPP
-#define MCNBT_BE_COMMON_BLOCK_BSD_HPP
+#ifndef MCNBT_BE_COMMON_BLOCK_STATE_DATA_HPP
+#define MCNBT_BE_COMMON_BLOCK_STATE_DATA_HPP
 
-#include "../../mcnbt.hpp"
+#include <mcnbt/mcnbt.hpp>
 
 namespace nbt
 {
@@ -30,4 +30,4 @@ protected:
 
 } // namespace nbt
 
-#endif // !MCNBT_BE_COMMON_BLOCK_BSD_HPP
+#endif // !MCNBT_BE_COMMON_BLOCK_STATE_DATA_HPP
