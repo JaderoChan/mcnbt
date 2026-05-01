@@ -6,20 +6,7 @@ An easy-to-use Header-Only read and write library in MC NBT format. High perform
 
 ## :earth_africa: Dependency
 
-**zlib:** Used to decompress or compress NBT tags that use gzip. If needed, it can be enabled by adding the following macros before including the *mcnbt.hpp* header file.
-
-```cpp
-#define MCNBT_USE_GZIP
-```
-
-e.g.
-
-```cpp
-#define MCNBT_USE_GZIP
-#include <mcnbt/mcnbt>
-
-// Others.
-```
+**zlib:** Used to decompress or compress NBT tags that use gzip
 
 ## :rocket: Features
 
@@ -42,7 +29,19 @@ and so on
 
 ## :triangular_flag_on_post: Usage
 
-You only need to include the *mcnbt.hpp* header file in your project（In cases where gzip decompression and compression is enabled using the MCNBT_USE_GZIP macro, the project will also need to configure the *zlib* library）
+### Fetch and build
+
+```cmd
+git clone --recurse-submodules https://github.com/JaderoChan/mcnbt.git
+cd mcnbt
+cmake -B build
+```
+
+#### Build options
+
+- `MCNBT_ENABLE_GZIP` Enable GZip to support compress/decompress NBT data. Default is on.
+- `MCNBT_USE_INBUILD_ZLIB` Use inbuild Zlib submodule to build. Default is on. If you use other ZLib library, you can turn off it.
+- `MCNBT_DISABLE_EXCEPTION` Disable throw excepetion for better performance.
 
 ### 1. Load a NBT from file
 

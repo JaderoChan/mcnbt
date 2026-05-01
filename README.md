@@ -6,20 +6,7 @@
 
 ## :earth_africa: 依赖
 
-**zlib:** 用于解压缩使用了gzip的NBT标签。若需要使用，可通过在包含*mcnbt.hpp*头文件之前加入以下宏进行启用。
-
-```cpp
-#define MCNBT_USE_GZIP
-```
-
-例如：
-
-```cpp
-#define MCNBT_USE_GZIP
-#include <mcnbt/mcnbt>
-
-// 其他代码
-```
+**zlib:** 用于解压缩使用了gzip的NBT标签。
 
 ## :rocket: 特点
 
@@ -42,7 +29,19 @@
 
 ## :triangular_flag_on_post: 使用方法
 
-只需要在项目中包含*mcnbt.hpp*头文件（对于使用了MCNBT_USE_GZIP宏进行启用gzip解压缩的情况下，项目还需要配置好*zlib*库）
+### 取得与构建
+
+```cmd
+git clone --recurse-submodules https://github.com/JaderoChan/mcnbt.git
+cd mcnbt
+cmake -B build
+```
+
+#### 编译选项
+
+- `MCNBT_ENABLE_GZIP` 启用 GZIP 以支持 NBT 数据的解压缩。默认启用。
+- `MCNBT_USE_INBUILD_ZLIB` 使用内置的 ZLib 子模块编译。默认启用。如果你使用其他 ZLib 库可以对其禁用。
+- `MCNBT_DISABLE_EXCEPTION` 禁用抛出异常以提升性能。
 
 ### 1、从文件中读取NBT
 
