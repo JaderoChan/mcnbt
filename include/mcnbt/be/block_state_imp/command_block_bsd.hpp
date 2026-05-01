@@ -13,12 +13,12 @@ struct CommandBlockBSD final : CommonBlockStateData
 {
     enum FacingDirection : Int32
     {
-        FD_DOWN,
-        FD_UP,
-        FD_NORTH,
-        FD_SOUTH,
-        FD_WEST,
-        FD_EAST
+        FD_DOWN     = 0,
+        FD_UP       = 1,
+        FD_NORTH    = 2,
+        FD_SOUTH    = 3,
+        FD_WEST     = 4,
+        FD_EAST     = 5
     };
 
     CommandBlockBSD() = default;
