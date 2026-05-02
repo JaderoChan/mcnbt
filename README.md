@@ -46,7 +46,7 @@ cmake --install build [--prefix YourInstallPath]
 ### 编译选项
 
 - `MCNBT_ENABLE_GZIP` 启用 GZIP 以支持 NBT 数据的解压缩。默认启用。
-- `MCNBT_USE_INBUILD_ZLIB` 使用内置的 ZLib 子模块编译。默认启用。如果你使用其他 ZLib 库可以对其禁用。
+- `MCNBT_USE_BUILTIN_ZLIB` 使用内置的 ZLib 子模块编译。默认启用。如果你使用其他 ZLib 库可以对其禁用。
 - `MCNBT_DISABLE_EXCEPTION` 禁用抛出异常以提升性能。
 
 ### 1、从文件中读取NBT

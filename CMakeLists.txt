@@ -22,7 +22,7 @@ endif()
 ###########
 
 option(MCNBT_ENABLE_GZIP "Enable GZip to support compress/decompress NBT data." ON)
-option(MCNBT_USE_INBUILD_ZLIB "Use the inbuild zlib libarary to build with GZip" ON)
+option(MCNBT_USE_BUILTIN_ZLIB "Use the built-in zlib libarary to build with GZip" ON)
 option(MCNBT_DISABLE_EXCEPTION "Disable exception throw for better performance" OFF)
 
 ########################
@@ -67,7 +67,7 @@ target_include_directories(
 
 # Configure third-party dependencies.
 if(MCNBT_ENABLE_GZIP)
-    if(MCNBT_USE_INBUILD_ZLIB)
+    if(MCNBT_USE_BUILTIN_ZLIB)
         include(FetchContent)
         FetchContent_Declare(
             zlib
