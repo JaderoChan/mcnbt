@@ -16,8 +16,8 @@ Tag fastWayExample()
     auto pack = gCompound("Pack");
     pack << gByte(static_cast<char>(false), "ByteValue_Bool_False");
     pack << gByte(static_cast<char>(true), "ByteValue_Bool_True");
-    pack << gShort(SHRT_MAX, "ShortValue_Max");
-    pack << gShort(SHRT_MIN, "ShortValue_Min");
+    pack << gShort(INT16_MAX, "ShortValue_Max");
+    pack << gShort(INT16_MIN, "ShortValue_Min");
     pack << gInt(INT32_MAX, "IntValue_Max");
     pack << gInt(INT32_MIN, "IntValue_Min");
     pack << gLong(INT64_MAX, "LongValue_Max");
