@@ -20,8 +20,8 @@ Tag fastWayExample()
     pack << gShort(SHRT_MIN, "ShortValue_Min");
     pack << gInt(INT32_MAX, "IntValue_Max");
     pack << gInt(INT32_MIN, "IntValue_Min");
-    pack << gLong(LONG_LONG_MAX, "LongValue_Max");
-    pack << gLong(LONG_LONG_MIN, "LongValue_Min");
+    pack << gLong(INT64_MAX, "LongValue_Max");
+    pack << gLong(INT64_MIN, "LongValue_Min");
     pack << gFloat(3.1415926, "FloatValue_Pi");
     pack << gDouble(2.718281828459045, "DoubleValue_E");
     pack << gString("Hello, World!", "StringValue");
