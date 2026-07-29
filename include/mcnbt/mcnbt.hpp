@@ -45,9 +45,9 @@
 
 #include <mcnbt/config.hpp>
 
-#ifdef MCNBT_ENABLE_GZIP
-    #include "gzip.hpp"
-#endif // MCNBT_ENABLE_GZIP
+#ifdef MCNBT_HAS_ZLIB
+    #include <mcnbt/gzip.hpp>
+#endif // MCNBT_HAS_ZLIB
 
 namespace nbt
 {
@@ -469,7 +469,7 @@ public:
     // (usually is 0, but bedrock edition map file is 8, some useless dat)
     static Tag fromBinStream(IFStream& is, bool isBigEndian, size_t headerSize = 0)
     {
-    #ifdef MCNBT_ENABLE_GZIP
+    #ifdef MCNBT_HAS_ZLIB
         SStream buf;
         buf << is.rdbuf();
         String content = buf.str();
@@ -489,7 +489,7 @@ public:
             is.seekg(headerSize, is.cur);
 
         return fromBinStream_(is, isBigEndian, false);
-    #endif // MCNBT_ENABLE_GZIP
+    #endif // MCNBT_HAS_ZLIB
     }
 
     /// @brief Get the tag from a nbt file.
@@ -1883,7 +1883,7 @@ public:
         return *this;
     }
 
-#ifdef MCNBT_ENABLE_GZIP
+#ifdef MCNBT_HAS_ZLIB
     /// @brief Write the tag to output stream.
     void write(OStream& os, bool isBigEndian, bool isCompressed = false) const
     {
@@ -1927,7 +1927,7 @@ public:
 
         ofs.close();
     }
-#endif // MCNBT_ENABLE_GZIP
+#endif // MCNBT_HAS_ZLIB
 
     /// @brief Get the SNBT (The string representation of NBT).
     /// @param isWrappedIndented If true, the output string will be wrapped and indented.

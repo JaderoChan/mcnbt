@@ -21,29 +21,29 @@ endif()
 # Options #
 ###########
 
-option(MCNBT_ENABLE_GZIP "Enable GZip to support compress/decompress NBT data." ON)
-option(MCNBT_USE_BUILTIN_ZLIB "Use the built-in zlib libarary to build with GZip" ON)
-option(MCNBT_DISABLE_EXCEPTION "Disable exception throw for better performance" OFF)
+option(MCNBT_BUILD_ZLIB       "Build Zlib to support compress/decompress NBT data with GZip." OFF)
+option(MCNBT_USE_BUILTIN_ZLIB "Use built-in Zlib library to build."                           OFF)
+if(MCNBT_BUILD_ZLIB)
+    set(MCNBT_HAS_ZLIB TRUE)
+else()
+    set(MCNBT_HAS_ZLIB FALSE)
+endif()
 
 ########################
 # Collect source files #
 ########################
 
-# Configure config header.
-set(CONFIG_HEADER_PATH ${CMAKE_CURRENT_BINARY_DIR}/include/mcnbt/config.hpp)
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/config.hpp.in
-    ${CONFIG_HEADER_PATH}
-    @ONLY
-)
-
-# Headers
-set(GZIP_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/include/mcnbt/gzip.hpp)
-file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/mcnbt/*.hpp)
-if(NOT MCNBT_ENABLE_GZIP)
-    list(REMOVE_ITEM HEADERS ${GZIP_HEADER})
+set(EXTRA_HEADERS config.hpp)
+if(MCNBT_BUILD_ZLIB)
+    list(APPEND EXTRA_HEADERS gzip.hpp)
 endif()
-list(APPEND HEADERS ${CONFIG_HEADER_PATH})
+foreach(item IN LISTS EXTRA_HEADERS)
+    configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/${item}.in
+        ${CMAKE_CURRENT_BINARY_DIR}/include/mcnbt/${item}
+        @ONLY
+    )
+endforeach()
 
 ############################
 # Make header-only library #
@@ -66,7 +66,7 @@ target_include_directories(
 )
 
 # Configure third-party dependencies.
-if(MCNBT_ENABLE_GZIP)
+if(MCNBT_BUILD_ZLIB)
     if(MCNBT_USE_BUILTIN_ZLIB)
         include(FetchContent)
         FetchContent_Declare(
@@ -87,16 +87,15 @@ endif()
 
 install(
     TARGETS ${PROJECT_NAME}
-    EXPORT ${PROJECT_NAME}
+    EXPORT  ${PROJECT_NAME}
 )
 
+set(EXPORT_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/mcnbt/mcnbt.hpp)
+list(APPEND HEADERS ${EXTRA_HEADERS})
+
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/mcnbt/be DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mcnbt)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/mcnbt/mcnbt.hpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mcnbt)
-if(MCNBT_ENABLE_GZIP)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/mcnbt/gzip.hpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mcnbt)
-endif()
-install(FILES ${CONFIG_HEADER_PATH} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mcnbt)
-install(FILES LICENSE DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/licenses/${PROJECT_NAME})
+install(FILES     ${EXPORT_HEADERS}                            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mcnbt)
+install(FILES     LICENSE                                      DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/licenses/${PROJECT_NAME})
 
 install(
     EXPORT ${PROJECT_NAME}
