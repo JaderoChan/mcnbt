@@ -37,10 +37,10 @@ set(EXTRA_HEADERS config.hpp)
 if(MCNBT_BUILD_ZLIB)
     list(APPEND EXTRA_HEADERS gzip.hpp)
 endif()
-foreach(item IN LISTS EXTRA_HEADERS)
+foreach(ITEM IN LISTS EXTRA_HEADERS)
     configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/${item}.in
-        ${CMAKE_CURRENT_BINARY_DIR}/include/mcnbt/${item}
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/${ITEM}.in
+        ${CMAKE_CURRENT_BINARY_DIR}/include/mcnbt/${ITEM}
         @ONLY
     )
 endforeach()
@@ -91,7 +91,9 @@ install(
 )
 
 set(EXPORT_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/mcnbt/mcnbt.hpp)
-list(APPEND HEADERS ${EXTRA_HEADERS})
+foreach(ITEM IN LISTS EXTRA_HEADERS)
+    list(APPEND EXPORT_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/include/mcnbt/${ITEM})
+endforeach()
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/mcnbt/be DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mcnbt)
 install(FILES     ${EXPORT_HEADERS}                            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/mcnbt)
