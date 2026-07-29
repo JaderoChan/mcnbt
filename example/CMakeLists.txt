@@ -5,7 +5,7 @@ project(mcnbt_example)
 link_libraries(mcnbt::mcnbt)
 
 add_executable(base_example base_example.cpp)
-add_executable(boundary_texst boundary_test.cpp)
+add_executable(boundary_test boundary_test.cpp)
 if(MCNBT_ENABLE_GZIP)
     add_executable(de_compress_example de_compress_example.cpp)
 endif()
