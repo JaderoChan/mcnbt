@@ -21,8 +21,8 @@ endif()
 # Options #
 ###########
 
-option(MCNBT_BUILD_ZLIB       "Build Zlib to support compress/decompress NBT data with GZip." OFF)
-option(MCNBT_USE_BUILTIN_ZLIB "Use built-in Zlib library to build."                           OFF)
+option(MCNBT_BUILD_ZLIB       "Build Zlib to support compress/decompress NBT data with GZip." ON)
+option(MCNBT_USE_BUILTIN_ZLIB "Use built-in Zlib library to build."                           ON)
 if(MCNBT_BUILD_ZLIB)
     set(MCNBT_HAS_ZLIB TRUE)
 else()
