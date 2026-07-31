@@ -16,7 +16,7 @@ namespace nbt
 namespace gzip
 {
 
-/// @brief Checks if the given data is compressed using Gzip or Zlib.
+/** @brief Checks if the given data is compressed using Gzip or Zlib. */
 static inline bool isCompressed(const char* data, size_t size) noexcept
 {
     if (size < 2)
@@ -31,14 +31,16 @@ static inline bool isCompressed(const char* data, size_t size) noexcept
     return isZlib || isGzip;
 }
 
-/// @overload
+/** @overload */
 static inline bool isCompressed(const std::string& data) noexcept
 {
     return isCompressed(data.c_str(), data.size());
 }
 
-/// @brief  Compresses the given data using Gzip.
-/// @return The compressed data if success else the empty string.
+/**
+ * @brief  Compresses the given data using Gzip.
+ * @return The compressed data if success else the empty string.
+ */
 static inline std::string compress(const char* data, size_t size) noexcept
 {
     if (size > std::numeric_limits<uInt>::max())
@@ -89,14 +91,16 @@ static inline std::string compress(const char* data, size_t size) noexcept
     return compressed;
 }
 
-/// @overload
+/** @overload */
 static inline std::string compress(const std::string& data) noexcept
 {
     return compress(data.c_str(), data.size());
 }
 
-/// @brief  Decompresses the given data using Gzip.
-/// @return The decompressed data if success else the empty string.
+/**
+ * @brief  Decompresses the given data using Gzip.
+ * @return The decompressed data if success else the empty string.
+ */
 static inline std::string decompress(const char* data, size_t size) noexcept
 {
     if (size * 2 > std::numeric_limits<uInt>::max())
@@ -140,7 +144,7 @@ static inline std::string decompress(const char* data, size_t size) noexcept
     return decompressed;
 }
 
-/// @overload
+/** @overload */
 static inline std::string decompress(const std::string& data) noexcept
 {
     return decompress(data.c_str(), data.size());
