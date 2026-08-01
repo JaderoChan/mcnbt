@@ -12,83 +12,74 @@ namespace be
 
 struct MCStructure
 {
-    MCStructure(Int32 formatVersion = 1, Int32 sizeX = 1, Int32 sizeY = 1, Int32 sizeZ = 1)
-        : root(gCompound())
+    MCStructure(int32_t formatVersion = 1, int32_t sizeX = 1, int32_t sizeY = 1, int32_t sizeZ = 1)
+        : root(Tag::compound())
     {
-        // Write format version.
-        root << gInt(formatVersion, "format_version");
+        root["format_version"] = formatVersion;
 
-        // Write size.
-        Tag size = gList(TT_INT, "size");
-        size << gInt(sizeX) << gInt(sizeY) << gInt(sizeZ);
-        root << size;
+        auto size = Tag::list();
+        size << sizeX << sizeY << sizeZ;
+        root["size"] = std::move(size);
 
-        // Write structure world origin.
-        Tag swo = gList(TT_INT, "structure_world_origin");
-        swo << gInt(0) << gInt(0) << gInt(0);
-        root << swo;
+        auto swo = Tag::list();
+        swo << int32_t(0) << int32_t(0) << int32_t(0);
+        root["structure_world_origin"] = std::move(swo);
 
-        // Create structure tag.
-        Tag structure = gCompound("structure");
+        auto blockIndices = Tag::list();
+        blockIndices << Tag::list() << Tag::list();
 
-        // Create block indices.
-        Tag blockIndices = gList(TT_LIST, "block_indices");
-        blockIndices << gList(TT_INT) << gList(TT_INT);
+        auto defaultPalette = Tag::compound();
+        defaultPalette["block_palette"]       = Tag::list();
+        defaultPalette["block_position_data"] = Tag::compound();
 
-        // Create entities tag.
-        Tag entities = gList(TT_COMPOUND, "entities");
+        auto palette = Tag::compound();
+        palette["default"] = std::move(defaultPalette);
 
-        // Create palette tag.
-        Tag palette = gCompound("palette");
-        Tag blockPalette = gList(TT_COMPOUND, "block_palette");
+        auto structure = Tag::compound();
+        structure["block_indices"] = std::move(blockIndices);
+        structure["entities"]      = Tag::list();
+        structure["palette"]       = std::move(palette);
 
-        // Create block position data tag.
-        Tag blockPositionData = gCompound("block_position_data");
-        palette << gCompound("default");
-        palette["default"] << blockPalette << blockPositionData;
+        root["structure"] = std::move(structure);
+    }
 
-        // Merge block data.
-        structure << blockIndices << entities << palette;
+    Tag& formatVersion()        { return root["format_version"]; }
 
-        // Write structure tag.
-        root << structure;
-    };
+    Tag& size()                 { return root["size"]; }
 
-    Tag& formatVersion()            { return root[0]; }
+    Tag& structureWorldOrigin() { return root["structure_world_origin"]; }
 
-    Tag& size()                     { return root[1]; }
+    Tag& blockIndices1()        { return root["structure"]["block_indices"][0]; }
 
-    Tag& structureWorldOrigin()     { return root[2]; }
+    Tag& blockIndices2()        { return root["structure"]["block_indices"][1]; }
 
-    Tag& blockIndices1()            { return root[3][0][0]; }
+    Tag& entities()             { return root["structure"]["entities"]; }
 
-    Tag& blockIndices2()            { return root[3][0][1]; }
+    Tag& blockPalette()         { return root["structure"]["palette"]["default"]["block_palette"]; }
 
-    Tag& entities()                 { return root[3][1]; }
-
-    Tag& blockPalette()             { return root[3][2][0][0]; }
-
-    Tag& blockPositionData()        { return root[3][2][0][1]; }
+    Tag& blockPositionData()    { return root["structure"]["palette"]["default"]["block_position_data"]; }
 
     Tag root;
 };
 
 inline Tag createSingleBlockStructure(
     const std::string& blockId,
-    const CommonBlockEntityData& bed, const CommonBlockStateData& bsd,
-    Int32 version = 18105860)
+    const CommonBlockEntityData<>& bed, const CommonBlockStateData<>& bsd,
+    int32_t version = 18105860)
 {
     MCStructure mcs;
-    mcs.blockIndices1() << gInt(0);
-    mcs.blockIndices2() << gInt(-1);
+    mcs.blockIndices1() << int32_t(0);
+    mcs.blockIndices2() << int32_t(-1);
 
-    Tag block = gCompound();
-    block << gString(blockId, "name") << bsd.getTag() << gInt(version, "version");
-    mcs.blockPalette() << block;
+    auto block = Tag::compound();
+    block["name"]    = blockId;
+    block["states"]  = bsd.getTag();
+    block["version"] = version;
+    mcs.blockPalette() << std::move(block);
 
-    Tag bpd = gCompound("0");
-    bpd << bed.getTag();
-    mcs.blockPositionData() << bpd;
+    auto bpd = Tag::compound();
+    bpd["block_entity_data"] = bed.getTag();
+    mcs.blockPositionData()["0"] = std::move(bpd);
 
     return mcs.root;
 }

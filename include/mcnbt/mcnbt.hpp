@@ -1,4 +1,4 @@
-// The "mcnbt" library, in c++.
+// The "mcnbt" library, in C++11.
 //
 // Webs: https://github.com/JaderoChan/mcnbt
 // You can contact me by email: c_dl_cn@outlook.com
@@ -25,2556 +25,2043 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Note:
-// Move the tag (not copy) is default when add tag to list or compound. (use #copy() function if need)
-
 #ifndef MCNBT_MCNBT_HPP
 #define MCNBT_MCNBT_HPP
 
-#include <cstdint>          // int16_t, int32_t, int64_t
-#include <cstddef>          // size_t
-#include <cstring>          // strlen(), memcpy()
-#include <string>           // string, to_string()
-#include <vector>           // vector
-#include <unordered_map>    // unordered_map
-#include <iostream>         // istream, ostream
-#include <fstream>          // ifstream, ofstream
-#include <sstream>          // stringstream
-#include <stdexcept>        // runtime_error, logic_error, out_of_range
-#include <cassert>          // assert()
-
-#include <mcnbt/config.hpp>
+#include <cstdint>
+#include <cstddef>
+#include <cstring>
+#include <string>
+#include <vector>
+#include <map>
+#include <utility>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <stdexcept>
+#include <algorithm>
+#include <type_traits>
+#include <iterator>
+#include <functional>
 
 #ifdef MCNBT_HAS_ZLIB
     #include <mcnbt/gzip.hpp>
-#endif // MCNBT_HAS_ZLIB
+#endif
 
 namespace nbt
 {
 
-// Type alias
-
-using UChar     = unsigned char;
-using Byte      = char;
-using Int16     = int16_t;
-using Int32     = int32_t;
-using Int64     = int64_t;
-using Fp32      = float;
-using Fp64      = double;
-
-using String    = std::string;
-
-using SStream   = std::stringstream;
-
-using IStream   = std::istream;
-using OStream   = std::ostream;
-using IOStream  = std::iostream;
-
-using IFStream  = std::ifstream;
-using OFStream  = std::ofstream;
-using FStream   = std::fstream;
-
-template <typename T>
-using Vec       = std::vector<T>;
-
-template <typename K, typename V>
-using Map       = std::unordered_map<K, V>;
-
-} // namespace nbt
-
-namespace nbt
-{
-
-// Enum, constants and aux functions
-
-/// @brief The enum of NBT tag type.
-enum TagType : UChar
-{
-    TT_END          = 0,
-    TT_BYTE         = 1,
-    TT_SHORT        = 2,
-    TT_INT          = 3,
-    TT_LONG         = 4,
-    TT_FLOAT        = 5,
-    TT_DOUBLE       = 6,
-    TT_BYTE_ARRAY   = 7,
-    TT_STRING       = 8,
-    TT_LIST         = 9,
-    TT_COMPOUND     = 10,
-    TT_INT_ARRAY    = 11,
-    TT_LONG_ARRAY   = 12
-};
-
-// Constants about the indent of snbt.
-
-constexpr size_t _SNBT_INDENT_WIDTH     = 2;
-constexpr char _SNBT_INDENT_CHAR        = 0x20;     // Space
-static const String _SNBT_INDENT_STR    = String(_SNBT_INDENT_WIDTH, _SNBT_INDENT_CHAR);
-
-// Aux functions about the tag type.
-
-inline bool isEnd(TagType type)
-{ return type == TT_END; }
-
-inline bool isByte(TagType type)
-{ return type == TT_BYTE; }
-
-inline bool isShort(TagType type)
-{ return type == TT_SHORT; }
-
-inline bool isInt(TagType type)
-{ return type == TT_INT; }
-
-inline bool isLong(TagType type)
-{ return type == TT_LONG; }
-
-inline bool isFloat(TagType type)
-{ return type == TT_FLOAT; }
-
-inline bool isDouble(TagType type)
-{ return type == TT_DOUBLE; }
-
-inline bool isString(TagType type)
-{ return type == TT_STRING; }
-
-inline bool isByteArray(TagType type)
-{ return type == TT_BYTE_ARRAY;}
-
-inline bool isIntArray(TagType type)
-{ return type == TT_INT_ARRAY; }
-
-inline bool isLongArray(TagType type)
-{ return type == TT_LONG_ARRAY; }
-
-inline bool isList(TagType type)
-{ return type == TT_LIST; }
-
-inline bool isCompound(TagType type)
-{ return type == TT_COMPOUND; }
-
-inline bool isInteger(TagType type)
-{ return isByte(type) || isShort(type) || isInt(type) || isLong(type); }
-
-inline bool isFloatPoint(TagType type)
-{ return isFloat(type) || isDouble(type); }
-
-inline bool isNum(TagType type)
-{ return isInteger(type) || isFloatPoint(type); }
-
-inline bool isArray(TagType type)
-{ return isByteArray(type) || isIntArray(type) || isLongArray(type); }
-
-inline bool isContainer(TagType type)
-{ return isList(type) || isCompound(type); }
-
-/// @brief Get the string text of the tag type.
-inline String getTagTypeString(TagType type)
-{
-    switch (type)
-    {
-        case TT_END:            return "End";
-        case TT_BYTE:           return "Byte";
-        case TT_SHORT:          return "Short";
-        case TT_INT:            return "Int";
-        case TT_LONG:           return "Long";
-        case TT_FLOAT:          return "Float";
-        case TT_DOUBLE:         return "Double";
-        case TT_BYTE_ARRAY:     return "Byte Array";
-        case TT_STRING:         return "String";
-        case TT_LIST:           return "List";
-        case TT_COMPOUND:       return "Compound";
-        case TT_INT_ARRAY:      return "Int Array";
-        case TT_LONG_ARRAY:     return "Long Array";
-        default:                return "";
-    }
-}
-
-} // namespace nbt
-
-namespace nbt
-{
-
-// Functions of read and write binary data.
-
-/// @brief Reverse a C style string.
-/// @param size The size of need reversed range, and if it is 0 reverse all bytes until \0 char.
-/// @note The srcStr can be equal to the dstStr.
-inline void _reverse(char* srcStr, char* dstStr, size_t size = 0)
-{
-    if (size == 0)
-        size = std::strlen(srcStr);
-
-    size_t i = 0;
-    while (i < size / 2)
-    {
-        char ch = srcStr[i];
-        dstStr[i] = srcStr[size - 1 - i];
-        dstStr[size - 1 - i] = ch;
-
-        i++;
-    }
-}
-
-/// @brief Check whether the memory order of system of compiler environment is big endian.
-inline bool _isBigEndian()
-{
-    static bool isInited = false;
-    static bool rslt = false;
-
-    // If already checked, return the result.
-    if (isInited)
-        return rslt;
-
-    int num = 1;
-    rslt = reinterpret_cast<char*>(&num)[0] == 0 ? true : false;
-    isInited = true;
-
-    return rslt;
-}
-
-/// @brief Obtain bytes from input stream, and convert it to number.
-/// @param is               The input stream.
-/// @param isBigEndian      The endianness of the bytes.
-/// @param resumeCursor     Whether to resume the cursor position of input stream after read.
-/// @return A number.
-template <typename T>
-T _bytes2num(IStream& is, bool isBigEndian = false, bool resumeCursor = false)
-{
-    size_t size = sizeof(T);
-    T num = T();
-
-    // Store the begin position of read data used to resume cursor.
-    auto begpos = is.tellg();
-
-    // Read the bytes from input stream.
-    static Byte buffer[sizeof(T)] = {};
-    is.read(buffer, size);
-
-    size = static_cast<size_t>(is.gcount());
-
-    // Reverse the bytes if the specified endianness is different from system's endianness.
-    if (isBigEndian != _isBigEndian())
-        _reverse(buffer, buffer, size);
-
-    // Convert the bytes to number. (reinterpreting memory bytes)
-    std::memcpy(&num, buffer, size);
-
-    // Resume the cursor position of input stream if needed.
-    if (resumeCursor)
-        is.seekg(begpos);
-
-    return num;
-}
-
-/// @brief Convert the number to bytes, and write it to output stream.
-/// @param num              The number to convert.
-/// @param os               The output stream.
-/// @param isBigEndian      The endianness of the bytes need to write.
-template <typename T>
-void _num2bytes(T num, OStream& os, bool isBigEndian = false)
-{
-    size_t size = sizeof(T);
-    static Byte buffer[sizeof(T)] = {};
-
-    // Convert the number to bytes. (reinterpreting memory bytes)
-    std::memcpy(buffer, &num, size);
-
-    // Reverse the bytes if the specified endianness is different from system's endianness.
-    if (isBigEndian != _isBigEndian())
-        _reverse(buffer, buffer, size);
-
-    os.write(buffer, size);
-}
-
-} // namespace nbt
-
-// Main
-namespace nbt
-{
-
-class Tag
+/**
+ * @brief Insertion-order-preserving map backed by std::vector with a std::map-compatible key interface.
+ * @details Intended as a drop-in replacement for the CompoundType template parameter
+ *          when the insertion order of compound tag entries must be preserved.
+ */
+template<
+    class Key,
+    class T,
+    class IgnoredLess = std::less<Key>,
+    class Allocator   = std::allocator<std::pair<const Key, T>>
+>
+class OrderedMap
 {
 public:
-    Tag() = default;
+    using key_type        = Key;
+    using mapped_type     = T;
+    using value_type      = std::pair<const Key, T>;
+    using size_type       = size_t;
+    using difference_type = std::ptrdiff_t;
+    using allocator_type  = Allocator;
+    using key_compare     = IgnoredLess;
 
-    /// @note Release all alloced memory and set the parent to nullptr.
-    ~Tag()
+private:
+    using StorageAlloc = typename std::allocator_traits<Allocator>::template rebind_alloc<value_type>;
+    using Container    = std::vector<value_type, StorageAlloc>;
+
+public:
+    using reference              = value_type&;
+    using const_reference        = const value_type&;
+    using pointer                = typename std::allocator_traits<StorageAlloc>::pointer;
+    using const_pointer          = typename std::allocator_traits<StorageAlloc>::const_pointer;
+    using iterator               = typename Container::iterator;
+    using const_iterator         = typename Container::const_iterator;
+    using reverse_iterator       = typename Container::reverse_iterator;
+    using const_reverse_iterator = typename Container::const_reverse_iterator;
+
+    OrderedMap() = default;
+
+    OrderedMap(std::initializer_list<value_type> ilist)
     {
-        release_();
-        parent_ = nullptr;
+        for (const auto& v : ilist)
+            insert(v);
     }
 
-    /// @note Deep copy but not copy the other's parent.
-    Tag(const Tag& other)
-        : tagType_(other.tagType_), itemType_(other.itemType_)
+    // ============
+    // > Iterators
+    // ============
+
+    iterator               begin()  noexcept       { return data_.begin();  }
+    iterator               end()    noexcept       { return data_.end();    }
+    const_iterator         begin()  const noexcept { return data_.begin();  }
+    const_iterator         end()    const noexcept { return data_.end();    }
+    const_iterator         cbegin() const noexcept { return data_.cbegin(); }
+    const_iterator         cend()   const noexcept { return data_.cend();   }
+    reverse_iterator       rbegin() noexcept       { return data_.rbegin(); }
+    reverse_iterator       rend()   noexcept       { return data_.rend();   }
+    const_reverse_iterator rbegin() const noexcept { return data_.rbegin(); }
+    const_reverse_iterator rend()   const noexcept { return data_.rend();   }
+
+    // ===========
+    // > Capacity
+    // ===========
+
+    bool      empty() const noexcept { return data_.empty(); }
+    size_type size()  const noexcept { return data_.size();  }
+    void      clear() noexcept       { data_.clear();        }
+    void      reserve(size_type n)   { data_.reserve(n);     }
+
+    // =================
+    // > Element access
+    // =================
+
+    T& operator[](const Key& key)
     {
-        if (other.isNum())                                      tagData_.num = other.tagData_.num;
-        else if (other.isString() && other.tagData_.str)        tagData_.str = new String(*other.tagData_.str);
-        else if (other.isArray() && other.tagData_.bad)         tagData_.bad = new Vec<Byte>(*other.tagData_.bad);
-        else if (other.isIntArray() && other.tagData_.iad)      tagData_.iad = new Vec<Int32>(*other.tagData_.iad);
-        else if (other.isLongArray() && other.tagData_.lad)     tagData_.lad = new Vec<Int64>(*other.tagData_.lad);
-        else if (other.isList() && other.tagData_.ld)
-        {
-            tagData_.ld = new Vec<Tag>();
-            tagData_.ld->reserve(other.tagData_.ld->size());
-
-            for (const auto& var : *other.tagData_.ld)
-            {
-                tagData_.ld->emplace_back(var);
-                tagData_.ld->back().parent_ = this;
-            }
-        }
-        else if (other.isCompound() && other.tagData_.cd)
-        {
-            tagData_.cd = new CompoundData();
-            tagData_.cd->reserve(other.tagData_.cd->size());
-
-            tagData_.cd->idxs = other.tagData_.cd->idxs;
-            for (const auto& var : other.tagData_.cd->data)
-            {
-                tagData_.cd->data.emplace_back(var);
-                tagData_.cd->data.back().parent_ = this;
-            }
-        }
-
-        if (other.tagName_ && !other.tagName_->empty())
-            tagName_ = new String(*other.tagName_);
+        auto it = find(key);
+        if (it != end())
+            return it->second;
+        data_.push_back(value_type(key, T{}));
+        return data_.back().second;
     }
 
-    /// @note Copy the other's parent.
-    Tag(Tag&& other) noexcept
-        : tagType_(other.tagType_), itemType_(other.itemType_), tagData_(other.tagData_), tagName_(other.tagName_)
+    T& operator[](Key&& key)
     {
-        if (isList() && tagData_.ld)
-        {
-            for (auto& var : *tagData_.ld)
-                var.parent_ = this;
-        }
-        else if (isCompound() && tagData_.cd)
-        {
-            for (auto& var : tagData_.cd->data)
-                var.parent_ = this;
-        }
-
-        other.tagData_.str  = nullptr;
-        other.tagName_      = nullptr;
+        auto it = find(key);
+        if (it != end())
+            return it->second;
+        data_.push_back(value_type(std::move(key), T{}));
+        return data_.back().second;
     }
 
-    /// @note Deep copy but not copy the other's parent.
-    Tag& operator=(const Tag& other)
+    T& at(const Key& key)
     {
-        assert(!(isListItem() && (type() != other.type())));
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (isListItem() && (type() != other.type()))
-            throw std::logic_error("Can't assign a tag of incorrect tag type to list element.");
-    #endif
+        auto it = find(key);
+        if (it == end())
+            throw std::out_of_range("OrderedMap::at(): key not found");
+        return it->second;
+    }
 
-        if (this == &other)
-            return *this;
+    const T& at(const Key& key) const
+    {
+        auto it = find(key);
+        if (it == end())
+            throw std::out_of_range("OrderedMap::at(): key not found");
+        return it->second;
+    }
 
-        release_();
+    // =========
+    // > Lookup
+    // =========
 
-        tagType_ = other.tagType_;
-        itemType_ = other.itemType_;
+    iterator find(const Key& key)
+    {
+        for (auto it = data_.begin(); it != data_.end(); ++it)
+            if (it->first == key) return it;
+        return data_.end();
+    }
 
-        if (other.isNum())                                      tagData_.num = other.tagData_.num;
-        else if (other.isString() && other.tagData_.str)        tagData_.str = new String(*other.tagData_.str);
-        else if (other.isArray() && other.tagData_.bad)         tagData_.bad = new Vec<Byte>(*other.tagData_.bad);
-        else if (other.isIntArray() && other.tagData_.iad)      tagData_.iad = new Vec<Int32>(*other.tagData_.iad);
-        else if (other.isLongArray() && other.tagData_.lad)     tagData_.lad = new Vec<Int64>(*other.tagData_.lad);
-        else if (other.isList() && other.tagData_.ld)
+    const_iterator find(const Key& key) const
+    {
+        for (auto it = data_.cbegin(); it != data_.cend(); ++it)
+            if (it->first == key) return it;
+        return data_.cend();
+    }
+
+    size_type count(const Key& key) const
+    {
+        return find(key) != data_.cend() ? 1 : 0;
+    }
+
+    // ============
+    // > Modifiers
+    // ============
+
+    std::pair<iterator, bool> insert(const value_type& val)
+    {
+        auto it = find(val.first);
+        if (it != end())
+            return {it, false};
+        data_.push_back(val);
+        return {std::prev(data_.end()), true};
+    }
+
+    template<typename K, typename... Args>
+    std::pair<iterator, bool> emplace(K&& key, Args&&... args)
+    {
+        auto it = find(key);
+        if (it != end())
+            return {it, false};
+        data_.emplace_back(
+            std::piecewise_construct,
+            std::forward_as_tuple(std::forward<K>(key)),
+            std::forward_as_tuple(std::forward<Args>(args)...));
+        return {std::prev(data_.end()), true};
+    }
+
+    size_type erase(const Key& key)
+    {
+        auto it = find(key);
+        if (it == end()) return 0;
+        data_.erase(it);
+        return 1;
+    }
+
+    iterator erase(const_iterator pos)
+    {
+        return data_.erase(pos);
+    }
+
+private:
+    Container data_;
+};
+
+// TagGetter forward declaration
+namespace detail
+{
+
+template<typename T, typename BasicTagType>
+struct TagGetter;
+
+} // namespace detail
+
+/**
+ * @brief A type-safe NBT (Named Binary Tag) value.
+ * @tparam StringType   String type used for entry names and string payloads (default: std::string).
+ * @tparam ListType     Sequence container template for TT_LIST payloads (default: std::vector).
+ * @tparam CompoundType Associative container template for TT_COMPOUND payloads (default: std::map).
+ *                      Use OrderedMap to preserve entry insertion order.
+ * @tparam AllocatorType Allocator template applied to all internal containers.
+ */
+template<
+    class StringType = std::string,
+    template<typename U, typename... Args> class ListType = std::vector,
+    template<typename K, typename V, typename... Args> class CompoundType = std::map,
+    template<typename U> class AllocatorType = std::allocator
+>
+class BasicTag
+{
+private:
+    using BasicTagType = BasicTag<StringType, ListType, CompoundType, AllocatorType>;
+
+public:
+    using value_type      = BasicTagType;
+    using reference       = BasicTagType&;
+    using const_reference = const BasicTagType&;
+    using size_type       = size_t;
+
+    using StringT         = StringType;
+    using ByteArrayT      = std::vector<int8_t,  AllocatorType<int8_t>>;
+    using IntArrayT       = std::vector<int32_t, AllocatorType<int32_t>>;
+    using LongArrayT      = std::vector<int64_t, AllocatorType<int64_t>>;
+    using ListT           = ListType<BasicTagType, AllocatorType<BasicTagType>>;
+    using CompoundT       = CompoundType<
+        StringType,
+        BasicTagType,
+        std::less<StringType>,
+        AllocatorType<std::pair<const StringType, BasicTagType>>>;
+
+    /** @brief NBT tag type identifier. */
+    enum TagType : uint8_t
+    {
+        TT_END        = 0,
+        TT_BYTE       = 1,
+        TT_SHORT      = 2,
+        TT_INT        = 3,
+        TT_LONG       = 4,
+        TT_FLOAT      = 5,
+        TT_DOUBLE     = 6,
+        TT_BYTE_ARRAY = 7,
+        TT_STRING     = 8,
+        TT_LIST       = 9,
+        TT_COMPOUND   = 10,
+        TT_INT_ARRAY  = 11,
+        TT_LONG_ARRAY = 12
+    };
+
+    // ===========
+    // > Iterator
+    // ===========
+
+    /**
+     * @brief Unified forward iterator over TT_LIST and TT_COMPOUND tags.
+     * @details Dereference yields the element value (BasicTagType&).
+     *          key() returns the compound entry key and throws std::domain_error
+     *          when the iterator belongs to a list tag.
+     */
+    template<bool IsConst>
+    class iter_impl
+    {
+        friend class BasicTag;
+
+        using TagPtr = typename std::conditional<IsConst, const BasicTag*, BasicTag*>::type;
+        using TagRef = typename std::conditional<IsConst, const BasicTag&, BasicTag&>::type;
+        using ListIt = typename std::conditional<IsConst,
+            typename ListT::const_iterator, typename ListT::iterator>::type;
+        using CmpIt  = typename std::conditional<IsConst,
+            typename CompoundT::const_iterator, typename CompoundT::iterator>::type;
+
+        bool   isCompound_;
+        ListIt listIt_;
+        CmpIt  cmpIt_;
+
+        explicit iter_impl(ListIt it) : isCompound_(false), listIt_(it), cmpIt_()   {}
+        explicit iter_impl(CmpIt  it) : isCompound_(true),  listIt_(),   cmpIt_(it) {}
+
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type        = BasicTag;
+        using reference         = TagRef;
+        using pointer           = TagPtr;
+        using difference_type   = std::ptrdiff_t;
+
+        reference operator*()  const { return isCompound_ ? cmpIt_->second : *listIt_; }
+        pointer   operator->() const { return &(**this); }
+
+        iter_impl& operator++()    { isCompound_ ? (void)++cmpIt_ : (void)++listIt_; return *this; }
+        iter_impl  operator++(int) { auto t = *this; ++(*this); return t; }
+
+        bool operator==(const iter_impl& o) const
         {
-            tagData_.ld = new Vec<Tag>();
-            tagData_.ld->reserve(other.tagData_.ld->size());
-
-            for (const auto& var : *other.tagData_.ld)
-            {
-                tagData_.ld->emplace_back(var);
-                tagData_.ld->back().parent_ = this;
-            }
+            if (isCompound_ != o.isCompound_) return false;
+            return isCompound_ ? cmpIt_ == o.cmpIt_ : listIt_ == o.listIt_;
         }
-        else if (other.isCompound() && other.tagData_.cd)
+        bool operator!=(const iter_impl& o) const { return !(*this == o); }
+
+        /**
+         * @brief Returns the current compound entry key.
+         * @throws std::domain_error when iterating a list.
+         */
+        const StringT& key() const
         {
-            tagData_.cd = new CompoundData();
-            tagData_.cd->reserve(other.tagData_.cd->size());
-
-            tagData_.cd->idxs = other.tagData_.cd->idxs;
-            for (const auto& var : other.tagData_.cd->data)
-            {
-                tagData_.cd->data.emplace_back(var);
-                tagData_.cd->data.back().parent_ = this;
-            }
+            if (!isCompound_)
+                throw std::domain_error("nbt::iterator::key(): not a compound iterator");
+            return cmpIt_->first;
         }
+    };
 
-        if (!isListItem() && !other.name().empty())
-            tagName_ = new String(other.name());
+    using iterator       = iter_impl<false>;
+    using const_iterator = iter_impl<true>;
 
+    // ============================
+    // > Construct and deconstruct
+    // ============================
+
+    /** @brief Constructs a TT_END (null) tag. */
+    BasicTag() noexcept : type_(TT_END), listItemType_(TT_END)
+    { value_.i64 = 0; }
+
+    /** @brief Constructs an empty tag of the specified type, allocating heap storage when required. */
+    explicit BasicTag(TagType t) : type_(t), listItemType_(TT_END)
+    {
+        value_.i64 = 0;
+        switch (t)
+        {
+            case TT_STRING:     value_.ptr = new StringT();     break;
+            case TT_BYTE_ARRAY: value_.ptr = new ByteArrayT();  break;
+            case TT_INT_ARRAY:  value_.ptr = new IntArrayT();   break;
+            case TT_LONG_ARRAY: value_.ptr = new LongArrayT();  break;
+            case TT_LIST:       value_.ptr = new ListT();       break;
+            case TT_COMPOUND:   value_.ptr = new CompoundT();   break;
+            default: break;
+        }
+    }
+
+    /** @brief Constructs a TT_BYTE tag. */
+    BasicTag(int8_t v) noexcept : type_(TT_BYTE), listItemType_(TT_END)
+    { value_.i64 = 0; value_.i8 = v; }
+
+    /** @brief Constructs a TT_BYTE tag with boolean value. */
+    BasicTag(bool v) noexcept : type_(TT_BYTE), listItemType_(TT_END)
+    { value_.i64 = 0; value_.i8 = static_cast<int8_t>(v); }
+
+    /** @brief Constructs a TT_SHORT tag. */
+    BasicTag(int16_t v) noexcept : type_(TT_SHORT), listItemType_(TT_END)
+    { value_.i64 = 0; value_.i16 = v; }
+
+    /** @brief Constructs a TT_INT tag. */
+    BasicTag(int32_t v) noexcept : type_(TT_INT), listItemType_(TT_END)
+    { value_.i64 = 0; value_.i32 = v; }
+
+    /** @brief Constructs a TT_LONG tag. */
+    BasicTag(int64_t v) noexcept : type_(TT_LONG), listItemType_(TT_END)
+    { value_.i64 = v; }
+
+    /** @brief Constructs a TT_FLOAT tag. */
+    BasicTag(float v) noexcept : type_(TT_FLOAT), listItemType_(TT_END)
+    { value_.i64 = 0; value_.f32 = v; }
+
+    /** @brief Constructs a TT_DOUBLE tag. */
+    BasicTag(double v) noexcept : type_(TT_DOUBLE), listItemType_(TT_END)
+    { value_.f64 = v; }
+
+    /** @brief Constructs a TT_STRING tag from an lvalue string. */
+    BasicTag(const StringT& v) : type_(TT_STRING), listItemType_(TT_END)
+    { value_.ptr = new StringT(v); }
+
+    /** @brief Constructs a TT_STRING tag from an rvalue string. */
+    BasicTag(StringT&& v) : type_(TT_STRING), listItemType_(TT_END)
+    { value_.ptr = new StringT(std::move(v)); }
+
+    /** @brief Constructs a TT_STRING tag from a null-terminated character array. */
+    BasicTag(const typename StringT::value_type* v) : type_(TT_STRING), listItemType_(TT_END)
+    { value_.ptr = new StringT(v); }
+
+    /** @brief Constructs a TT_BYTE_ARRAY tag from an lvalue byte array. */
+    BasicTag(const ByteArrayT& v) : type_(TT_BYTE_ARRAY), listItemType_(TT_END)
+    { value_.ptr = new ByteArrayT(v); }
+
+    /** @brief Constructs a TT_BYTE_ARRAY tag from an rvalue byte array. */
+    BasicTag(ByteArrayT&& v) : type_(TT_BYTE_ARRAY), listItemType_(TT_END)
+    { value_.ptr = new ByteArrayT(std::move(v)); }
+
+    /** @brief Constructs a TT_INT_ARRAY tag from an lvalue int array. */
+    BasicTag(const IntArrayT& v) : type_(TT_INT_ARRAY), listItemType_(TT_END)
+    { value_.ptr = new IntArrayT(v); }
+
+    /** @brief Constructs a TT_INT_ARRAY tag from an rvalue int array. */
+    BasicTag(IntArrayT&& v) : type_(TT_INT_ARRAY), listItemType_(TT_END)
+    { value_.ptr = new IntArrayT(std::move(v)); }
+
+    /** @brief Constructs a TT_LONG_ARRAY tag from an lvalue long array. */
+    BasicTag(const LongArrayT& v) : type_(TT_LONG_ARRAY), listItemType_(TT_END)
+    { value_.ptr = new LongArrayT(v); }
+
+    /** @brief Constructs a TT_LONG_ARRAY tag from an rvalue long array. */
+    BasicTag(LongArrayT&& v) : type_(TT_LONG_ARRAY), listItemType_(TT_END)
+    { value_.ptr = new LongArrayT(std::move(v)); }
+
+    /** @brief Constructs a TT_LIST tag from an lvalue list; deduces the element type from the first element. */
+    BasicTag(const ListT& v) : type_(TT_LIST), listItemType_(TT_END)
+    {
+        if (!v.empty())
+            listItemType_ = v.front().type_;
+        value_.ptr = new ListT(v);
+    }
+
+    /** @brief Constructs a TT_LIST tag from an rvalue list; deduces the element type from the first element. */
+    BasicTag(ListT&& v) : type_(TT_LIST), listItemType_(TT_END)
+    {
+        if (!v.empty())
+            listItemType_ = v.front().type_;
+        value_.ptr = new ListT(std::move(v));
+    }
+
+    /** @brief Constructs a TT_COMPOUND tag from an lvalue compound map. */
+    BasicTag(const CompoundT& v) : type_(TT_COMPOUND), listItemType_(TT_END)
+    { value_.ptr = new CompoundT(v); }
+
+    /** @brief Constructs a TT_COMPOUND tag from an rvalue compound map. */
+    BasicTag(CompoundT&& v) : type_(TT_COMPOUND), listItemType_(TT_END)
+    { value_.ptr = new CompoundT(std::move(v)); }
+
+    /** @brief Copy constructor; performs a deep copy of the heap-allocated payload. */
+    BasicTag(const BasicTag& other) : type_(other.type_), listItemType_(other.listItemType_)
+    { copyValueFrom(other); }
+
+    /** @brief Move constructor; transfers ownership of the heap-allocated payload. */
+    BasicTag(BasicTag&& other) noexcept : type_(other.type_), listItemType_(other.listItemType_), value_(other.value_)
+    {
+        other.type_      = TT_END;
+        other.value_.i64 = 0;
+    }
+
+    /** @brief Unified copy/move assignment operator via copy-and-swap idiom. */
+    BasicTag& operator=(BasicTag other) noexcept
+    {
+        using std::swap;
+        swap(type_,         other.type_);
+        swap(listItemType_, other.listItemType_);
+        swap(value_,        other.value_);
         return *this;
     }
 
-    /// @note Copy the other's parent.
-    Tag& operator=(Tag&& other)
+    /** @brief Destructor; releases the heap-allocated payload if present. */
+    ~BasicTag() { destroyValue(); }
+
+    // ================================
+    // > Convenience static constructs
+    // ================================
+
+    /** @brief Convenience functions for constructing List. */
+    static BasicTag list()     { return BasicTag(TT_LIST); }
+
+    /** @brief Convenience functions for constructing Compound. */
+    static BasicTag compound() { return BasicTag(TT_COMPOUND); }
+
+    // ===============
+    // > Type queries
+    // ===============
+
+    /** @brief Returns the runtime tag type. */
+    TagType type()      const noexcept { return type_; }
+
+    bool isEnd()        const noexcept { return type_ == TT_END;        }
+    bool isByte()       const noexcept { return type_ == TT_BYTE;       }
+    bool isShort()      const noexcept { return type_ == TT_SHORT;      }
+    bool isInt()        const noexcept { return type_ == TT_INT;        }
+    bool isLong()       const noexcept { return type_ == TT_LONG;       }
+    bool isFloat()      const noexcept { return type_ == TT_FLOAT;      }
+    bool isDouble()     const noexcept { return type_ == TT_DOUBLE;     }
+    bool isString()     const noexcept { return type_ == TT_STRING;     }
+    bool isByteArray()  const noexcept { return type_ == TT_BYTE_ARRAY; }
+    bool isIntArray()   const noexcept { return type_ == TT_INT_ARRAY;  }
+    bool isLongArray()  const noexcept { return type_ == TT_LONG_ARRAY; }
+    bool isList()       const noexcept { return type_ == TT_LIST;       }
+    bool isCompound()   const noexcept { return type_ == TT_COMPOUND;   }
+
+    /** @brief Returns true when the tag is any integer type (byte, short, int, or long). */
+    bool isInteger()    const noexcept { return isByte() || isShort() || isInt() || isLong(); }
+    /** @brief Returns true when the tag is TT_FLOAT or TT_DOUBLE. */
+    bool isFloatPoint() const noexcept { return isFloat() || isDouble(); }
+    /** @brief Returns true when the tag is any numeric type. */
+    bool isNumber()     const noexcept { return isInteger() || isFloatPoint(); }
+    /** @brief Returns true when the tag is a typed array (byte, int, or long array). */
+    bool isArray()      const noexcept { return isByteArray() || isIntArray() || isLongArray(); }
+    /** @brief Returns true when the tag is TT_LIST or TT_COMPOUND. */
+    bool isContainer()  const noexcept { return isList() || isCompound(); }
+    /** @brief Returns true when the tag is a number or a string. */
+    bool isPrimitive()  const noexcept { return isNumber() || isString(); }
+
+    // ===============
+    // > Value access
+    // ===============
+
+    /**
+     * @brief Returns the byte value.
+     * @throws std::domain_error if the tag is not TT_BYTE.
+     */
+    int8_t   getByte()   const { checkType(TT_BYTE);   return value_.i8;  }
+    /**
+     * @brief Returns a mutable reference to the byte value.
+     * @throws std::domain_error if the tag is not TT_BYTE.
+     */
+    int8_t&  getByte()         { checkType(TT_BYTE);   return value_.i8;  }
+    /**
+     * @brief Returns the short value.
+     * @throws std::domain_error if the tag is not TT_SHORT.
+     */
+
+    int16_t  getShort()  const { checkType(TT_SHORT);  return value_.i16; }
+    /**
+     * @brief Returns a mutable reference to the short value.
+     * @throws std::domain_error if the tag is not TT_SHORT.
+     */
+    int16_t& getShort()        { checkType(TT_SHORT);  return value_.i16; }
+    /**
+     * @brief Returns the int value.
+     * @throws std::domain_error if the tag is not TT_INT.
+     */
+
+    int32_t  getInt()    const { checkType(TT_INT);    return value_.i32; }
+    /**
+     * @brief Returns a mutable reference to the int value.
+     * @throws std::domain_error if the tag is not TT_INT.
+     */
+    int32_t& getInt()          { checkType(TT_INT);    return value_.i32; }
+    /**
+     * @brief Returns the long value.
+     * @throws std::domain_error if the tag is not TT_LONG.
+     */
+
+    int64_t  getLong()   const { checkType(TT_LONG);   return value_.i64; }
+    /**
+     * @brief Returns a mutable reference to the long value.
+     * @throws std::domain_error if the tag is not TT_LONG.
+     */
+    int64_t& getLong()         { checkType(TT_LONG);   return value_.i64; }
+    /**
+     * @brief Returns the float value.
+     * @throws std::domain_error if the tag is not TT_FLOAT.
+     */
+
+    float    getFloat()  const { checkType(TT_FLOAT);  return value_.f32; }
+    /**
+     * @brief Returns a mutable reference to the float value.
+     * @throws std::domain_error if the tag is not TT_FLOAT.
+     */
+    float&   getFloat()        { checkType(TT_FLOAT);  return value_.f32; }
+    /**
+     * @brief Returns the double value.
+     * @throws std::domain_error if the tag is not TT_DOUBLE.
+     */
+
+    double   getDouble() const { checkType(TT_DOUBLE); return value_.f64; }
+    /**
+     * @brief Returns a mutable reference to the double value.
+     * @throws std::domain_error if the tag is not TT_DOUBLE.
+     */
+    double&  getDouble()       { checkType(TT_DOUBLE); return value_.f64; }
+
+    /**
+     * @brief Returns a const reference to the string value.
+     * @throws std::domain_error if not TT_STRING.
+     */
+    const StringT& getString() const
+    { checkType(TT_STRING); return *static_cast<StringT*>(value_.ptr); }
+    /**
+     * @brief Returns a mutable reference to the string value.
+     * @throws std::domain_error if not TT_STRING.
+     */
+    StringT& getString()
+    { checkType(TT_STRING); return *static_cast<StringT*>(value_.ptr); }
+
+    /**
+     * @brief Returns a const reference to the byte array.
+     * @throws std::domain_error if not TT_BYTE_ARRAY.
+     */
+    const ByteArrayT& getByteArray() const
+    { checkType(TT_BYTE_ARRAY); return *static_cast<ByteArrayT*>(value_.ptr); }
+    /**
+     * @brief Returns a mutable reference to the byte array.
+     * @throws std::domain_error if not TT_BYTE_ARRAY.
+     */
+    ByteArrayT& getByteArray()
+    { checkType(TT_BYTE_ARRAY); return *static_cast<ByteArrayT*>(value_.ptr); }
+
+    /**
+     * @brief Returns a const reference to the int array.
+     * @throws std::domain_error if not TT_INT_ARRAY.
+     */
+    const IntArrayT& getIntArray() const
+    { checkType(TT_INT_ARRAY); return *static_cast<IntArrayT*>(value_.ptr); }
+    /**
+     * @brief Returns a mutable reference to the int array.
+     * @throws std::domain_error if not TT_INT_ARRAY.
+     */
+    IntArrayT& getIntArray()
+    { checkType(TT_INT_ARRAY); return *static_cast<IntArrayT*>(value_.ptr); }
+
+    /**
+     * @brief Returns a const reference to the long array.
+     * @throws std::domain_error if not TT_LONG_ARRAY.
+     */
+    const LongArrayT& getLongArray() const
+    { checkType(TT_LONG_ARRAY); return *static_cast<LongArrayT*>(value_.ptr); }
+    /**
+     * @brief Returns a mutable reference to the long array.
+     * @throws std::domain_error if not TT_LONG_ARRAY.
+     */
+    LongArrayT& getLongArray()
+    { checkType(TT_LONG_ARRAY); return *static_cast<LongArrayT*>(value_.ptr); }
+
+    /**
+     * @brief Returns a const reference to the list.
+     * @throws std::domain_error if not TT_LIST.
+     */
+    const ListT& getList() const
+    { checkType(TT_LIST); return *static_cast<ListT*>(value_.ptr); }
+    /**
+     * @brief Returns a mutable reference to the list.
+     * @throws std::domain_error if not TT_LIST.
+     */
+    ListT& getList()
+    { checkType(TT_LIST); return *static_cast<ListT*>(value_.ptr); }
+
+    /**
+     * @brief Returns a const reference to the compound map.
+     * @throws std::domain_error if not TT_COMPOUND.
+     */
+    const CompoundT& getCompound() const
+    { checkType(TT_COMPOUND); return *static_cast<CompoundT*>(value_.ptr); }
+    /**
+     * @brief Returns a mutable reference to the compound map.
+     * @throws std::domain_error if not TT_COMPOUND.
+     */
+    CompoundT& getCompound()
+    { checkType(TT_COMPOUND); return *static_cast<CompoundT*>(value_.ptr); }
+
+    /**
+     * @brief Returns the payload cast to type T.
+     * @tparam T One of the supported native or container types.
+     * @throws std::domain_error if the tag type does not match T.
+     */
+    template<typename T>
+    T get() const
     {
-        assert(!isContained(other));
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (isContained(other))
-            throw std::logic_error("Can't assign parent to self.");
-    #endif
-
-        assert(!(isListItem() && (type() != other.type())));
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (isListItem() && (type() != other.type()))
-            throw std::logic_error("Can't assign a tag of incorrect tag type to list element");
-    #endif
-
-        if (this == &other)
-            return *this;
-
-        release_();
-
-        tagType_    = other.tagType_;
-        itemType_   = other.itemType_;
-        tagData_    = other.tagData_;
-        tagName_    = other.tagName_;
-
-        if (isList() && tagData_.ld)
-        {
-            for (auto& var : *tagData_.ld)
-                var.parent_ = this;
-        }
-        else if (isCompound() && tagData_.cd)
-        {
-            for (auto& var : tagData_.cd->data)
-                var.parent_ = this;
-        }
-
-        other.tagData_.str  = nullptr;
-        other.tagName_      = nullptr;
-
-        if (isListItem() && tagName_)
-        {
-            delete tagName_;
-            tagName_ = nullptr;
-        }
-
-        return *this;
+        return detail::TagGetter<T, BasicTagType>::get(*this);
+    }
+    /**
+     * @brief Returns a mutable reference to the payload cast to type T.
+     * @tparam T One of the supported native or container types.
+     * @throws std::domain_error if the tag type does not match T.
+     */
+    template<typename T>
+    T& get()
+    {
+        return detail::TagGetter<T, BasicTagType>::getRef(*this);
     }
 
-    explicit Tag(TagType type) : tagType_(type) {}
+    // ===========================
+    // > Implicit type conversion
+    // ===========================
 
-    /// @brief Get the tag from binary input stream.
-    /// @param is               The input stream.
-    /// @param isBigEndian      Whether the read data from input stream with big endian.
-    /// @param headerSize       The size of need discard data from input stream begin.
-    // (usually is 0, but bedrock edition map file is 8, some useless dat)
-    static Tag fromBinStream(IFStream& is, bool isBigEndian, size_t headerSize = 0)
-    {
-    #ifdef MCNBT_HAS_ZLIB
-        SStream buf;
-        buf << is.rdbuf();
-        String content = buf.str();
+    // Explicit for arithmetic types prevents built-in operator candidates from being synthesized.
+    explicit operator int8_t()  const { return getByte();      }
+    explicit operator int16_t() const { return getShort();     }
+    explicit operator int32_t() const { return getInt();       }
+    explicit operator int64_t() const { return getLong();      }
+    explicit operator float()   const { return getFloat();     }
+    explicit operator double()  const { return getDouble();    }
+    operator StringT()          const { return getString();    }
+    operator ByteArrayT()       const { return getByteArray(); }
+    operator IntArrayT()        const { return getIntArray();  }
+    operator LongArrayT()       const { return getLongArray(); }
+    operator CompoundT()        const { return getCompound();  }
+    operator ListT()            const { return getList();      }
 
-        SStream ss;
-        if (gzip::isCompressed(content))
-            content = gzip::decompress(content);
+    // =================
+    // > List item type
+    // =================
 
-        ss << content;
-
-        if (headerSize != 0)
-            ss.seekg(headerSize, ss.cur);
-
-        return fromBinStream_(ss, isBigEndian, false);
-    #else
-        if (headerSize != 0)
-            is.seekg(headerSize, is.cur);
-
-        return fromBinStream_(is, isBigEndian, false);
-    #endif // MCNBT_HAS_ZLIB
-    }
-
-    /// @brief Get the tag from a nbt file.
-    static Tag fromFile(const String& filename, bool isBigEndian, size_t headerSize = 0)
-    {
-        IFStream ifs(filename, std::ios::binary);
-        if (!ifs.is_open())
-            throw std::runtime_error("Failed to open file: " + filename);
-
-        Tag rslt = fromBinStream(ifs, isBigEndian, headerSize);
-
-        ifs.close();
-
-        return rslt;
-    }
-
-    /// @todo
-    /// @brief Get the tag from a text input stream.
-    /// @note - The root tag must be a compound tag.
-    /// @note - The tag name (key of key-value) must valid, it can't contains {, }, [,] and so on key characters.
-    static Tag fromSnbt(IStream& is) { return Tag(); };
-
-    /// @brief Get the tag from a string.
-    /// @note - The root tag must be a compound tag.
-    /// @note - The tag name (key of key-value) must valid, it can't contains {, }, [,] and so on key characters.
-    static Tag fromSnbt(const String& snbt)
-    {
-        SStream ss;
-        ss << snbt;
-        return fromSnbt(ss);
-    }
-
-   /// @brief Functions of check tag type.
-
-    bool isEnd() const          { return nbt::isEnd(tagType_); }
-
-    bool isByte() const         { return nbt::isByte(tagType_); }
-
-    bool isShort() const        { return nbt::isShort(tagType_); }
-
-    bool isInt() const          { return nbt::isInt(tagType_); }
-
-    bool isLong() const         { return nbt::isLong(tagType_); }
-
-    bool isFloat() const        { return nbt::isFloat(tagType_); }
-
-    bool isDouble() const       { return nbt::isDouble(tagType_); }
-
-    bool isString() const       { return nbt::isString(tagType_); }
-
-    bool isByteArray() const    { return nbt::isByteArray(tagType_); }
-
-    bool isIntArray() const     { return nbt::isIntArray(tagType_); }
-
-    bool isLongArray() const    { return nbt::isLongArray(tagType_); }
-
-    bool isList() const         { return nbt::isList(tagType_); }
-
-    bool isCompound() const     { return nbt::isCompound(tagType_); }
-
-    bool isInteger() const      { return nbt::isInteger(tagType_); }
-
-    bool isFloatPoint() const   { return nbt::isFloatPoint(tagType_); }
-
-    bool isNum() const          { return nbt::isNum(tagType_); }
-
-    bool isArray() const        { return nbt::isArray(tagType_); }
-
-    bool isContainer() const    { return nbt::isContainer(tagType_); }
-
-    /// Functions of common to all tag.
-
-    /// @brief Make a copy.
-    // Usually used for add tag to list or compound. (because default is move when add tag to list or compound)
-    Tag copy() const            { return Tag(*this); }
-
-    /// @brief Assign a tag to self, be equal to *this = tag;
-    Tag& assign(const Tag& tag) { *this = tag; return *this; }
-
-    /// @brief Get the tag type.
-    TagType type() const        { return tagType_; }
-
-    /// @brief Get the name of tag.
-    String name() const         { return tagName_ ? *tagName_ : ""; }
-
-    /// @brief Get the name length of tag.
-    Int16 nameLength() const    { return static_cast<Int16>(name().size()); }
-
-    /// @brief Set the name of tag.
-    /// @note If the new name already exist in parent, cover it.
-    /// @attention Only be called via non-ListItem.
-    Tag& setName(const String& name)
-    {
-        assert(!isListItem());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (isListItem())
-            throw std::logic_error("Can't set name for list element.");
-    #endif
-
-        // If the new name is empty and the old name is empty (maybe not exists), do nothing.
-        if (name.empty() && this->name().empty())
-            return *this;
-
-        // If the new name is equal to the old name, do nothing.
-        String oldname = this->name();
-        if (name == oldname)
-            return *this;
-
-        // Why need some step above? see below.
-
-        if (!parent_)
-        {
-            if (tagName_)
-                *tagName_ = name;
-            else
-                tagName_ = new String(name);
-
-            return *this;
-        }
-        else
-        {
-            Tag* p = parent_;
-            if (p->hasTag(name))
-                p->remove(name);
-
-            Tag& t = (*p)[oldname];
-
-            if (t.tagName_)
-                *t.tagName_ = name;
-            else
-                t.tagName_ = new String(name);
-
-            size_t idx = p->tagData_.cd->idxs[oldname];
-
-            p->tagData_.cd->idxs.erase(oldname);
-            p->tagData_.cd->idxs.insert({ name, idx });
-
-            return t;
-        }
-    }
-
-    /// @brief Check if is a list element.
-    bool isListItem() const     { return parent_ && parent_->isList(); }
-
-    /// @brief Check if the parent is exists.
-    bool hasParent() const      { return parent_ != nullptr; }
-
-    /// @return The parent pointer.
-    const Tag* parent() const   { return parent_; }
-
-    /// @brief Check if is be contained in specified tag.
-    /// @param container The tag that be checked whether self is contained in it.
-    /// @note Recursive check all the parent (parent's parent) until a parent is nullptr.
-    bool isContained(const Tag& container) const
-    {
-        const Tag* p = parent_;
-
-        while (p)
-        {
-            if (p == &container)
-                return true;
-            p = p->parent_;
-        }
-
-        return false;
-    }
-
-    /// @brief Functions about the list tag.
-
-    /// @brief Get the list item type.
-    /// @attention Only be called via #TT_LIST.
+    /**
+     * @brief Returns the element type of a TT_LIST tag.
+     * @throws std::domain_error if the tag is not TT_LIST.
+     */
     TagType listItemType() const
     {
-        assert(isList());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isList())
-            throw std::logic_error("Can't get the list item type for non-list tag.");
-    #endif
-
-        return itemType_;
+        checkType(TT_LIST);
+        return listItemType_;
     }
 
-    /// @brief Check if the list item type is be seted.
-    /// @attention Only be called via #TT_LIST.
-    bool hasSetListItemType() const
+    // ===========
+    // > Capacity
+    // ===========
+
+    /**
+     * @brief Returns the number of elements in the tag's container.
+     * @details Returns 0 for non-container types (scalars, TT_END).
+     */
+    size_type size() const noexcept
     {
-        return listItemType() != TT_END;
-    }
-
-    /// @brief Set the tag type of list item.
-    /// @note If the list item type already be seted, cover the original list item type and remove all original items.
-    /// @attention Only be called via #TT_LIST.
-    Tag& setListItemType(TagType type)
-    {
-        assert(isList());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isList())
-            throw std::logic_error("Can't set the list item type for non-list tag.");
-    #endif
-
-        if (itemType_ != TT_END)
+        switch (type_)
         {
-            if (tagData_.ld)
-            {
-                delete tagData_.ld;
-                tagData_.ld = nullptr;
-            }
-        }
-
-        itemType_ = type;
-
-        return *this;
-    }
-
-    /// @attention Only be called via #TT_LIST.
-    Tag& assign(size_t size, const Tag& tag)
-    {
-        assert(isList());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isList())
-            throw std::logic_error("Can't assign multiple tags to non-list tag.");
-
-        if (itemType_ == TT_END)
-            throw std::logic_error("Can't read or write a uninitialized list.");
-
-        if (tag.type() != itemType_)
-        {
-            String errmsg = "Can't assign the tag of " + getTagTypeString(tag.type());
-            errmsg += " to the list of " + getTagTypeString(itemType_);
-            throw std::logic_error(errmsg);
-        }
-    #endif
-
-        if (size == 0 && !tagData_.ld)
-            return *this;
-
-        if (!tagData_.ld)
-            tagData_.ld = new Vec<Tag>();
-
-        tagData_.ld->assign(size, tag);
-
-        return *this;
-    }
-
-    /// @brief Functions about the compound tag.
-
-    /// @brief Check if the compound contains member of specified name.
-    /// @attention Only be called via #TT_COMPOUND.
-    bool hasTag(const String& name) const
-    {
-        assert(isCompound());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isCompound())
-            throw std::logic_error("Can't check tag existence for non-compound tag.");
-    #endif
-
-        if (!tagData_.cd)
-            return false;
-
-        return tagData_.cd->idxs.find(name) != tagData_.cd->idxs.end();
-    }
-
-    /// @brief Functions about the tag of containers.
-
-    /// @brief Get the length of string or size of array or tag counts of list and compound.
-    /// @attention Only be called via
-    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
-    size_t size() const
-    {
-        assert(isString() || isArray() || isContainer());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isString() && !isArray() && !isContainer())
-            throw std::logic_error("Can't get size for non-string, non-array, non-container tag.");
-    #endif
-
-        if (isString())     return !tagData_.str ? 0 : tagData_.str->size();
-        if (isByteArray())  return !tagData_.bad ? 0 : tagData_.bad->size();
-        if (isIntArray())   return !tagData_.iad ? 0 : tagData_.iad->size();
-        if (isLongArray())  return !tagData_.lad ? 0 : tagData_.lad->size();
-        if (isList())       return !tagData_.ld ? 0 : tagData_.ld->size();
-        if (isCompound())   return !tagData_.cd ? 0 : tagData_.cd->size();
-
-        return 0;
-    }
-
-    /// @brief Check if the string or array or list or compound is empty.
-    /// @attention Only be called via
-    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
-    bool isEmpty() const { return size() == 0; }
-
-    /// @brief Reserve the space of string or array or list or compound.
-    /// @attention Only be called via
-    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
-    void reserve(size_t size)
-    {
-        assert(isString() || isArray() || isContainer());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isString() && !isArray() && !isContainer())
-            throw std::logic_error("Can't reserve space for non-string, non-array, non-container tag.");
-    #endif
-
-        if (isString())
-        {
-            if (!tagData_.str)
-                tagData_.str = new String();
-            tagData_.str->reserve(size);
-        }
-        else if (isByteArray())
-        {
-            if (!tagData_.bad)
-                tagData_.bad = new Vec<Byte>();
-            tagData_.bad->reserve(size);
-        }
-        else if (isIntArray())
-        {
-            if (!tagData_.iad)
-                tagData_.iad = new Vec<Int32>();
-            tagData_.iad->reserve(size);
-        }
-        else if (isLongArray())
-        {
-            if (!tagData_.lad)
-                tagData_.lad = new Vec<Int64>();
-            tagData_.lad->reserve(size);
-        }
-        else if (isList())
-        {
-            if (!tagData_.ld)
-                tagData_.ld = new Vec<Tag>();
-            tagData_.ld->reserve(size);
-        }
-        else if (isCompound())
-        {
-            if (!tagData_.cd)
-                tagData_.cd = new CompoundData();
-            tagData_.cd->reserve(size);
+            case TT_STRING:     return value_.ptr ? static_cast<StringT*>(value_.ptr)->size()    : 0;
+            case TT_BYTE_ARRAY: return value_.ptr ? static_cast<ByteArrayT*>(value_.ptr)->size() : 0;
+            case TT_INT_ARRAY:  return value_.ptr ? static_cast<IntArrayT*>(value_.ptr)->size()  : 0;
+            case TT_LONG_ARRAY: return value_.ptr ? static_cast<LongArrayT*>(value_.ptr)->size() : 0;
+            case TT_LIST:       return value_.ptr ? static_cast<ListT*>(value_.ptr)->size()      : 0;
+            case TT_COMPOUND:   return value_.ptr ? static_cast<CompoundT*>(value_.ptr)->size()  : 0;
+            default:            return 0;
         }
     }
 
-    /// @brief Functions for set value. Only be called via corresponding tag.
+    /** @brief Returns true when the container is empty or the tag is a scalar. */
+    bool empty() const noexcept { return size() == 0; }
 
-    /// @attention Only be called via #TT_BYTE.
-    Tag& setByte(Byte value)
+    // =================
+    // > Element access
+    // =================
+
+    /** @brief Subscript access for TT_LIST tags; no bounds checking. */
+    reference operator[](size_type idx)
     {
-        assert(isByte());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isByte())
-            throw std::logic_error("Can't set byte value for non-byte tag.");
-    #endif
+        checkType(TT_LIST);
+        return (*static_cast<ListT*>(value_.ptr))[idx];
+    }
 
-        tagData_.num.i8 = value;
+    /** @brief Subscript access for TT_LIST tags (const overload); no bounds checking. */
+    const_reference operator[](size_type idx) const
+    {
+        checkType(TT_LIST);
+        return (*static_cast<const ListT*>(value_.ptr))[idx];
+    }
 
+    /** @brief Subscript access for TT_COMPOUND tags; inserts a default-constructed tag if the key is absent. */
+    reference operator[](const StringT& key)
+    {
+        checkType(TT_COMPOUND);
+        return (*static_cast<CompoundT*>(value_.ptr))[key];
+    }
+
+    /**
+     * @brief Subscript access for TT_COMPOUND tags (const overload).
+     * @throws std::out_of_range if the key is not found.
+     */
+    const_reference operator[](const StringT& key) const
+    {
+        checkType(TT_COMPOUND);
+        auto& c = *static_cast<const CompoundT*>(value_.ptr);
+        auto it = c.find(key);
+        if (it == c.end())
+            throw std::out_of_range("nbt::BasicTag::operator[](): key not found");
+        return it->second;
+    }
+
+    /**
+     * @brief Bounds-checked index access for TT_LIST tags.
+     * @throws std::out_of_range if idx is out of range.
+     */
+    reference at(size_type idx)
+    {
+        checkType(TT_LIST);
+        auto& l = *static_cast<ListT*>(value_.ptr);
+        if (idx >= l.size())
+            throw std::out_of_range("nbt::BasicTag::at(): index out of range");
+        return l[idx];
+    }
+
+    /**
+     * @brief Bounds-checked index access for TT_LIST tags (const overload).
+     * @throws std::out_of_range if idx is out of range.
+     */
+    const_reference at(size_type idx) const
+    {
+        checkType(TT_LIST);
+        const auto& l = *static_cast<const ListT*>(value_.ptr);
+        if (idx >= l.size())
+            throw std::out_of_range("nbt::BasicTag::at(): index out of range");
+        return l[idx];
+    }
+
+    /**
+     * @brief Bounds-checked key access for TT_COMPOUND tags.
+     * @throws std::out_of_range if the key is not found.
+     */
+    reference at(const StringT& key)
+    {
+        checkType(TT_COMPOUND);
+        auto& c = *static_cast<CompoundT*>(value_.ptr);
+        auto it = c.find(key);
+        if (it == c.end())
+            throw std::out_of_range("nbt::BasicTag::at(): key not found");
+        return it->second;
+    }
+
+    /**
+     * @brief Bounds-checked key access for TT_COMPOUND tags (const overload).
+     * @throws std::out_of_range if the key is not found.
+     */
+    const_reference at(const StringT& key) const
+    {
+        checkType(TT_COMPOUND);
+        const auto& c = *static_cast<const CompoundT*>(value_.ptr);
+        auto it = c.find(key);
+        if (it == c.end())
+            throw std::out_of_range("nbt::BasicTag::at(): key not found");
+        return it->second;
+    }
+
+    /**
+     * @brief Returns a reference to the first element of a TT_LIST tag.
+     * @throws std::out_of_range if the list is empty.
+     */
+    reference front()
+    {
+        checkType(TT_LIST);
+        auto& l = *static_cast<ListT*>(value_.ptr);
+        if (l.empty())
+            throw std::out_of_range("nbt::BasicTag::front(): list is empty");
+        return l.front();
+    }
+
+    /**
+     * @brief Returns a const reference to the first element of a TT_LIST tag.
+     * @throws std::out_of_range if the list is empty.
+     */
+    const_reference front() const
+    {
+        checkType(TT_LIST);
+        const auto& l = *static_cast<const ListT*>(value_.ptr);
+        if (l.empty())
+            throw std::out_of_range("nbt::BasicTag::front(): list is empty");
+        return l.front();
+    }
+
+    /**
+     * @brief Returns a reference to the last element of a TT_LIST tag.
+     * @throws std::out_of_range if the list is empty.
+     */
+    reference back()
+    {
+        checkType(TT_LIST);
+        auto& l = *static_cast<ListT*>(value_.ptr);
+        if (l.empty())
+            throw std::out_of_range("nbt::BasicTag::back(): list is empty");
+        return l.back();
+    }
+
+    /**
+     * @brief Returns a const reference to the last element of a TT_LIST tag.
+     * @throws std::out_of_range if the list is empty.
+     */
+    const_reference back() const
+    {
+        checkType(TT_LIST);
+        const auto& l = *static_cast<const ListT*>(value_.ptr);
+        if (l.empty())
+            throw std::out_of_range("nbt::BasicTag::back(): list is empty");
+        return l.back();
+    }
+
+    // ======================
+    // > Lookup for compound
+    // ======================
+
+    /** @brief Returns true when the tag is TT_COMPOUND and contains the given key. */
+    bool contains(const StringT& key) const noexcept
+    {
+        if (!isCompound() || !value_.ptr) return false;
+        return static_cast<const CompoundT*>(value_.ptr)->count(key) > 0;
+    }
+
+    // ============
+    // > Iterators
+    // ============
+
+    /**
+     * @brief Returns an iterator to the first element.
+     * @throws std::domain_error if the tag is not TT_LIST or TT_COMPOUND.
+     */
+    iterator begin()
+    {
+        if (isList())     return iterator(static_cast<ListT*>(value_.ptr)->begin());
+        if (isCompound()) return iterator(static_cast<CompoundT*>(value_.ptr)->begin());
+        throw std::domain_error("nbt::BasicTag::begin(): tag is not a list or compound");
+    }
+    /**
+     * @brief Returns an iterator past the last element.
+     * @throws std::domain_error if the tag is not TT_LIST or TT_COMPOUND.
+     */
+    iterator end()
+    {
+        if (isList())     return iterator(static_cast<ListT*>(value_.ptr)->end());
+        if (isCompound()) return iterator(static_cast<CompoundT*>(value_.ptr)->end());
+        throw std::domain_error("nbt::BasicTag::end(): tag is not a list or compound");
+    }
+    /** @brief Returns a const iterator to the first element (calls cbegin()). */
+    const_iterator begin() const { return cbegin(); }
+    /** @brief Returns a const iterator past the last element (calls cend()). */
+    const_iterator end()   const { return cend(); }
+    /**
+     * @brief Returns a const iterator to the first element.
+     * @throws std::domain_error if the tag is not TT_LIST or TT_COMPOUND.
+     */
+    const_iterator cbegin() const
+    {
+        if (isList())     return const_iterator(static_cast<const ListT*>(value_.ptr)->cbegin());
+        if (isCompound()) return const_iterator(static_cast<const CompoundT*>(value_.ptr)->cbegin());
+        throw std::domain_error("nbt::BasicTag::cbegin(): tag is not a list or compound");
+    }
+    /**
+     * @brief Returns a const iterator past the last element.
+     * @throws std::domain_error if the tag is not TT_LIST or TT_COMPOUND.
+     */
+    const_iterator cend() const
+    {
+        if (isList())     return const_iterator(static_cast<const ListT*>(value_.ptr)->cend());
+        if (isCompound()) return const_iterator(static_cast<const CompoundT*>(value_.ptr)->cend());
+        throw std::domain_error("nbt::BasicTag::cend(): tag is not a list or compound");
+    }
+
+    /**
+     * @brief Returns a reference to the underlying CompoundT for key-value iteration.
+     * @throws std::domain_error if the tag is not TT_COMPOUND.
+     * @example `for (const auto& kv : tag.items()) { ... }`
+     */
+    CompoundT& items()
+    { checkType(TT_COMPOUND); return *static_cast<CompoundT*>(value_.ptr); }
+    /**
+     * @brief Returns a const reference to the underlying CompoundT for key-value iteration.
+     * @throws std::domain_error if not TT_COMPOUND.
+     */
+    const CompoundT& items() const
+    { checkType(TT_COMPOUND); return *static_cast<const CompoundT*>(value_.ptr); }
+
+    // ============
+    // > Modifiers
+    // ============
+
+    /**
+     * @brief Appends a tag to a TT_LIST tag; infers the element type on the first call.
+     * @throws std::domain_error on type mismatch.
+     */
+    void pushBack(BasicTag val)
+    {
+        checkType(TT_LIST);
+        auto& l = *static_cast<ListT*>(value_.ptr);
+
+        if (listItemType_ == TT_END)
+            listItemType_ = val.type_;
+        else if (val.type_ != listItemType_)
+            throw std::domain_error("nbt::BasicTag::pushBack(): element type does not match list item type");
+
+        l.push_back(std::move(val));
+    }
+
+    /** @brief Constructs a tag in-place at the back of a TT_LIST tag; infers the element type on the first call. */
+    template<typename... Args>
+    reference emplaceBack(Args&&... args)
+    {
+        checkType(TT_LIST);
+        auto& l = *static_cast<ListT*>(value_.ptr);
+        l.emplace_back(std::forward<Args>(args)...);
+        TagType newType = l.back().type_;
+        if (listItemType_ == TT_END)
+            listItemType_ = newType;
+        else if (newType != listItemType_)
+        {
+            l.pop_back();
+            throw std::domain_error("nbt::BasicTag::emplaceBack(): element type does not match list item type");
+        }
+        return l.back();
+    }
+
+    /**
+     * @brief Inserts a tag at the specified index in a TT_LIST tag.
+     * @throws std::out_of_range if idx is out of range.
+     * @throws std::domain_error if the tag type does not match the list element type.
+     */
+    void insert(size_type idx, BasicTag val)
+    {
+        checkType(TT_LIST);
+        auto& l = *static_cast<ListT*>(value_.ptr);
+        if (idx > l.size())
+            throw std::out_of_range("nbt::BasicTag::insert(): index out of range");
+        if (listItemType_ == TT_END)
+            listItemType_ = val.type_;
+        else if (val.type_ != listItemType_)
+            throw std::domain_error("nbt::BasicTag::insert(): element type mismatch");
+        l.insert(l.begin() + static_cast<typename ListT::difference_type>(idx), std::move(val));
+    }
+
+    /**
+     * @brief Inserts a key-value entry into a TT_COMPOUND tag.
+     * @return true if the entry was inserted; false if the key already existed.
+     */
+    bool insert(const StringT& key, BasicTag val)
+    {
+        checkType(TT_COMPOUND);
+        return static_cast<CompoundT*>(value_.ptr)->emplace(key, std::move(val)).second;
+    }
+
+    /**
+     * @brief Inserts a key-value pair into a TT_COMPOUND tag.
+     * @return true if the entry was inserted; false if the key already existed.
+     */
+    bool insert(const std::pair<const StringT, BasicTag>& kv)
+    {
+        checkType(TT_COMPOUND);
+        return static_cast<CompoundT*>(value_.ptr)->insert(kv).second;
+    }
+
+    /** @brief Shorthand for pushBack() on TT_LIST. */
+    BasicTag& operator<<(BasicTag val)
+    {
+        pushBack(std::move(val));
         return *this;
     }
 
-    /// @attention Only be called via #TT_SHORT.
-    Tag& setShort(Int16 value)
+    /** @brief Shorthand for pushBack(key, val) on TT_COMPOUND. */
+    BasicTag& operator<<(std::pair<StringT, BasicTag> kv)
     {
-        assert(isShort());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isShort())
-            throw std::logic_error("Can't set short value for non-short tag.");
-    #endif
-
-        tagData_.num.i16 = value;
-
+        insert(std::move(kv.first), std::move(kv.second));
         return *this;
     }
 
-    /// @attention Only be called via #TT_INT.
-    Tag& setInt(Int32 value)
+    /**
+     * @brief Erases the element at the specified index from a TT_LIST or typed array tag.
+     * @throws std::out_of_range if idx is out of range.
+     * @throws std::domain_error if the tag is not a list or array.
+     */
+    void erase(size_type idx)
     {
-        assert(isInt());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isInt())
-            throw std::logic_error("Can't set int value for non-int tag.");
-    #endif
-
-        tagData_.num.i32 = value;
-
-        return *this;
-    }
-
-    /// @attention Only be called via #TT_LONG.
-    Tag& setLong(Int64 value)
-    {
-        assert(isLong());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isLong())
-            throw std::logic_error("Can't set long value for non-long tag.");
-    #endif
-
-        tagData_.num.i64 = value;
-
-        return *this;
-    }
-
-    /// @attention Only be called via #TT_FLOAT.
-    Tag& setFloat(Fp32 value)
-    {
-        assert(isFloat());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isFloat())
-            throw std::logic_error("Can't set float value for non-float tag.");
-    #endif
-
-        tagData_.num.f32 = value;
-
-        return *this;
-    }
-
-    /// @attention Only be called via #TT_DOUBLE.
-    Tag& setDouble(Fp64 value)
-    {
-        assert(isDouble());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isDouble())
-            throw std::logic_error("Can't set double value for non-double tag.");
-    #endif
-
-        tagData_.num.f64 = value;
-
-        return *this;
-    }
-
-    /// @brief Fast way of set the integer value.
-    /// @attention Only be called via #TT_BYTE, #TT_SHORT, #TT_INT, #TT_LONG.
-    Tag& setInteger(Int64 value)
-    {
-        assert(isInteger());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isInteger())
-            throw std::logic_error("Can't set interger number for non-integer tag.");
-    #endif
-
-        if (isByte())           setByte(static_cast<Byte>(value));
-        else if (isShort())     setShort(static_cast<Int16>(value));
-        else if (isInt())       setInt(static_cast<Int32>(value));
-        else if (isLong())      setLong(value);
-
-        return *this;
-    }
-
-    /// @brief Fast way of set the float point value.
-    /// @attention Only be called via #TT_FLOAT, #TT_DOUBLE.
-    Tag& setFloatPoint(Fp64 value)
-    {
-        assert(isFloatPoint());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isFloatPoint())
-            throw std::logic_error("Can't set float point number value for non-float point tag.");
-    #endif
-
-        if (isFloat())
-            setFloat(static_cast<Fp32>(value));
-        else if (isDouble())
-            setDouble(value);
-
-        return *this;
-    }
-
-    /// @attention Only be called via #TT_STRING.
-    Tag& setString(const String& value)
-    {
-        assert(isString());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isString())
-            throw std::logic_error("Can't set string value for non-string tag.");
-    #endif
-
-        if (value.empty() && !tagData_.str)
-            return *this;
-
-        if (tagData_.str)
-            *tagData_.str = value;
-        else
-            tagData_.str = new String(value);
-
-        return *this;
-    }
-
-    /// @attention Only be called via #TT_BYTE_ARRAY.
-    Tag& setByteArray(const Vec<Byte>& value)
-    {
-        assert(isByteArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isByteArray())
-            throw std::logic_error("Can't set Byte array value for non-Byte array tag.");
-    #endif
-
-        if (value.empty() && !tagData_.bad)
-            return *this;
-
-        if (tagData_.bad)
-            *tagData_.bad = value;
-        else
-            tagData_.bad = new Vec<Byte>(value);
-
-        return *this;
-    }
-
-    /// @attention Only be called via #TT_INT_ARRAY.
-    Tag& setIntArray(const Vec<Int32>& value)
-    {
-        assert(isIntArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isIntArray())
-            throw std::logic_error("Can't set int array value for non-int array tag.");
-    #endif
-
-        if (value.empty() && !tagData_.iad)
-            return *this;
-
-        if (tagData_.iad)
-            *tagData_.iad = value;
-        else
-            tagData_.iad = new Vec<Int32>(value);
-
-        return *this;
-    }
-
-    /// @attention Only be called via #TT_LONG_ARRAY.
-    Tag& setLongArray(const Vec<Int64>& value)
-    {
-        assert(isLongArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isLongArray())
-            throw std::logic_error("Can't set long array value for non-long array tag.");
-    #endif
-
-        if (value.empty() && !tagData_.lad)
-            return *this;
-
-        if (tagData_.lad)
-            *tagData_.lad = value;
-        else
-            tagData_.lad = new Vec<Int64>(value);
-
-        return *this;
-    }
-
-    /// @attention Only be called via #TT_BYTE_ARRAY.
-    Tag& setArray(const Vec<Byte>& value) { return setByteArray(value); }
-
-    /// @overload
-    /// @attention Only be called via #TT_INT_ARRAY.
-    Tag& setArray(const Vec<Int32>& value) { return setIntArray(value); }
-
-    /// @overload
-    /// @attention Only be called via #TT_LONG_ARRAY.
-    Tag& setArray(const Vec<Int64>& value) { return setLongArray(value); }
-
-    /// @brief Add a value to the byte array.
-    /// @attention Only be called via #TT_BYTE_ARRAY.
-    Tag& addByte(Byte value)
-    {
-        assert(isByteArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isByteArray())
-            throw std::logic_error("Can't add byte value to non-byte array tag.");
-    #endif
-
-        if (!tagData_.bad)
-            tagData_.bad = new Vec<Byte>();
-        tagData_.bad->emplace_back(value);
-
-        return *this;
-    }
-
-    /// @brief Add a value to the int array.
-    /// @attention Only be called via #TT_INT_ARRAY.
-    Tag& addInt(Int32 value)
-    {
-        assert(isIntArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isIntArray())
-            throw std::logic_error("Can't add int value to non-int array tag.");
-    #endif
-
-        if (!tagData_.iad)
-            tagData_.iad = new Vec<Int32>();
-        tagData_.iad->emplace_back(value);
-
-        return *this;
-    }
-
-    /// @brief Add a value to the long array.
-    /// @attention Only be called via #TT_LONG_ARRAY.
-    Tag& addLong(Int64 value)
-    {
-        assert(isLongArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isLongArray())
-            throw std::logic_error("Can't add long value to non-long array tag.");
-    #endif
-
-        if (!tagData_.lad)
-            tagData_.lad = new Vec<Int64>();
-        tagData_.lad->emplace_back(value);
-
-        return *this;
-    }
-
-    /// @brief Add a tag to the list or compound.
-    /// @note Original tag will be moved to the new tag whether left-value or right-value reference,
-    // and the original tag will invalid after this operation, but you can call #copy() function to avoid this.
-    /// @attention Only be called via #TT_LIST, #TT_COMPOUND.
-    Tag& addTag(Tag&& tag)
-    {
-        assert(isContainer());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isContainer())
-            throw std::logic_error("Can't add tag to non-container tag.");
-    #endif
-
-        assert(this != &tag);
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (this == &tag)
-            throw std::logic_error("Can't add self to self.");
-    #endif
-
-        assert(!isContained(tag));
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (isContained(tag))
-            throw std::logic_error("Can't add parent to self.");
-    #endif
-
-        // List
         if (isList())
         {
-        #ifndef MCNBT_DISABLE_EXCEPTION
-            if (itemType_ == TT_END)
-                throw std::logic_error("Can't read or write a uninitialized list.");
-
-            if (tag.tagType_ != itemType_)
-            {
-                String errmsg = "Can't add the tag of " + getTagTypeString(tag.type());
-                errmsg += " to the list of " + getTagTypeString(itemType_);
-                throw std::logic_error(errmsg);
-            }
-        #endif
-
-            if (!tagData_.ld)
-                tagData_.ld = new Vec<Tag>();
-
-            bool needShuffle = (tagData_.ld->capacity() - tagData_.ld->size()) == 0;
-            tagData_.ld->emplace_back(std::move(tag));
-
-            if (needShuffle)
-            {
-                for (auto& var : *tagData_.ld)
-                    var.parent_ = this;
-            }
-            else
-            {
-                tagData_.ld->back().parent_ = this;
-            }
-
-            if (tagData_.ld->back().tagName_)
-            {
-                delete tagData_.ld->back().tagName_;
-                tagData_.ld->back().tagName_ = nullptr;
-            }
-        }
-        // Compound
-        else
-        {
-            if (!tagData_.cd)
-                tagData_.cd = new CompoundData();
-
-            if (hasTag(tag.name()))
-            {
-                tagData_.cd->data[tagData_.cd->idxs[tag.name()]] = std::move(tag);
-            }
-            else
-            {
-                bool needShuffle = (tagData_.cd->data.capacity() - tagData_.cd->size()) == 0;
-                tagData_.cd->data.emplace_back(std::move(tag));
-                tagData_.cd->idxs.insert({ tagData_.cd->data.back().name(), tagData_.cd->data.size() - 1 });
-
-                if (needShuffle)
-                {
-                    for (auto& var : tagData_.cd->data)
-                        var.parent_ = this;
-                }
-                else
-                {
-                    tagData_.cd->data.back().parent_ = this;
-                }
-            }
+            auto& l = *static_cast<ListT*>(value_.ptr);
+            if (idx >= l.size()) throw std::out_of_range("nbt::BasicTag::erase(): index out of range");
+            l.erase(l.begin() + static_cast<typename ListT::difference_type>(idx));
+            return;
         }
 
-        return *this;
-    }
-
-    /// @overload
-    Tag& addTag(Tag& tag) { return addTag(std::move(tag)); }
-
-    /// @brief Functions for get value. Only be called via corresponding tag.
-
-    /// @attention Only be called via #TT_BYTE.
-    Byte getByte() const
-    {
-        assert(isByte());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isByte())
-            throw std::logic_error("Can't get byte value for non-byte tag.");
-    #endif
-
-        return tagData_.num.i8;
-    }
-
-    /// @attention Only be called via #TT_SHORT.
-    Int16 getShort() const
-    {
-        assert(isShort());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isShort())
-            throw std::logic_error("Can't get short value for non-short tag.");
-    #endif
-
-        return tagData_.num.i16;
-    }
-
-    /// @attention Only be called via #TT_INT.
-    Int32 getInt() const
-    {
-        assert(isInt());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isInt())
-            throw std::logic_error("Can't get int value for non-int tag.");
-    #endif
-
-        return tagData_.num.i32;
-    }
-
-    /// @attention Only be called via #TT_LONG.
-    Int64 getLong() const
-    {
-        assert(isLong());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isLong())
-            throw std::logic_error("Can't get long value for non-long tag.");
-    #endif
-
-        return tagData_.num.i64;
-    }
-
-    /// @attention Only be called via #TT_FLOAT.
-    Fp32 getFloat() const
-    {
-        assert(isFloat());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isFloat())
-            throw std::logic_error("Can't get float value for non-float tag.");
-    #endif
-
-        return tagData_.num.f32;
-    }
-
-    /// @attention Only be called via #TT_DOUBLE.
-    Fp64 getDouble() const
-    {
-        assert(isDouble());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isDouble())
-            throw std::logic_error("Can't get double value for non-double tag.");
-    #endif
-
-        return tagData_.num.f64;
-    }
-
-    /// @brief Fast way of get the integer value.
-    /// @attention Only be called via #TT_BYTE, #TT_SHORT, #TT_INT, #TT_LONG.
-    Int64 getInteger() const
-    {
-        assert(isInteger());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isInteger())
-            throw std::logic_error("Can't get interger number for non-integer tag.");
-    #endif
-
-        if (isByte())           return tagData_.num.i8;
-        if (isShort())          return tagData_.num.i16;
-        if (isInt())            return tagData_.num.i32;
-        if (isLong())           return tagData_.num.i64;
-
-        return 0;
-    }
-
-    /// @brief Fast way of get the float point value.
-    /// @attention Only be called via #TT_FLOAT, #TT_DOUBLE.
-    Fp64 getFloatPoint() const
-    {
-        assert(isFloatPoint());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isFloatPoint())
-            throw std::logic_error("Can't get float point number value for non-float point tag.");
-    #endif
-
-        if (isFloat())
-            return tagData_.num.f32;
-        else
-            return tagData_.num.f64;
-
-        return 0;
-    }
-
-    /// @attention Only be called via #TT_STRING.
-    String getString() const
-    {
-        assert(isString());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isString())
-            throw std::logic_error("Can't get string value for non-string tag.");
-    #endif
-
-        return tagData_.str ? *tagData_.str : "";
-    }
-
-    /// @attention Only be called via #TT_BYTE_ARRAY.
-    Vec<Byte> getByteArray() const
-    {
-        assert(isByteArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isByteArray())
-            throw std::logic_error("Can't get byte array value for non-byte array tag.");
-    #endif
-
-        return tagData_.bad ? *tagData_.bad : Vec<Byte>();
-    }
-
-    /// @attention Only be called via #TT_INT_ARRAY.
-    Vec<Int32> getIntArray() const
-    {
-        assert(isIntArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isIntArray())
-            throw std::logic_error("Can't get int array value for non-int array tag.");
-    #endif
-
-        return tagData_.iad ? *tagData_.iad : Vec<Int32>();
-    }
-
-    /// @attention Only be called via #TT_LONG_ARRAY.
-    Vec<Int64> getLongArray() const
-    {
-        assert(isLongArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isLongArray())
-            throw std::logic_error("Can't get long array value for non-long array tag.");
-    #endif
-
-        return tagData_.lad ? *tagData_.lad : Vec<Int64>();
-    }
-
-    /// @overload
-    /// @brief Get a value from the byte array by index.
-    /// @attention Only be called via #TT_BYTE_ARRAY.
-    Byte getByte(size_t idx) const
-    {
-        assert(isByteArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isByteArray())
-            throw std::logic_error("Can't get byte value from non-byte array tag.");
-    #endif
-
-        if (!tagData_.bad || idx >= tagData_.bad->size())
-            throw std::out_of_range("The specified index is out of range.");
-
-        return (*tagData_.bad)[idx];
-    }
-
-    /// @attention Only be called via #TT_BYTE_ARRAY.
-    Byte getFrontByte() const
-    {
-        assert(isByteArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isByteArray())
-            throw std::logic_error("Can't get front byte value from non-byte array tag.");
-    #endif
-
-        if (!tagData_.bad || tagData_.bad->empty())
-            throw std::out_of_range("The front member is not exists.");
-
-        return tagData_.bad->front();
-    }
-
-    /// @attention Only be called via #TT_BYTE_ARRAY.
-    Byte getBackByte() const
-    {
-        assert(isByteArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isByteArray())
-            throw std::logic_error("Can't get back byte value from non-byte array tag.");
-    #endif
-
-        if (!tagData_.bad || tagData_.bad->empty())
-            throw std::out_of_range("The back member is not exits.");
-
-        return tagData_.bad->back();
-    }
-
-    /// @overload
-    /// @brief Get a value from the int array by index.
-    /// @attention Only be called via #TT_INT_ARRAY.
-    Int32 getInt(size_t idx) const
-    {
-        assert(isIntArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isIntArray())
-            throw std::logic_error("Can't get int value from non-int array tag.");
-    #endif
-
-        if (!tagData_.iad || idx >= tagData_.iad->size())
-            throw std::out_of_range("The specified index is out of range.");
-
-        return (*tagData_.iad)[idx];
-    }
-
-    /// @attention Only be called via #TT_INT_ARRAY.
-    Int32 getFrontInt() const
-    {
-        assert(isIntArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isIntArray())
-            throw std::logic_error("Can't get front int value from non-int array tag.");
-    #endif
-
-        if (!tagData_.iad || tagData_.iad->empty())
-            throw std::out_of_range("The front member is not exists.");
-
-        return tagData_.iad->front();
-    }
-
-    /// @attention Only be called via #TT_INT_ARRAY.
-    Int32 getBackInt() const
-    {
-        assert(isIntArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isIntArray())
-            throw std::logic_error("Can't get back int value from non-int array tag.");
-    #endif
-
-        if (!tagData_.iad || tagData_.iad->empty())
-            throw std::out_of_range("The back member is not exits.");
-
-        return tagData_.iad->back();
-    }
-
-    /// @overload
-    /// @brief Get a value from long array by index.
-    /// @attention Only be called via #TT_LONG_ARRAY.
-    Int64 getLong(size_t idx) const
-    {
-        assert(isLongArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isLongArray())
-            throw std::logic_error("Can't get long value from non-long array tag.");
-    #endif
-
-        if (!tagData_.lad || idx >= tagData_.lad->size())
-            throw std::out_of_range("The specified index is out of range.");
-
-        return (*tagData_.lad)[idx];
-    }
-
-    /// @attention Only be called via #TT_LONG_ARRAY.
-    Int64 getFrontLong() const
-    {
-        assert(isLongArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isLongArray())
-            throw std::logic_error("Can't get front long value from non-long array tag.");
-    #endif
-
-        if (!tagData_.lad || tagData_.lad->empty())
-            throw std::out_of_range("The front member is not exists.");
-
-        return tagData_.lad->front();
-    }
-
-    /// @attention Only be called via #TT_LONG_ARRAY.
-    Int64 getBackLong() const
-    {
-        assert(isLongArray());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isLongArray())
-            throw std::logic_error("Can't get back long value from non-long array tag.");
-    #endif
-
-        if (!tagData_.lad || tagData_.lad->empty())
-            throw std::out_of_range("The back member is not exits.");
-
-        return tagData_.lad->back();
-    }
-
-    /// @brief Get the tag by index.
-    /// @attention Only be called via #TT_LIST, #TT_COMPOUND.
-    Tag& getTag(size_t idx)
-    {
-        assert(isContainer());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isContainer())
-            throw std::logic_error("Can't get tag from non-container tag.");
-    #endif
-
-        // List
-        if (isList())
+        if (isByteArray())
         {
-        #ifndef MCNBT_DISABLE_EXCEPTION
-            if (itemType_ == TT_END)
-                throw std::logic_error("Can't read or write a uninitialized list.");
-        #endif
-
-            if (!tagData_.ld || idx >= tagData_.ld->size())
-                throw std::out_of_range("The specified index is out of range.");
-
-            return (*tagData_.ld)[idx];
+            auto& a = *static_cast<ByteArrayT*>(value_.ptr);
+            if (idx >= a.size()) throw std::out_of_range("nbt::BasicTag::erase(): index out of range");
+            a.erase(a.begin() + static_cast<typename ByteArrayT::difference_type>(idx));
+            return;
         }
-        // Compound
-        else
-        {
-            if (!tagData_.cd || idx >= tagData_.cd->size())
-                throw std::out_of_range("The specified index is out of range.");
 
-            return tagData_.cd->data[idx];
+        if (isIntArray())
+        {
+            auto& a = *static_cast<IntArrayT*>(value_.ptr);
+            if (idx >= a.size()) throw std::out_of_range("nbt::BasicTag::erase(): index out of range");
+            a.erase(a.begin() + static_cast<typename IntArrayT::difference_type>(idx));
+            return;
+        }
+
+        if (isLongArray())
+        {
+            auto& a = *static_cast<LongArrayT*>(value_.ptr);
+            if (idx >= a.size()) throw std::out_of_range("nbt::BasicTag::erase(): index out of range");
+            a.erase(a.begin() + static_cast<typename LongArrayT::difference_type>(idx));
+            return;
+        }
+
+        throw std::domain_error("nbt::BasicTag::erase(size_t): tag is not a list or array");
+    }
+
+    /**
+     * @brief Erases the entry with the specified key from a TT_COMPOUND tag.
+     * @return Number of entries removed (0 or 1).
+     */
+    size_type erase(const StringT& key)
+    {
+        checkType(TT_COMPOUND);
+        return static_cast<CompoundT*>(value_.ptr)->erase(key);
+    }
+
+    /** @brief Clears all elements in the tag's container; resets listItemType_ to TT_END for lists. */
+    void clear() noexcept
+    {
+        switch (type_)
+        {
+            case TT_STRING:     static_cast<StringT*>(value_.ptr)->clear();    break;
+            case TT_BYTE_ARRAY: static_cast<ByteArrayT*>(value_.ptr)->clear(); break;
+            case TT_INT_ARRAY:  static_cast<IntArrayT*>(value_.ptr)->clear();  break;
+            case TT_LONG_ARRAY: static_cast<LongArrayT*>(value_.ptr)->clear(); break;
+            case TT_LIST:
+                static_cast<ListT*>(value_.ptr)->clear();
+                listItemType_ = TT_END;
+                break;
+            case TT_COMPOUND:   static_cast<CompoundT*>(value_.ptr)->clear();  break;
+            default: break;
         }
     }
 
-    /// @overload
-    /// @brief Get the tag by name.
-    /// @attention Only be called via #TT_COMPOUND.
-    Tag& getTag(const String& name)
+    // =======================
+    // > Binary serialization
+    // =======================
+
+    /**
+     * @brief Parses a named root tag from a binary stream.
+     * @param is        Input stream positioned at the start of a named tag.
+     * @param bigEndian True for big-endian (Java Edition); false for little-endian (Bedrock Edition).
+     * @return Pair of {root_name, root_tag}.
+     * @note When MCNBT_HAS_ZLIB is defined, gzip-compressed streams are decompressed automatically.
+     */
+    static std::pair<StringT, BasicTagType> parse(std::istream& is, bool bigEndian)
     {
-        assert(isCompound());
-        assert(hasTag(name));
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isCompound())
-            throw std::logic_error("Can't get tag from non-compound tag.");
-
-        if (!hasTag(name))
-            throw std::logic_error("The specified name is not exists.");
-
-        if (!tagData_.cd)
-            throw std::logic_error("The member of specified name is not exists.");
+    #ifdef MCNBT_HAS_ZLIB
+        std::stringstream buf;
+        buf << is.rdbuf();
+        std::string content = buf.str();
+        if (gzip::isCompressed(content))
+            content = gzip::decompress(content);
+        std::istringstream ss(content);
+        return parseNamed(ss, bigEndian);
+    #else
+        return parseNamed(is, bigEndian);
     #endif
-
-        return tagData_.cd->data[tagData_.cd->idxs[name]];
     }
 
-    /// @attention Only be called via #TT_LIST, #TT_COMPOUND.
-    Tag& getFrontTag()
+    /**
+     * @brief Parses a named root tag from a file.
+     * @param filepath   Path to the binary NBT file.
+     * @param bigEndian  True for big-endian; false for little-endian.
+     * @param headerSkip Number of bytes to skip at the start of the file (e.g., 8 for some Bedrock map files).
+     * @return Pair of {root_name, root_tag}.
+     */
+    static std::pair<StringT, BasicTagType>
+    parse(const std::string& filepath, bool bigEndian, size_t headerSkip = 0)
     {
-        assert(isContainer());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isContainer())
-            throw std::logic_error("Can't get front tag from non-container tag.");
-    #endif
-
-        // List
-        if (isList())
-        {
-        #ifndef MCNBT_DISABLE_EXCEPTION
-            if (itemType_ == TT_END)
-                throw std::logic_error("Can't read or write a uninitialized list.");
-        #endif
-
-            if (!tagData_.ld || tagData_.ld->empty())
-                throw std::out_of_range("The front member is not exists.");
-
-            return tagData_.ld->front();
-        }
-        // Compound
-        else
-        {
-            if (!tagData_.cd || tagData_.cd->empty())
-                throw std::out_of_range("The front member is not exists.");
-
-            return tagData_.cd->data.front();
-        }
+        std::ifstream ifs(filepath, std::ios::binary);
+        if (!ifs.is_open())
+            throw std::runtime_error("nbt::BasicTag::parse(): failed to open file: " + filepath);
+        if (headerSkip > 0)
+            ifs.seekg(static_cast<std::streamoff>(headerSkip), std::ios::cur);
+        return parse(ifs, bigEndian);
     }
 
-    /// @attention Only be called via #TT_LIST, #TT_COMPOUND.
-    Tag& getBackTag()
+    /**
+     * @brief Serializes this tag as a named root tag to a binary stream.
+     * @param os        Output stream.
+     * @param bigEndian True for big-endian; false for little-endian.
+     * @param name      Root tag name (empty string is valid).
+     */
+    void dump(std::ostream& os, bool bigEndian, const StringT& name = StringT{}) const
     {
-        assert(isContainer());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isContainer())
-            throw std::logic_error("Can't get back tag from non-container tag.");
-    #endif
-
-        // List
-        if (isList())
-        {
-        #ifndef MCNBT_DISABLE_EXCEPTION
-            if (itemType_ == TT_END)
-                throw std::logic_error("Can't read or write a uninitialized list.");
-        #endif
-
-            if (!tagData_.ld || tagData_.ld->empty())
-                throw std::out_of_range("The back member is not exists.");
-
-            return tagData_.ld->back();
-        }
-        // Compound
-        else
-        {
-            if (!tagData_.cd || tagData_.cd->empty())
-                throw std::out_of_range("The back member is not exists.");
-
-            return tagData_.cd->data.back();
-        }
+        writeNamed(os, bigEndian, name);
     }
 
-    /// @brief Remove the element by index.
-    /// @attention Only be called via
-    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
-    Tag& remove(size_t idx)
+    /**
+     * @brief Serializes this tag as a named root tag to a file.
+     * @param filepath  Destination file path.
+     * @param bigEndian True for big-endian; false for little-endian.
+     * @param name      Root tag name (empty string is valid).
+     */
+    void dump(const std::string& filepath, bool bigEndian, const StringT& name = StringT{}) const
     {
-        assert(isString() || isArray() || isContainer());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isString() && !isArray() && !isContainer())
-            throw std::logic_error("Can't remove element from non-string, non-array, non-container tag.");
-    #endif
-
-        if (isString())
-        {
-            if (!tagData_.str || idx >= tagData_.str->size())
-                throw std::out_of_range("The specified index is out of range.");
-
-            tagData_.str->erase(tagData_.str->begin() + idx);
-        }
-        else if (isByteArray())
-        {
-            if (!tagData_.bad || idx >= tagData_.bad->size())
-                throw std::out_of_range("The specified index is out of range.");
-
-            tagData_.bad->erase(tagData_.bad->begin() + idx);
-        }
-        else if (isIntArray())
-        {
-            if (!tagData_.iad || idx >= tagData_.iad->size())
-                throw std::out_of_range("The specified index is out of range.");
-
-            tagData_.iad->erase(tagData_.iad->begin() + idx);
-        }
-        else if (isLongArray())
-        {
-            if (!tagData_.lad || idx >= tagData_.lad->size())
-                throw std::out_of_range("The specified index is out of range.");
-
-            tagData_.lad->erase(tagData_.lad->begin() + idx);
-        }
-        else if (isList())
-        {
-        #ifndef MCNBT_DISABLE_EXCEPTION
-            if (itemType_ == TT_END)
-                throw std::logic_error("Can't read or write a uninitialized list.");
-        #endif
-
-            if (!tagData_.ld || idx >= tagData_.ld->size())
-                throw std::out_of_range("The specified index is out of range.");
-
-            tagData_.ld->erase(tagData_.ld->begin() + idx);
-        }
-        else if (isCompound())
-        {
-            if (!tagData_.cd || idx >= tagData_.cd->size())
-                throw std::out_of_range("The specified index is out of range.");
-
-            tagData_.cd->idxs.erase(tagData_.cd->data[idx].name());
-            tagData_.cd->data.erase(tagData_.cd->data.begin() + idx);
-
-            for (auto& var : tagData_.cd->idxs)
-                if (var.second > idx)
-                    var.second--;
-        }
-
-        return *this;
-    }
-
-    /// @overload
-    /// @brief Remove the tag by name.
-    /// @attention Only be called via #TT_COMPOUND.
-    Tag& remove(const String& name)
-    {
-        assert(isCompound());
-        assert(hasTag(name));
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isCompound())
-            throw std::logic_error("Can't remove tag from non-compound tag.");
-
-        if (!hasTag(name))
-            throw std::logic_error("The specified name is not exists.");
-
-        if (!tagData_.cd)
-            throw std::logic_error("The member of specified name is not exists.");
-    #endif
-
-        size_t idx = tagData_.cd->idxs[name];
-
-        tagData_.cd->data.erase(tagData_.cd->data.begin() + idx);
-        tagData_.cd->idxs.erase(name);
-
-        for (auto& var : tagData_.cd->idxs)
-        {
-            if (var.second > idx)
-            var.second--;
-        }
-
-        return *this;
-    }
-
-    /// @brief Remove the first element.
-    /// @attention Only be called via
-    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
-    Tag& removeFront()
-    {
-        assert(isString() || isArray() || isContainer());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isString() && !isArray() && !isContainer())
-            throw std::logic_error("Can't remove front element from non-string, non-array, non-container tag.");
-    #endif
-
-        if (isString())
-        {
-            if (!tagData_.str || tagData_.str->empty())
-                throw std::out_of_range("The front member is not exists.");
-
-            tagData_.str->erase(tagData_.str->begin());
-        }
-        else if (isByteArray())
-        {
-            if (!tagData_.bad || tagData_.bad->empty())
-                throw std::out_of_range("The front member is not exists.");
-
-            tagData_.bad->erase(tagData_.bad->begin());
-        }
-        else if (isIntArray())
-        {
-            if (!tagData_.iad || tagData_.iad->empty())
-                throw std::out_of_range("The front member is not exists.");
-
-            tagData_.iad->erase(tagData_.iad->begin());
-        }
-        else if (isLongArray())
-        {
-            if (!tagData_.lad || tagData_.lad->empty())
-                throw std::out_of_range("The front member is not exists.");
-
-            tagData_.lad->erase(tagData_.lad->begin());
-        }
-        else if (isList())
-        {
-        #ifndef MCNBT_DISABLE_EXCEPTION
-            if (itemType_ == TT_END)
-                throw std::logic_error("Can't read or write a uninitialized list.");
-        #endif
-
-            if (!tagData_.ld || tagData_.ld->empty())
-                throw std::out_of_range("The front member is not exists.");
-
-            tagData_.ld->erase(tagData_.ld->begin());
-        }
-        else if (isCompound())
-        {
-            if (!tagData_.cd || tagData_.cd->empty())
-                throw std::out_of_range("The front member is not exists.");
-
-            tagData_.cd->idxs.erase(tagData_.cd->data.front().name());
-            tagData_.cd->data.erase(tagData_.cd->data.begin());
-
-            for (auto& var : tagData_.cd->idxs)
-                var.second--;
-        }
-
-        return *this;
-    }
-
-    /// @brief Remove the last element.
-    /// @attention Only be called via
-    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
-    Tag& removeBack()
-    {
-        assert(isString() || isArray() || isContainer());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isString() && !isArray() && !isContainer())
-            throw std::logic_error("Can't remove back element from non-string, non-array, non-container tag.");
-    #endif
-
-        if (isString())
-        {
-            if (!tagData_.str || tagData_.str->empty())
-                throw std::out_of_range("The back member is not exists.");
-
-            tagData_.str->pop_back();
-        }
-        else if (isByteArray())
-        {
-            if (!tagData_.bad || tagData_.bad->empty())
-                throw std::out_of_range("The back member is not exists.");
-
-            tagData_.bad->pop_back();
-        }
-        else if (isIntArray())
-        {
-            if (!tagData_.iad || tagData_.iad->empty())
-                throw std::out_of_range("The back member is not exists.");
-
-            tagData_.iad->pop_back();
-        }
-        else if (isLongArray())
-        {
-            if (!tagData_.lad || tagData_.lad->empty())
-                throw std::out_of_range("The back member is not exists.");
-
-            tagData_.lad->pop_back();
-        }
-        else if (isList())
-        {
-        #ifndef MCNBT_DISABLE_EXCEPTION
-            if (itemType_ == TT_END)
-                throw std::logic_error("Can't read or write a uninitialized list.");
-        #endif
-
-            if (!tagData_.ld || tagData_.ld->empty())
-                throw std::out_of_range("The back member is not exists.");
-
-            tagData_.ld->pop_back();
-        }
-        else if (isCompound())
-        {
-            if (!tagData_.cd || tagData_.cd->empty())
-                throw std::out_of_range("The back member is not exists.");
-
-            tagData_.cd->idxs.erase(tagData_.cd->data.back().name());
-            tagData_.cd->data.pop_back();
-        }
-
-        return *this;
-    }
-
-    /// @brief Remove the all elements.
-    /// @attention Only be called via
-    // #TT_STRING, #TT_BYTE_ARRAY, #TT_INT_ARRAY, #TT_LONG_ARRAY, #TT_LIST, #TT_COMPOUND.
-    Tag& removeAll()
-    {
-        assert(isString() || isArray() || isContainer());
-    #ifndef MCNBT_DISABLE_EXCEPTION
-        if (!isString() && !isArray() && !isContainer())
-            throw std::logic_error("Can't remove all elements from non-string, non-array, non-container tag.");
-    #endif
-
-        if (isString())
-        {
-            if (tagData_.str)
-                tagData_.str->clear();
-        }
-        else if (isByteArray())
-        {
-            if (tagData_.bad)
-                tagData_.bad->clear();
-        }
-        else if (isIntArray())
-        {
-            if (tagData_.iad)
-                tagData_.iad->clear();
-        }
-        else if (isLongArray())
-        {
-            if (tagData_.lad)
-                tagData_.lad->clear();
-        }
-        else if (isList())
-        {
-        #ifndef MCNBT_DISABLE_EXCEPTION
-            if (itemType_ == TT_END)
-                throw std::logic_error("Can't read or write a uninitialized list.");
-        #endif
-
-            if (tagData_.ld)
-                tagData_.ld->clear();
-        }
-        else if (isCompound())
-        {
-            if (tagData_.cd)
-                tagData_.cd->clear();
-        }
-
-        return *this;
+        std::ofstream ofs(filepath, std::ios::binary);
+        if (!ofs.is_open())
+            throw std::runtime_error("nbt::BasicTag::dump(): failed to open file: " + filepath);
+        dump(ofs, bigEndian, name);
     }
 
 #ifdef MCNBT_HAS_ZLIB
-    /// @brief Write the tag to output stream.
-    void write(OStream& os, bool isBigEndian, bool isCompressed = false) const
+    /**
+     * @brief Serializes and gzip-compresses this tag to a binary stream.
+     * @param os        Output stream.
+     * @param bigEndian True for big-endian; false for little-endian.
+     * @param name      Root tag name.
+     */
+    void dumpCompressed(std::ostream& os, bool bigEndian, const StringT& name = StringT{}) const
     {
-        if (isCompressed)
-        {
-            SStream ss;
-            write_(ss, isBigEndian, isListItem());
-            os << gzip::compress(ss.str());
-        }
-        else
-        {
-            write_(os, isBigEndian, isListItem());
-        }
+        std::ostringstream ss;
+        writeNamed(ss, bigEndian, name);
+        os << gzip::compress(ss.str());
     }
 
-    /// @overload
-    void write(const String& filename, bool isBigEndian, bool isCompressed = false) const
+    /**
+     * @brief Serializes and gzip-compresses this tag to a file.
+     * @param filepath  Destination file path.
+     * @param bigEndian True for big-endian; false for little-endian.
+     * @param name      Root tag name.
+     */
+    void dumpCompressed(const std::string& filepath, bool bigEndian, const StringT& name = StringT{}) const
     {
-        OFStream ofs(filename, std::ios_base::binary);
-
-        if (ofs.is_open())
-            write(ofs, isBigEndian, isCompressed);
-        else
-            throw std::runtime_error("Failed to open file: " + filename);
-
-        ofs.close();
+        std::ofstream ofs(filepath, std::ios::binary);
+        if (!ofs.is_open())
+            throw std::runtime_error("nbt::BasicTag::dumpCompressed(): failed to open file: " + filepath);
+        dumpCompressed(ofs, bigEndian, name);
     }
-#else
-    /// @brief Write the tag to output stream.
-    void write(OStream& os, bool isBigEndian) const { write_(os, isBigEndian, isListItem()); }
+#endif
 
-    /// @overload
-    void write(const String& filename, bool isBigEndian) const
+    // =============================
+    // > SNBT (text representation)
+    // =============================
+
+    /**
+     * @brief Serializes this tag to an SNBT string.
+     * @param indent Spaces per indentation level. Pass 0 for compact output (no newlines or spaces).
+     */
+    StringT toSnbt(int indent = 0) const
     {
-        OFStream ofs(filename, std::ios_base::binary);
-
-        if (ofs.is_open())
-            write(ofs, isBigEndian);
-        else
-            throw std::runtime_error("Failed to open file: " + filename);
-
-        ofs.close();
+        return toSnbtImpl(indent, 0);
     }
-#endif // MCNBT_HAS_ZLIB
 
-    /// @brief Get the SNBT (The string representation of NBT).
-    /// @param isWrappedIndented If true, the output string will be wrapped and indented.
-    String toSnbt(bool isWrappedIndented = true) const { return toSnbt_(isWrappedIndented, isListItem()); }
+    /**
+     * @brief Parses an SNBT string and returns the corresponding tag.
+     * @param s SNBT-formatted string.
+     * @throws std::runtime_error on malformed input.
+     */
+    static BasicTagType fromSnbt(const StringT& s)
+    {
+        size_t pos = 0;
+        BasicTagType result = snbtParseValue(s, pos);
+        snbtSkipWs(s, pos);
+        if (pos != s.size())
+            throw std::runtime_error("nbt::BasicTag::fromSnbt(): trailing content after value");
+        return result;
+    }
 
-    /// @brief Operators overloading.
+    // =======
+    // > Swap
+    // =======
 
-    /// @brief Fast way of get the tag by index.
-    Tag& operator[](size_t idx)             { return getTag(idx); }
-
-    /// @overload
-    /// @brief Fast way of get the tag by name.
-    Tag& operator[](const String& name)     { return getTag(name); }
-
-    /// @brief Fast way of add the tag.
-    Tag& operator<<(Tag&& tag)              { return addTag(std::move(tag)); }
-
-    /// @overload
-    Tag& operator<<(Tag& tag)               { return addTag(tag); }
+    /** @brief Swaps the contents of this tag and @p other without allocating. */
+    void swap(BasicTagType& other) noexcept
+    {
+        using std::swap;
+        swap(type_,         other.type_);
+        swap(listItemType_, other.listItemType_);
+        swap(value_,        other.value_);
+    }
 
 private:
-    // Nums.
-    // Contains interger and float point number.
-    union Num
-    {
-        Num() : i64(0) {}
+    // ===================
+    // > Internal storage
+    // ===================
 
-        Byte    i8;
-        Int16   i16;
-        Int32   i32;
-        Int64   i64;
-        Fp32    f32;
-        Fp64    f64;
+    // All heap-allocated payload types are stored through a void pointer so that
+    // the union remains trivially copyable and reading an inactive member is avoided.
+    union Storage
+    {
+        int8_t  i8;
+        int16_t i16;
+        int32_t i32;
+        int64_t i64;
+        float   f32;
+        double  f64;
+        void*   ptr;
     };
 
-    // A simple wrapper of std::vector<tag> and std::map<string, size_t>.
-    struct CompoundData
+    TagType type_;
+    TagType listItemType_;
+    Storage value_;
+
+    // ===================
+    // > Internal helpers
+    // ===================
+
+    void checkType(TagType expected) const
     {
-        Vec<Tag> data;
-        Map<String, size_t> idxs;
+        if (type_ != expected)
+            throw std::domain_error("nbt::BasicTag: tag type mismatch");
+    }
 
-        bool empty() const          { return data.empty(); }
-
-        size_t size() const         { return data.size(); }
-
-        void reserve(size_t size)   { data.reserve(size); idxs.reserve(size); }
-
-        void clear()                { data.clear(); idxs.clear(); }
-    };
-
-    // Value of tag.
-    // Individual tag is like key-value pair.
-    // The key is the name of tag (can be empty. e.g. All list element not has name).
-    // The value is stored in the following union.
-    union Data
+    void destroyValue() noexcept
     {
-        Data() : num(Num()) {}
-
-        // Number data
-        Num             num;
-        // String data
-        String*         str;
-        // Byte Array data
-        Vec<Byte>*      bad;
-        // Int Array data
-        Vec<Int32>*     iad;
-        // Long Array data
-        Vec<Int64>*     lad;
-        // List data
-        Vec<Tag>*       ld;
-        // Compound data
-        CompoundData*   cd;
-    };
-
-    /// @brief Get the tag from a binary input stream.
-    /// @param isListItem       Whether the parent is a List tag.
-    /// @param parentType       If the parameter #isListItem is false, ignore this.
-    // Else this must be set to same as the element tag type of parent List.
-    static Tag fromBinStream_(IStream& is, bool isBigEndian, bool isListItem, TagType parentType = TT_END)
-    {
-        Tag tag;
-
-        // Get the tag type.
-        // If the parent is a List, that is this tag is a list element, get the tag type from parent.
-        // Else get the tag type from stream.
-        if (isListItem)
-            tag.tagType_ = parentType;
-        else
-            tag.tagType_ = static_cast<TagType>(is.get());
-
-        if (tag.tagType_ == TT_END)
-            return tag;
-
-        // Get the tag name (key).
-        // If the tag not is a list element obtain the name from stream.
-        if (!isListItem)
+        switch (type_)
         {
-            Int16 nameLen = _bytes2num<Int16>(is, isBigEndian);
-            if (nameLen != 0)
-            {
-                Byte* bytes = new Byte[nameLen];
-
-                is.read(bytes, nameLen);
-                tag.tagName_ = new String();
-                tag.tagName_->assign(bytes, static_cast<size_t>(is.gcount()));
-
-                delete[] bytes;
-            }
+            case TT_STRING:     delete static_cast<StringT*>(value_.ptr);    break;
+            case TT_BYTE_ARRAY: delete static_cast<ByteArrayT*>(value_.ptr); break;
+            case TT_INT_ARRAY:  delete static_cast<IntArrayT*>(value_.ptr);  break;
+            case TT_LONG_ARRAY: delete static_cast<LongArrayT*>(value_.ptr); break;
+            case TT_LIST:       delete static_cast<ListT*>(value_.ptr);      break;
+            case TT_COMPOUND:   delete static_cast<CompoundT*>(value_.ptr);  break;
+            default: break;
         }
+    }
 
-        // Get the tag dat (value).
-        switch (tag.tagType_)
+    void copyValueFrom(const BasicTag& other)
+    {
+        switch (other.type_)
+        {
+            case TT_BYTE:   value_.i8  = other.value_.i8;  break;
+            case TT_SHORT:  value_.i16 = other.value_.i16; break;
+            case TT_INT:    value_.i32 = other.value_.i32; break;
+            case TT_LONG:   value_.i64 = other.value_.i64; break;
+            case TT_FLOAT:  value_.f32 = other.value_.f32; break;
+            case TT_DOUBLE: value_.f64 = other.value_.f64; break;
+            case TT_STRING:
+                value_.ptr = other.value_.ptr
+                    ? new StringT(*static_cast<const StringT*>(other.value_.ptr)) : nullptr;
+                break;
+            case TT_BYTE_ARRAY:
+                value_.ptr = other.value_.ptr
+                    ? new ByteArrayT(*static_cast<const ByteArrayT*>(other.value_.ptr)) : nullptr;
+                break;
+            case TT_INT_ARRAY:
+                value_.ptr = other.value_.ptr
+                    ? new IntArrayT(*static_cast<const IntArrayT*>(other.value_.ptr)) : nullptr;
+                break;
+            case TT_LONG_ARRAY:
+                value_.ptr = other.value_.ptr
+                    ? new LongArrayT(*static_cast<const LongArrayT*>(other.value_.ptr)) : nullptr;
+                break;
+            case TT_LIST:
+                value_.ptr = other.value_.ptr
+                    ? new ListT(*static_cast<const ListT*>(other.value_.ptr)) : nullptr;
+                break;
+            case TT_COMPOUND:
+                value_.ptr = other.value_.ptr
+                    ? new CompoundT(*static_cast<const CompoundT*>(other.value_.ptr)) : nullptr;
+                break;
+            default:
+                value_.i64 = 0;
+                break;
+        }
+    }
+
+    // ===============
+    // > IO utilities
+    // ===============
+
+    static bool isBigEndian() noexcept
+    {
+        static const int probe = 1;
+        static const bool result = (reinterpret_cast<const char*>(&probe)[0] == 0);
+        return result;
+    }
+
+    template<typename T>
+    static T readBinary(std::istream& is, bool bigEndian)
+    {
+        char buf[sizeof(T)];
+        is.read(buf, sizeof(T));
+        if (bigEndian != isBigEndian())
+            std::reverse(buf, buf + sizeof(T));
+        T val;
+        memcpy(&val, buf, sizeof(T));
+        return val;
+    }
+
+    template<typename T>
+    static void writeBinary(std::ostream& os, T val, bool bigEndian)
+    {
+        char buf[sizeof(T)];
+        memcpy(buf, &val, sizeof(T));
+        if (bigEndian != isBigEndian())
+            std::reverse(buf, buf + sizeof(T));
+        os.write(buf, sizeof(T));
+    }
+
+    static StringT readNbtString(std::istream& is, bool bigEndian)
+    {
+        int16_t len = readBinary<int16_t>(is, bigEndian);
+        if (len <= 0)
+            return StringT{};
+        StringT s(static_cast<size_t>(len), typename StringT::value_type{});
+        is.read(&s[0], len);
+        return s;
+    }
+
+    static void writeNbtString(std::ostream& os, const StringT& s, bool bigEndian)
+    {
+        if (s.size() > static_cast<size_t>(std::numeric_limits<int16_t>::max()))
+            throw std::length_error("nbt::BasicTag: string length exceeds the NBT 32767-byte limit");
+        writeBinary<int16_t>(os, static_cast<int16_t>(s.size()), bigEndian);
+        os.write(s.data(), static_cast<std::streamsize>(s.size()));
+    }
+
+    static std::string makeIndent(int width, int level)
+    {
+        if (width <= 0) return "";
+        return std::string(static_cast<size_t>(width * level), ' ');
+    }
+
+    // =========================
+    // > Binary parsing helpers
+    // =========================
+
+    static std::pair<StringT, BasicTagType>
+    parseNamed(std::istream& is, bool bigEndian)
+    {
+        auto typeByte = static_cast<TagType>(static_cast<uint8_t>(is.get()));
+        if (typeByte == TT_END || is.eof())
+            return {StringT{}, BasicTagType{}};
+
+        StringT name = readNbtString(is, bigEndian);
+        BasicTagType tag;
+        tag.type_ = typeByte;
+        parsePayload(is, bigEndian, tag);
+        return {std::move(name), std::move(tag)};
+    }
+
+    static void parsePayload(std::istream& is, bool bigEndian, BasicTagType& tag)
+    {
+        switch (tag.type_)
         {
             case TT_BYTE:
-                tag.tagData_.num.i8 = _bytes2num<Byte>(is, isBigEndian);
+                tag.value_.i8 = readBinary<int8_t>(is, bigEndian);
                 break;
             case TT_SHORT:
-                tag.tagData_.num.i16 = _bytes2num<Int16>(is, isBigEndian);
+                tag.value_.i16 = readBinary<int16_t>(is, bigEndian);
                 break;
             case TT_INT:
-                tag.tagData_.num.i32 = _bytes2num<Int32>(is, isBigEndian);
+                tag.value_.i32 = readBinary<int32_t>(is, bigEndian);
                 break;
             case TT_LONG:
-                tag.tagData_.num.i64 = _bytes2num<Int64>(is, isBigEndian);
+                tag.value_.i64 = readBinary<int64_t>(is, bigEndian);
                 break;
             case TT_FLOAT:
-                tag.tagData_.num.f32 = _bytes2num<Fp32>(is, isBigEndian);
+                tag.value_.f32 = readBinary<float>(is, bigEndian);
                 break;
             case TT_DOUBLE:
-                tag.tagData_.num.f64 = _bytes2num<Fp64>(is, isBigEndian);
+                tag.value_.f64 = readBinary<double>(is, bigEndian);
                 break;
             case TT_STRING:
-            {
-                Int16 strlen = _bytes2num<Int16>(is, isBigEndian);
-
-                if (strlen != 0)
-                {
-                    Byte* bytes = new Byte[strlen];
-
-                    is.read(bytes, strlen);
-                    tag.tagData_.str = new String();
-                    tag.tagData_.str->assign(bytes, static_cast<size_t>(is.gcount()));
-
-                    delete[] bytes;
-                }
+                tag.value_.ptr = new StringT(readNbtString(is, bigEndian));
                 break;
-            }
             case TT_BYTE_ARRAY:
             {
-                Int32 dsize = _bytes2num<Int32>(is, isBigEndian);
-
-                if (dsize != 0)
-                {
-                    tag.tagData_.bad = new Vec<Byte>();
-                    tag.tagData_.bad->reserve(dsize);
-
-                    for (Int32 i = 0; i < dsize; ++i)
-                        tag.addByte(_bytes2num<Byte>(is, isBigEndian));
-                }
+                int32_t n = readBinary<int32_t>(is, bigEndian);
+                auto* arr = new ByteArrayT();
+                arr->reserve(static_cast<size_t>(n));
+                for (int32_t i = 0; i < n; ++i)
+                    arr->push_back(readBinary<int8_t>(is, bigEndian));
+                tag.value_.ptr = arr;
                 break;
             }
             case TT_INT_ARRAY:
             {
-                Int32 dsize = _bytes2num<Int32>(is, isBigEndian);
-
-                if (dsize != 0)
-                {
-                    tag.tagData_.iad = new Vec<Int32>();
-                    tag.tagData_.iad->reserve(dsize);
-
-                    for (Int32 i = 0; i < dsize; ++i)
-                        tag.addInt(_bytes2num<Int32>(is, isBigEndian));
-                }
+                int32_t n = readBinary<int32_t>(is, bigEndian);
+                auto* arr = new IntArrayT();
+                arr->reserve(static_cast<size_t>(n));
+                for (int32_t i = 0; i < n; ++i)
+                    arr->push_back(readBinary<int32_t>(is, bigEndian));
+                tag.value_.ptr = arr;
                 break;
             }
             case TT_LONG_ARRAY:
             {
-                Int32 dsize = _bytes2num<Int32>(is, isBigEndian);
-
-                if (dsize != 0)
-                {
-                    tag.tagData_.lad = new Vec<Int64>();
-                    tag.tagData_.lad->reserve(dsize);
-
-                    for (Int32 i = 0; i < dsize; ++i)
-                        tag.addLong(_bytes2num<Int64>(is, isBigEndian));
-                }
+                int32_t n = readBinary<int32_t>(is, bigEndian);
+                auto* arr = new LongArrayT();
+                arr->reserve(static_cast<size_t>(n));
+                for (int32_t i = 0; i < n; ++i)
+                    arr->push_back(readBinary<int64_t>(is, bigEndian));
+                tag.value_.ptr = arr;
                 break;
             }
             case TT_LIST:
             {
-                tag.itemType_ = static_cast<TagType>(is.get());
-                Int32 dsize = _bytes2num<Int32>(is, isBigEndian);
-
-                if (dsize != 0)
+                tag.listItemType_ = static_cast<TagType>(static_cast<uint8_t>(is.get()));
+                int32_t n = readBinary<int32_t>(is, bigEndian);
+                auto* lst = new ListT();
+                lst->reserve(static_cast<size_t>(n));
+                for (int32_t i = 0; i < n; ++i)
                 {
-                    tag.tagData_.ld = new Vec<Tag>();
-                    tag.tagData_.ld->reserve(dsize);
+                    BasicTagType item;
+                    item.type_ = tag.listItemType_;
+                    parsePayload(is, bigEndian, item);
+                    lst->push_back(std::move(item));
+                }
+                tag.value_.ptr = lst;
+                break;
+            }
+            case TT_COMPOUND:
+            {
+                auto* cmp = new CompoundT();
+                while (!is.eof()) {
+                    int peek = is.peek();
+                    if (peek == static_cast<int>(TT_END) || peek == EOF)
+                    {
+                        is.get(); // consume the End Tag terminator
+                        break;
+                    }
+                    auto named = parseNamed(is, bigEndian);
+                    cmp->emplace(std::move(named.first), std::move(named.second));
+                }
+                tag.value_.ptr = cmp;
+                break;
+            }
+            default:
+                throw std::runtime_error("nbt::BasicTag: unknown tag type during parse");
+        }
+    }
 
-                    for (Int32 i = 0; i < dsize; ++i)
-                        tag.addTag(fromBinStream_(is, isBigEndian, true, tag.itemType_));
+    // =========================
+    // > Binary writing helpers
+    // =========================
+
+    void writeNamed(std::ostream& os, bool bigEndian, const StringT& name) const
+    {
+        os.put(static_cast<char>(static_cast<uint8_t>(type_)));
+        writeNbtString(os, name, bigEndian);
+        writePayload(os, bigEndian);
+    }
+
+    void writePayload(std::ostream& os, bool bigEndian) const
+    {
+        switch (type_)
+        {
+            case TT_END:
+                os.put('\0');
+                break;
+            case TT_BYTE:
+                writeBinary<int8_t>(os, value_.i8, bigEndian);
+                break;
+            case TT_SHORT:
+                writeBinary<int16_t>(os, value_.i16, bigEndian);
+                break;
+            case TT_INT:
+                writeBinary<int32_t>(os, value_.i32, bigEndian);
+                break;
+            case TT_LONG:
+                writeBinary<int64_t>(os, value_.i64, bigEndian);
+                break;
+            case TT_FLOAT:
+                writeBinary<float>(os, value_.f32, bigEndian);
+                break;
+            case TT_DOUBLE:
+                writeBinary<double>(os, value_.f64, bigEndian);
+                break;
+            case TT_STRING:
+            {
+                const StringT empty{};
+                const auto& s = value_.ptr ? *static_cast<const StringT*>(value_.ptr) : empty;
+                writeNbtString(os, s, bigEndian);
+                break;
+            }
+            case TT_BYTE_ARRAY:
+            {
+                const ByteArrayT empty{};
+                const auto& a = value_.ptr ? *static_cast<const ByteArrayT*>(value_.ptr) : empty;
+                writeBinary<int32_t>(os, static_cast<int32_t>(a.size()), bigEndian);
+                for (auto v : a) writeBinary<int8_t>(os, v, bigEndian);
+                break;
+            }
+            case TT_INT_ARRAY:
+            {
+                const IntArrayT empty{};
+                const auto& a = value_.ptr ? *static_cast<const IntArrayT*>(value_.ptr) : empty;
+                writeBinary<int32_t>(os, static_cast<int32_t>(a.size()), bigEndian);
+                for (auto v : a) writeBinary<int32_t>(os, v, bigEndian);
+                break;
+            }
+            case TT_LONG_ARRAY:
+            {
+                const LongArrayT empty{};
+                const auto& a = value_.ptr ? *static_cast<const LongArrayT*>(value_.ptr) : empty;
+                writeBinary<int32_t>(os, static_cast<int32_t>(a.size()), bigEndian);
+                for (auto v : a) writeBinary<int64_t>(os, v, bigEndian);
+                break;
+            }
+            case TT_LIST:
+            {
+                // Per-element type and name headers are omitted;
+                // only the element type, count, and payloads are written.
+                TagType itemType = listItemType_;
+                const ListT* lst = value_.ptr ? static_cast<const ListT*>(value_.ptr) : nullptr;
+                int32_t n = lst ? static_cast<int32_t>(lst->size()) : 0;
+                if (n == 0) itemType = TT_END;
+                os.put(static_cast<char>(static_cast<uint8_t>(itemType)));
+                writeBinary<int32_t>(os, n, bigEndian);
+                if (lst)
+                {
+                    for (const auto& item : *lst)
+                        item.writePayload(os, bigEndian);
                 }
                 break;
             }
             case TT_COMPOUND:
             {
-                while (!is.eof()) {
-                    if (is.peek() == TT_END)
-                    {
-                        // Give up End tag and move stream point to next Byte.
-                        is.get();
-                        break;
-                    }
-
-                    tag.addTag(fromBinStream_(is, isBigEndian, false));
+                // Each entry is serialized as a named tag, followed by a TAG_End terminator.
+                if (value_.ptr)
+                {
+                    const auto& cmp = *static_cast<const CompoundT*>(value_.ptr);
+                    for (const auto& kv : cmp)
+                        kv.second.writeNamed(os, bigEndian, kv.first);
                 }
+                os.put(static_cast<char>(static_cast<uint8_t>(TT_END)));
                 break;
             }
             default:
-                throw std::runtime_error("Invalid tag type.");
+                throw std::runtime_error("nbt::BasicTag: unknown tag type during dump");
+        }
+    }
+
+    // ===============
+    // > SNBT helpers
+    // ===============
+
+    StringT toSnbtImpl(int indent, int level) const
+    {
+        const std::string ind  = makeIndent(indent, level);
+        const std::string ind1 = makeIndent(indent, level + 1);
+        const std::string nl   = indent >= 0 ? "\n" : "";
+        const std::string sp   = indent >= 0 ? " "  : "";
+
+        switch (type_)
+        {
+            case TT_END:
+                return "";
+            case TT_BYTE:
+                return std::to_string(static_cast<int>(value_.i8)) + "b";
+            case TT_SHORT:
+                return std::to_string(value_.i16) + "s";
+            case TT_INT:
+                return std::to_string(value_.i32);
+            case TT_LONG:
+                return std::to_string(value_.i64) + "l";
+            case TT_FLOAT:
+                return std::to_string(value_.f32) + "f";
+            case TT_DOUBLE:
+                return std::to_string(value_.f64) + "d";
+            case TT_STRING:
+            {
+                const StringT& s = value_.ptr ? *static_cast<const StringT*>(value_.ptr) : StringT{};
+                return StringT("\"") + s + "\"";
+            }
+            case TT_BYTE_ARRAY:
+            {
+                const ByteArrayT* a = static_cast<const ByteArrayT*>(value_.ptr);
+                if (!a || a->empty()) return "[B;]";
+                StringT s = "[B;";
+                for (size_t i = 0; i < a->size(); ++i)
+                {
+                    s += (i == 0 ? sp : "," + sp);
+                    s += std::to_string(static_cast<int>((*a)[i])) + "b";
+                }
+                return s + "]";
+            }
+            case TT_INT_ARRAY:
+            {
+                const IntArrayT* a = static_cast<const IntArrayT*>(value_.ptr);
+                if (!a || a->empty()) return "[I;]";
+                StringT s = "[I;";
+                for (size_t i = 0; i < a->size(); ++i)
+                {
+                    s += (i == 0 ? sp : "," + sp);
+                    s += std::to_string((*a)[i]);
+                }
+                return s + "]";
+            }
+            case TT_LONG_ARRAY:
+            {
+                const LongArrayT* a = static_cast<const LongArrayT*>(value_.ptr);
+                if (!a || a->empty()) return "[L;]";
+                StringT s = "[L;";
+                for (size_t i = 0; i < a->size(); ++i)
+                {
+                    s += (i == 0 ? sp : "," + sp);
+                    s += std::to_string((*a)[i]) + "l";
+                }
+                return s + "]";
+            }
+            case TT_LIST:
+            {
+                const ListT* lst = static_cast<const ListT*>(value_.ptr);
+                if (!lst || lst->empty()) return "[]";
+                StringT s = "[";
+                for (size_t i = 0; i < lst->size(); ++i)
+                {
+                    s += nl + ind1;
+                    s += (*lst)[i].toSnbtImpl(indent, level + 1);
+                    if (i + 1 < lst->size()) s += ",";
+                }
+                s += nl + ind + "]";
+                return s;
+            }
+            case TT_COMPOUND:
+            {
+                const CompoundT* cmp = static_cast<const CompoundT*>(value_.ptr);
+                if (!cmp || cmp->empty()) return "{}";
+                StringT s = "{";
+                bool first = true;
+                for (const auto& kv : *cmp)
+                {
+                    if (!first) s += ",";
+                    s += nl + ind1 + kv.first + ":" + sp;
+                    s += kv.second.toSnbtImpl(indent, level + 1);
+                    first = false;
+                }
+                s += nl + ind + "}";
+                return s;
+            }
+            default:
+                return "";
+        }
+    }
+
+    // =======================
+    // > SNBT parsing helpers
+    // =======================
+
+    static void snbtSkipWs(const StringT& s, size_t& pos)
+    {
+        while (pos < s.size())
+        {
+            char c = s[pos];
+            if (c != ' ' && c != '\t' && c != '\n' && c != '\r') break;
+            ++pos;
+        }
+    }
+
+    static StringT snbtReadQuotedString(const StringT& s, size_t& pos)
+    {
+        ++pos; // skip opening '"'
+        StringT result;
+        while (pos < s.size() && s[pos] != '"')
+        {
+            if (s[pos] == '\\' && pos + 1 < s.size())
+            {
+                ++pos;
+                switch (s[pos])
+                {
+                    case '"':  result += '"';    break;
+                    case '\\': result += '\\';   break;
+                    case 'n':  result += '\n';   break;
+                    case 'r':  result += '\r';   break;
+                    case 't':  result += '\t';   break;
+                    default:   result += s[pos]; break;
+                }
+            }
+            else { result += s[pos]; }
+            ++pos;
+        }
+        if (pos >= s.size())
+            throw std::runtime_error("nbt::BasicTag::fromSnbt(): unterminated string literal");
+        ++pos; // skip closing '"'
+        return result;
+    }
+
+    static StringT snbtReadKey(const StringT& s, size_t& pos)
+    {
+        snbtSkipWs(s, pos);
+        if (pos < s.size() && s[pos] == '"')
+            return snbtReadQuotedString(s, pos);
+        size_t start = pos;
+        while (pos < s.size() && s[pos] != ':' && s[pos] != ' ' &&
+            s[pos] != '\t' && s[pos] != '\n' && s[pos] != '\r')
+            ++pos;
+        return s.substr(start, pos - start);
+    }
+
+    // Reads an integer token with an optional b/s/l suffix; strips the suffix before numeric conversion.
+    static int64_t snbtReadRawInteger(const StringT& s, size_t& pos)
+    {
+        snbtSkipWs(s, pos);
+        size_t start = pos;
+        if (pos < s.size() && (s[pos] == '-' || s[pos] == '+')) ++pos;
+        while (pos < s.size() && isdigit(static_cast<unsigned char>(s[pos]))) ++pos;
+        if (pos < s.size() && (s[pos] == 'b' || s[pos] == 'B' || s[pos] == 's' || s[pos] == 'S' ||
+            s[pos] == 'l' || s[pos] == 'L'))
+            ++pos;
+        std::string tok(s.begin() + start, s.begin() + pos);
+        if (!tok.empty() && isalpha(static_cast<unsigned char>(tok.back())))
+            tok.pop_back();
+        return std::stoll(tok);
+    }
+
+    static BasicTagType snbtParsePrimitive(const StringT& s, size_t& pos)
+    {
+        size_t start = pos;
+        while (pos < s.size() && s[pos] != ',' && s[pos] != ']' && s[pos] != '}')
+            ++pos;
+        size_t end = pos;
+        while (end > start && (s[end - 1] == ' ' || s[end - 1] == '\t' ||
+            s[end - 1] == '\n' || s[end - 1] == '\r'))
+            --end;
+        if (end <= start)
+            throw std::runtime_error("nbt::BasicTag::fromSnbt(): empty primitive value");
+
+        std::string token(s.begin() + start, s.begin() + end);
+        char last = static_cast<char>(tolower(static_cast<unsigned char>(token.back())));
+        std::string body = token.substr(0, token.size() - 1);
+
+        auto isIntStr = [](const std::string& t) -> bool
+        {
+            if (t.empty()) return false;
+            size_t i = (t[0] == '-' || t[0] == '+') ? 1 : 0;
+            if (i == t.size()) return false;
+            for (; i < t.size(); ++i)
+                if (!isdigit(static_cast<unsigned char>(t[i]))) return false;
+            return true;
+        };
+        auto isNumStr = [](const std::string& t) -> bool
+        {
+            if (t.empty()) return false;
+            try { std::stod(t); return true; } catch (...) { return false; }
+        };
+
+        if (last == 'b' && isIntStr(body)) return BasicTagType(static_cast<int8_t>(std::stoi(body)));
+        if (last == 's' && isIntStr(body)) return BasicTagType(static_cast<int16_t>(std::stoi(body)));
+        if (last == 'l' && isIntStr(body)) return BasicTagType(static_cast<int64_t>(std::stoll(body)));
+        if (last == 'f' && isNumStr(body)) return BasicTagType(std::stof(body));
+        if (last == 'd' && isNumStr(body)) return BasicTagType(std::stod(body));
+        if (isIntStr(token))               return BasicTagType(static_cast<int32_t>(std::stoi(token)));
+        if (isNumStr(token))               return BasicTagType(std::stod(token));
+
+        return BasicTagType(StringT(token.begin(), token.end()));
+    }
+
+    static BasicTagType snbtParseListOrArray(const StringT& s, size_t& pos)
+    {
+        ++pos; // skip '['
+        snbtSkipWs(s, pos);
+
+        // Typed array prefix: "B;", "I;", "L;"
+        if (pos + 1 < s.size() && s[pos + 1] == ';')
+        {
+            char typeChar = s[pos];
+            pos += 2;
+
+            if (typeChar == 'B' || typeChar == 'b')
+            {
+                BasicTagType tag(TT_BYTE_ARRAY);
+                auto& arr = tag.getByteArray();
+                while (true)
+                {
+                    snbtSkipWs(s, pos);
+                    if (pos >= s.size())
+                        throw std::runtime_error("nbt::BasicTag::fromSnbt(): unterminated byte array");
+                    if (s[pos] == ']') { ++pos; break; }
+                    if (s[pos] == ',') { ++pos; continue; }
+                    arr.push_back(static_cast<int8_t>(snbtReadRawInteger(s, pos)));
+                }
+                return tag;
+            }
+
+            if (typeChar == 'I' || typeChar == 'i')
+            {
+                BasicTagType tag(TT_INT_ARRAY);
+                auto& arr = tag.getIntArray();
+                while (true)
+                {
+                    snbtSkipWs(s, pos);
+                    if (pos >= s.size())
+                        throw std::runtime_error("nbt::BasicTag::fromSnbt(): unterminated int array");
+                    if (s[pos] == ']') { ++pos; break; }
+                    if (s[pos] == ',') { ++pos; continue; }
+                    arr.push_back(static_cast<int32_t>(snbtReadRawInteger(s, pos)));
+                }
+                return tag;
+            }
+
+            if (typeChar == 'L' || typeChar == 'l')
+            {
+                BasicTagType tag(TT_LONG_ARRAY);
+                auto& arr = tag.getLongArray();
+                while (true)
+                {
+                    snbtSkipWs(s, pos);
+                    if (pos >= s.size())
+                        throw std::runtime_error("nbt::BasicTag::fromSnbt(): unterminated long array");
+                    if (s[pos] == ']') { ++pos; break; }
+                    if (s[pos] == ',') { ++pos; continue; }
+                    arr.push_back(snbtReadRawInteger(s, pos));
+                }
+                return tag;
+            }
+
+            throw std::runtime_error("nbt::BasicTag::fromSnbt(): unknown array type prefix");
         }
 
+        // Regular list
+        BasicTagType tag(TT_LIST);
+        while (true)
+        {
+            snbtSkipWs(s, pos);
+            if (pos >= s.size())
+                throw std::runtime_error("nbt::BasicTag::fromSnbt(): unterminated list");
+            if (s[pos] == ']') { ++pos; break; }
+            if (s[pos] == ',') { ++pos; continue; }
+            tag.pushBack(snbtParseValue(s, pos));
+        }
         return tag;
     }
 
-    /// @todo
-    static Tag fromSnbt_(IStream& snbtSs, TagType parentType);
-
-    void write_(OStream& os, bool isBigEndian, bool isListItem) const
+    static BasicTagType snbtParseCompound(const StringT& s, size_t& pos)
     {
-        if (!isListItem)
+        ++pos; // skip '{'
+        BasicTagType tag(TT_COMPOUND);
+        bool first = true;
+        while (true)
         {
-            os.put(static_cast<Byte>(tagType_));
-
-            if (!tagName_ || tagName_->empty())
+            snbtSkipWs(s, pos);
+            if (pos >= s.size())
+                throw std::runtime_error("nbt::BasicTag::fromSnbt(): unterminated compound tag");
+            if (s[pos] == '}') { ++pos; break; }
+            if (!first)
             {
-                _num2bytes<Int16>(static_cast<Int16>(0), os, isBigEndian);
+                if (s[pos] != ',')
+                    throw std::runtime_error("nbt::BasicTag::fromSnbt(): expected ',' between compound entries");
+                ++pos;
+                snbtSkipWs(s, pos);
             }
-            else
-            {
-                _num2bytes<Int16>(static_cast<Int16>(tagName_->size()), os, isBigEndian);
-                os.write(tagName_->c_str(), tagName_->size());
-            }
+            first = false;
+            StringT key = snbtReadKey(s, pos);
+            snbtSkipWs(s, pos);
+            if (pos >= s.size() || s[pos] != ':')
+                throw std::runtime_error("nbt::BasicTag::fromSnbt(): expected ':' after compound key");
+            ++pos;
+            tag.emplace(key, snbtParseValue(s, pos));
         }
-
-        switch (tagType_)
-        {
-            case TT_END:
-                os.put(TT_END);
-                break;
-            case TT_BYTE:
-                os.put(tagData_.num.i8);
-                break;
-            case TT_SHORT:
-                _num2bytes<Int16>(tagData_.num.i16, os, isBigEndian);
-                break;
-            case TT_INT:
-                _num2bytes<Int32>(tagData_.num.i32, os, isBigEndian);
-                break;
-            case TT_LONG:
-                _num2bytes<Int64>(tagData_.num.i64, os, isBigEndian);
-                break;
-            case TT_FLOAT:
-                _num2bytes<Fp32>(tagData_.num.f32, os, isBigEndian);
-                break;
-            case TT_DOUBLE:
-                _num2bytes<Fp64>(tagData_.num.f64, os, isBigEndian);
-                break;
-            case TT_STRING:
-            {
-                if (!tagData_.str || tagData_.str->empty())
-                {
-                    _num2bytes<Int16>(static_cast<Int16>(0), os, isBigEndian);
-                    break;
-                }
-
-                _num2bytes<Int16>(static_cast<Int16>(tagData_.str->size()), os, isBigEndian);
-                os.write(tagData_.str->c_str(), tagData_.str->size());
-
-                break;
-            }
-            case TT_BYTE_ARRAY:
-            {
-                if (!tagData_.bad || tagData_.bad->empty())
-                {
-                    _num2bytes<Int32>(static_cast<Int32>(0), os, isBigEndian);
-                    break;
-                }
-
-                _num2bytes<Int32>(static_cast<Int32>(tagData_.bad->size()), os, isBigEndian);
-
-                for (const auto& var : *tagData_.bad)
-                    os.put(var);
-
-                break;
-            }
-            case TT_INT_ARRAY:
-            {
-                if (!tagData_.iad || tagData_.iad->empty())
-                {
-                    _num2bytes<Int32>(static_cast<Int32>(0), os, isBigEndian);
-                    break;
-                }
-
-                _num2bytes<Int32>(static_cast<Int32>(tagData_.iad->size()), os, isBigEndian);
-
-                for (const auto& var : *tagData_.iad)
-                    _num2bytes<Int32>(var, os, isBigEndian);
-
-                break;
-            }
-            case TT_LONG_ARRAY:
-            {
-                if (!tagData_.lad || tagData_.lad->empty())
-                {
-                    _num2bytes<Int32>(static_cast<Int32>(0), os, isBigEndian);
-                    break;
-                }
-
-                _num2bytes<Int32>(static_cast<Int32>(tagData_.lad->size()), os, isBigEndian);
-
-                for (const auto& var : *tagData_.lad)
-                    _num2bytes<Int64>(var, os, isBigEndian);
-
-                break;
-            }
-            case TT_LIST:
-            {
-                if (!tagData_.ld || tagData_.ld->empty())
-                {
-                    os.put(static_cast<Byte>(TT_END));
-                    _num2bytes<Int32>(static_cast<Int32>(0), os, isBigEndian);
-                    break;
-                }
-
-                os.put(static_cast<Byte>(itemType_));
-                _num2bytes<Int32>(static_cast<Int32>(tagData_.ld->size()), os, isBigEndian);
-
-                for (const auto& var : *tagData_.ld)
-                    var.write_(os, isBigEndian, true);
-
-                break;
-            }
-            case TT_COMPOUND:
-            {
-                if (!tagData_.cd || tagData_.cd->data.empty())
-                {
-                    os.put(TT_END);
-                    break;
-                }
-
-                for (const auto& var : tagData_.cd->data)
-                    var.write_(os, isBigEndian, false);
-
-                os.put(TT_END);
-
-                break;
-            }
-            default:
-                throw std::runtime_error("Invalid tag type.");
-        }
+        return tag;
     }
 
-    String toSnbt_(bool isWrappedIndented, bool isListItem) const
+    static BasicTagType snbtParseValue(const StringT& s, size_t& pos)
     {
-        static size_t indentCount = 0;
-
-        String inheritedIndentStr(indentCount * _SNBT_INDENT_WIDTH, ' ');
-        String key = isWrappedIndented ? inheritedIndentStr : "";
-
-        if (!isListItem && !name().empty())
-            key += name() + (isWrappedIndented ? ": " : ":");
-
-        switch (type())
-        {
-            case TT_END:        return "";
-            case TT_BYTE:       return key + std::to_string(static_cast<int>(tagData_.num.i8)) + 'b';
-            case TT_SHORT:      return key + std::to_string(tagData_.num.i16) + 's';
-            case TT_INT:        return key + std::to_string(tagData_.num.i32);
-            case TT_LONG:       return key + std::to_string(tagData_.num.i64) + 'l';
-            case TT_FLOAT:      return key + std::to_string(tagData_.num.f32) + 'f';
-            case TT_DOUBLE:     return key + std::to_string(tagData_.num.f64) + 'd';
-            case TT_STRING:     return key + '"' + (tagData_.str ? *tagData_.str : "") + '"';
-            case TT_BYTE_ARRAY:
-            {
-                if (!tagData_.bad || tagData_.bad->empty())
-                    return key + "[B;]";
-
-                // If has indent add the newline character and indent string.
-                String snbt = key + '[';
-                snbt += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-                snbt += "B;";
-
-                for (const auto& var : *tagData_.bad)
-                {
-                    snbt += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-                    snbt += std::to_string(static_cast<int>(var)) + "b,";
-                }
-
-                if (snbt.back() == ',')
-                    snbt.pop_back();
-
-                snbt += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
-                snbt += ']';
-
-                return snbt;
-            }
-            case TT_INT_ARRAY:
-            {
-                if (!tagData_.iad || tagData_.iad->empty())
-                    return key + "[I;]";
-
-                // If has indent add the newline character and indent string.
-                String snbt = key + '[';
-                snbt += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-                snbt += "I;";
-
-                for (const auto& var : *tagData_.iad)
-                {
-                    snbt += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-                    snbt += std::to_string(var) + ",";
-                }
-
-                if (snbt.back() == ',')
-                    snbt.pop_back();
-
-                snbt += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
-                snbt += ']';
-
-                return snbt;
-            }
-            case TT_LONG_ARRAY:
-            {
-                if (!tagData_.lad || tagData_.lad->empty())
-                    return key + "[L;]";
-
-                // If has indent add the newline character and indent string.
-                String snbt = key + '[';
-                snbt += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-                snbt += "L;";
-
-                for (const auto& var : *tagData_.lad)
-                {
-                    snbt += isWrappedIndented ? ('\n' + inheritedIndentStr + _SNBT_INDENT_STR) : "";
-                    snbt += std::to_string(var) + "l,";
-                }
-
-                if (snbt.back() == ',')
-                    snbt.pop_back();
-
-                snbt += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
-                snbt += ']';
-
-                return snbt;
-            }
-            case TT_LIST:
-            {
-                if (!tagData_.ld || tagData_.ld->empty())
-                    return key + "[]";
-
-                String snbt = key + '[';
-
-                indentCount++;
-                for (const auto& var : *tagData_.ld)
-                {
-                    snbt += isWrappedIndented ? "\n" : "";
-                    snbt += var.toSnbt_(isWrappedIndented, true) + ",";
-                }
-                indentCount--;
-
-                if (snbt.back() == ',')
-                    snbt.pop_back();
-
-                snbt += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
-                snbt += ']';
-
-                return snbt;
-            }
-            case TT_COMPOUND:
-            {
-                if (!tagData_.cd || tagData_.cd->data.empty())
-                    return key + "{}";
-
-                String snbt = key + "{";
-
-                indentCount++;
-                for (const auto& var : tagData_.cd->data)
-                {
-                    snbt += isWrappedIndented ? "\n" : "";
-                    snbt += var.toSnbt_(isWrappedIndented, false) + ",";
-                }
-                indentCount--;
-
-                if (snbt.back() == ',')
-                    snbt.pop_back();
-
-                snbt += isWrappedIndented ? ('\n' + inheritedIndentStr) : "";
-                snbt += '}';
-
-                return snbt;
-            }
-            default:
-                throw std::runtime_error("Invalid tag type.");
-        }
+        snbtSkipWs(s, pos);
+        if (pos >= s.size())
+            throw std::runtime_error("nbt::BasicTag::fromSnbt(): unexpected end of input");
+        char c = s[pos];
+        if (c == '{') return snbtParseCompound(s, pos);
+        if (c == '[') return snbtParseListOrArray(s, pos);
+        if (c == '"') return BasicTagType(snbtReadQuotedString(s, pos));
+        return snbtParsePrimitive(s, pos);
     }
-
-    // Release the all alloced memory.
-    // (e.g. tag name and tag value.)
-    void release_()
-    {
-        if (isString() && tagData_.str)             delete tagData_.str;
-        else if (isByteArray() && tagData_.bad)     delete tagData_.bad;
-        else if (isIntArray() && tagData_.iad)      delete tagData_.iad;
-        else if (isLongArray() && tagData_.lad)     delete tagData_.lad;
-        else if (isList() && tagData_.ld)           delete tagData_.ld;
-        else if (isCompound() && tagData_.cd)       delete tagData_.cd;
-        tagData_.str = nullptr;
-
-        if (tagName_)
-        {
-            delete tagName_;
-            tagName_ = nullptr;
-        }
-    }
-
-    TagType tagType_    = TT_END;
-    TagType itemType_   = TT_END;    ///< Tag type of the list items. Just usefull for list tag.
-    Data tagData_;
-    String* tagName_    = nullptr;
-    Tag* parent_        = nullptr;
 };
 
+// ============
+// > TagGetter
+// ============
+
+namespace detail
+{
+
+template<typename T, typename BasicTagType>
+struct TagGetter
+{
+    static_assert(sizeof(T) == 0, "nbt::BasicTag::get<T>(): unsupported type T");
+};
+
+#define NBT_DEFINE_GETTER(T, METHOD)                            \
+template<typename BasicTagType>                                 \
+struct TagGetter<T, BasicTagType>                               \
+{                                                               \
+    static T  get(const BasicTagType& t) { return t.METHOD(); } \
+    static T& getRef(BasicTagType& t)    { return t.METHOD(); } \
+};
+
+NBT_DEFINE_GETTER(int8_t,  getByte)
+NBT_DEFINE_GETTER(int16_t, getShort)
+NBT_DEFINE_GETTER(int32_t, getInt)
+NBT_DEFINE_GETTER(int64_t, getLong)
+NBT_DEFINE_GETTER(float,   getFloat)
+NBT_DEFINE_GETTER(double,  getDouble)
+
+#undef NBT_DEFINE_GETTER
+
+template<typename BasicTagType>
+struct TagGetter<typename BasicTagType::StringT, BasicTagType>
+{
+    static typename BasicTagType::StringT  get(const BasicTagType& t) { return t.getString(); }
+    static typename BasicTagType::StringT& getRef(BasicTagType& t)    { return t.getString(); }
+};
+
+template<typename BasicTagType>
+struct TagGetter<typename BasicTagType::ByteArrayT, BasicTagType>
+{
+    static typename BasicTagType::ByteArrayT  get(const BasicTagType& t) { return t.getByteArray(); }
+    static typename BasicTagType::ByteArrayT& getRef(BasicTagType& t)    { return t.getByteArray(); }
+};
+
+template<typename BasicTagType>
+struct TagGetter<typename BasicTagType::IntArrayT, BasicTagType>
+{
+    static typename BasicTagType::IntArrayT  get(const BasicTagType& t) { return t.getIntArray(); }
+    static typename BasicTagType::IntArrayT& getRef(BasicTagType& t)    { return t.getIntArray(); }
+};
+
+template<typename BasicTagType>
+struct TagGetter<typename BasicTagType::LongArrayT, BasicTagType>
+{
+    static typename BasicTagType::LongArrayT  get(const BasicTagType& t) { return t.getLongArray(); }
+    static typename BasicTagType::LongArrayT& getRef(BasicTagType& t)    { return t.getLongArray(); }
+};
+
+template<typename BasicTagType>
+struct TagGetter<typename BasicTagType::ListT, BasicTagType>
+{
+    static typename BasicTagType::ListT  get(const BasicTagType& t) { return t.getList(); }
+    static typename BasicTagType::ListT& getRef(BasicTagType& t)    { return t.getList(); }
+};
+
+template<typename BasicTagType>
+struct TagGetter<typename BasicTagType::CompoundT, BasicTagType>
+{
+    static typename BasicTagType::CompoundT  get(const BasicTagType& t) { return t.getCompound(); }
+    static typename BasicTagType::CompoundT& getRef(BasicTagType& t)    { return t.getCompound(); }
+};
+
+} // namespace detail
+
+// ===========================
+// > Convenience type aliases
+// ===========================
+
+/** @brief Default tag: std::map-based compound, std::vector-based list. */
+using Tag = BasicTag<>;
+
+/** @brief Insertion-order-preserving variant. */
+using OrderedTag = BasicTag<std::string, std::vector, OrderedMap>;
+
 } // namespace nbt
 
-// Faster way for construct a tag object.
-namespace nbt
+namespace std
 {
 
-inline Tag gByte(Byte value, const String& name = "")
+template<
+    class S,
+    template<typename, typename...> class L,
+    template<typename, typename, typename...> class C,
+    template<typename> class A
+>
+void swap(nbt::BasicTag<S, L, C, A>& lhs, nbt::BasicTag<S, L, C, A>& rhs) noexcept
 {
-    Tag tag(TT_BYTE);
-    if (!name.empty())
-        tag.setName(name);
-
-    return tag.setByte(value);
+    lhs.swap(rhs);
 }
 
-inline Tag gShort(Int16 value, const String& name = "")
-{
-    Tag tag(TT_SHORT);
-    if (!name.empty())
-        tag.setName(name);
-
-    return tag.setShort(value);
-}
-
-inline Tag gInt(Int32 value, const String& name = "")
-{
-    Tag tag(TT_INT);
-    if (!name.empty())
-        tag.setName(name);
-
-    return tag.setInt(value);
-}
-
-inline Tag gLong(Int64 value, const String& name = "")
-{
-    Tag tag(TT_LONG);
-    if (!name.empty())
-        tag.setName(name);
-
-    return tag.setLong(value);
-}
-
-inline Tag gFloat(Fp32 value, const String& name = "")
-{
-    Tag tag(TT_FLOAT);
-    if (!name.empty())
-        tag.setName(name);
-
-    return tag.setFloat(value);
-}
-
-inline Tag gDouble(Fp64 value, const String& name = "")
-{
-    Tag tag(TT_DOUBLE);
-    if (!name.empty())
-        tag.setName(name);
-
-    return tag.setDouble(value);
-}
-
-inline Tag gString(const String& value, const String& name = "")
-{
-    Tag tag(TT_STRING);
-    if (!name.empty())
-        tag.setName(name);
-
-    return tag.setString(value);
-}
-
-inline Tag gByteArray(const Vec<Byte>& value, const String& name = "")
-{
-    Tag tag(TT_BYTE_ARRAY);
-    if (!name.empty())
-        tag.setName(name);
-
-    return tag.setByteArray(value);
-}
-
-inline Tag gIntArray(const Vec<Int32>& value, const String& name = "")
-{
-    Tag tag(TT_INT_ARRAY);
-    if (!name.empty())
-        tag.setName(name);
-
-    return tag.setIntArray(value);
-}
-
-inline Tag gLongArray(const Vec<Int64>& value, const String& name = "")
-{
-    Tag tag(TT_LONG_ARRAY);
-    if (!name.empty())
-        tag.setName(name);
-
-    return tag.setLongArray(value);
-}
-
-inline Tag gList(TagType dtype, const String& name = "")
-{
-    Tag tag(TT_LIST);
-    tag.setListItemType(dtype);
-    if (!name.empty())
-        tag.setName(name);
-
-    return tag;
-}
-
-inline Tag gCompound(const String& name = "")
-{
-    Tag tag(TT_COMPOUND);
-    if (!name.empty())
-        tag.setName(name);
-
-    return tag;
-}
-
-} // namespace nbt
+} // namespace std
 
 #endif // !MCNBT_MCNBT_HPP

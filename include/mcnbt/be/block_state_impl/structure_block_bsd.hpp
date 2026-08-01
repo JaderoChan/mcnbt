@@ -9,7 +9,8 @@ namespace nbt
 namespace be
 {
 
-struct StructureBlockBSD final : CommonBlockStateData
+template <typename BasicTagType = Tag>
+struct StructureBlockBSD final : CommonBlockStateData<BasicTagType>
 {
     enum Mode
     {
@@ -20,9 +21,9 @@ struct StructureBlockBSD final : CommonBlockStateData
 
     StructureBlockBSD() = default;
 
-    StructureBlockBSD(const String& mode) : mode(mode) {}
+    StructureBlockBSD(const std::string& mode) : mode(mode) {}
 
-    static String modeStr(Mode mode)
+    static std::string modeStr(Mode mode)
     {
         switch (mode)
         {
@@ -31,12 +32,12 @@ struct StructureBlockBSD final : CommonBlockStateData
             case MODE_CORNER:   return "corner";
             default:            return "";
         }
-    };
+    }
 
-    String mode = modeStr(MODE_LOAD);
+    std::string mode = modeStr(MODE_LOAD);
 
 protected:
-    void assemble(Tag& tag) const override { tag << gString(mode, "structure_block_type"); };
+    void assemble(BasicTagType& tag) const override { tag["structure_block_type"] = mode; }
 };
 
 } // namespace be

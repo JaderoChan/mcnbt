@@ -1,4 +1,4 @@
-# NBT data of Minecraft Bedrock Edition
+# NBT data of Minecraft Bedrock Edition (Discarded)
 
 **[简体中文](NBT_data_of_bedrock_ZH.md) | English**
 
@@ -16,7 +16,7 @@ The data is from the **Minecraft Wikipedia**. Some less frequently used data and
 ### Member variables of the data structure
 
 - It should be named with a name that conforms to its function instead of using its `savegame id`.
-- Variables of basic types must be their corresponding data types in `savegame`. For example, `Int` in `savegame` corresponds to `nbt::Int32`, and `Float` corresponds to `nbt::Fp32`.
+- Variables of basic types must be their corresponding data types in `savegame`. For example, `Int` in `savegame` corresponds to `nbt::int32_t`, and `Float` corresponds to `nbt::Fp32`.
 
   - Even when the available values are known and limited hard-coded values, `enum` cannot be used to replace its original data type. Instead, an `enum` based on the variable data type should be provided, while the data type of the variable itself remains unchanged.
   - When the available values are a known finite hard-coded String, the variable type must be `nbt::String`, and at the same time provide a `enum` and static conversion function from `enum values` to `nbt::String`.

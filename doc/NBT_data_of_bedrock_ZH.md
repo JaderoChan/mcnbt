@@ -1,4 +1,4 @@
-# 基岩版的NBT数据
+# 基岩版的NBT数据（废弃）
 
 **简体中文 | [English](NBT_data_of_bedrock_EN.md)**
 
@@ -16,7 +16,7 @@
 ### 数据结构的成员变量
 
 - 应该使用符合其功能的命名，而非使用其 `savegame id` 命名。
-- 基础类型的变量必须是其在 `savegame` 中对应的数据类型，如 `savegame` 中的 `Int` 对应 `nbt::Int32`、`Float` 对应 `nbt::Fp32`。
+- 基础类型的变量必须是其在 `savegame` 中对应的数据类型，如 `savegame` 中的 `Int` 对应 `nbt::int32_t`、`Float` 对应 `nbt::Fp32`。
 
   - 即使对于可取值是已知有限的硬编码值时也不能使用 `enum` 替代其原本的数据类型，应该提供一个基于变量数据类型的 `enum`，而变量本身的数据类型保持不变。
   - 对于可取值是已知有限的硬编码字符串时，变量类型必须为 `nbt::String`，同时提供一个 `enum` 与 `enum values` 到 `nbt::String` 的静态转换函数。

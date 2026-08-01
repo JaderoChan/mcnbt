@@ -10,9 +10,10 @@ namespace nbt
 namespace be
 {
 
-struct BannerBED final : public CommonBlockEntityData
+template <typename BasicTagType = Tag>
+struct BannerBED final : public CommonBlockEntityData<BasicTagType>
 {
-    enum Type : Int32
+    enum Type : int32_t
     {
         TYPE_NORMAL,
         TYPE_OMINOUS
@@ -69,9 +70,9 @@ struct BannerBED final : public CommonBlockEntityData
 
         Pattern() = default;
 
-        Pattern(const String& id, Int32 color) : id(id), color(color) {}
+        Pattern(const std::string& id, int32_t color) : id(id), color(color) {}
 
-        static String patternIdStr(PatternID id)
+        static std::string patternIdStr(PatternID id)
         {
             switch (id)
             {
@@ -122,44 +123,44 @@ struct BannerBED final : public CommonBlockEntityData
             }
         }
 
-        Tag getTag(const String& tagName = "") const
+        Tag getTag() const
         {
-            Tag tag = gCompound(tagName);
-            tag << gInt(color, "Color");
-            tag << gString(id, "Pattern");
+            Tag tag = Tag::compound();
+            tag["Color"]   = color;
+            tag["Pattern"] = id;
             return tag;
         }
 
-        String id       = patternIdStr(PTRNID_BASE);
-        Int32 color     = COLOR_WHITE;
+        std::string id    = patternIdStr(PTRNID_BASE);
+        int32_t color   = COLOR_WHITE;
     };
 
-    BannerBED() : CommonBlockEntityData("Banner") {}
+    BannerBED() : CommonBlockEntityData<BasicTagType>("Banner") {}
 
-    BannerBED(Int32 baseColor, Int32 type = TYPE_NORMAL, const Vec<Pattern>& patterns = {})
-        : CommonBlockEntityData("Banner"),
+    BannerBED(int32_t baseColor, int32_t type = TYPE_NORMAL, const std::vector<Pattern>& patterns = {})
+        : CommonBlockEntityData<BasicTagType>("Banner"),
         baseColor(baseColor),
         type(type),
         patterns(patterns)
     {}
 
-    Int32 baseColor     = COLOR_WHITE;
-    Int32 type          = TYPE_NORMAL;
+    int32_t              baseColor = COLOR_WHITE;
+    int32_t              type      = TYPE_NORMAL;
     /// @sa #BannerBED::Pattern
-    Vec<Pattern> patterns;
+    std::vector<Pattern> patterns;
 
 protected:
-    void assemble(Tag& tag) const override
+    void assemble(BasicTagType& tag) const override
     {
-        tag << gInt(baseColor, "Base");
-        tag << gInt(type, "Type");
+        tag["Base"] = baseColor;
+        tag["Type"] = type;
 
         if (!patterns.empty())
         {
-            auto patternsTag = gList(TT_COMPOUND, "Patterns");
+            auto patternsTag = BasicTagType::list();
             for (const auto& pattern : patterns)
                 patternsTag << pattern.getTag();
-            tag << patternsTag;
+            tag["Patterns"] = std::move(patternsTag);
         }
     }
 };

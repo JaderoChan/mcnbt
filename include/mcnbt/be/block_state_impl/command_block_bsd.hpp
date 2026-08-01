@@ -9,9 +9,10 @@ namespace nbt
 namespace be
 {
 
-struct CommandBlockBSD final : CommonBlockStateData
+template <typename BasicTagType = Tag>
+struct CommandBlockBSD final : CommonBlockStateData<BasicTagType>
 {
-    enum FacingDirection : Int32
+    enum FacingDirection : int32_t
     {
         FD_DOWN     = 0,
         FD_UP       = 1,
@@ -23,17 +24,17 @@ struct CommandBlockBSD final : CommonBlockStateData
 
     CommandBlockBSD() = default;
 
-    CommandBlockBSD(bool isConditional, Int32 fd) : isConditional(isConditional), fd(fd) {}
+    CommandBlockBSD(bool isConditional, int32_t fd) : isConditional(isConditional), fd(fd) {}
 
-    bool isConditional  = false;
-    Int32 fd            = FD_UP;
+    bool    isConditional = false;
+    int32_t fd            = FD_UP;
 
 protected:
-    void assemble(Tag& tag) const override
+    void assemble(BasicTagType& tag) const override
     {
-        tag << gByte(static_cast<Byte>(isConditional), "conditional_bit");
-        tag << gInt(fd, "facing_direction");
-    };
+        tag["conditional_bit"]  = isConditional;
+        tag["facing_direction"] = fd;
+    }
 };
 
 } // namespace be

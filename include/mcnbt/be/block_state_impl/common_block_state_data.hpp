@@ -9,21 +9,22 @@ namespace nbt
 namespace be
 {
 
+template <typename BasicTagType = Tag>
 struct CommonBlockStateData
 {
     CommonBlockStateData() = default;
 
     virtual ~CommonBlockStateData() = default;
 
-    Tag getTag(const String& tagName = "states") const
+    BasicTagType getTag(const std::string& = "states") const
     {
-        Tag tag = gCompound(tagName);
+        BasicTagType tag = BasicTagType::compound();
         assemble(tag);
         return tag;
-    };
+    }
 
 protected:
-    virtual void assemble(Tag& tag) const {};
+    virtual void assemble(BasicTagType&) const {}
 };
 
 } // namespace be
