@@ -78,8 +78,7 @@ void readExample(const std::string& filename, bool isBigEndian)
 
 int main()
 {
-    // auto rtn = inputHint();
-    std::pair<std::string, bool> rtn = {"./read_and_write_example.nbt", false};
+    auto rtn = inputHint();
 
     std::cout << "Write example:" << std::endl;
     writeExample(rtn.first, rtn.second);

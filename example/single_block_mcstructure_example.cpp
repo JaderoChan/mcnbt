@@ -12,7 +12,7 @@ int main()
     auto structure = be::createSingleBlockStructure("minecraft:command_block", bed, bsd);
 
     // Save the structure to a file. (Bedrock Edition, Little Endian)
-    std::cout << structure.toSnbt(4) << std::endl;
+    std::cout << structure.toSnbt(2) << std::endl;
     structure.dump("./single_block_mcstructure_example.mcstructure", false);
 
     return 0;

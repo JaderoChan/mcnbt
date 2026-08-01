@@ -36,7 +36,7 @@ int main()
 
     // Lists example.
     auto list1 = Tag::list();
-    list1 << Tag(int32_t(1)) << Tag(int32_t(2)) << Tag(int32_t(3));
+    list1 << int32_t(1) << int32_t(2) << int32_t(3);
     auto list2 = Tag::list();
     list2 << list1 << list1;  // lvalue: copies list1 twice
 
@@ -60,9 +60,13 @@ int main()
     root["Lists"]     = std::move(lists);
     root["Compounds"] = std::move(compounds);
 
-    auto snbt = root.toSnbt();
+    auto snbtNoIndent   = root.toSnbt();
+    std::cout << snbtNoIndent << std::endl;
+    auto snbtWithIndent = root.toSnbt(2);
+    std::cout << snbtWithIndent << std::endl;
+
     // No indent.
-    std::ofstream out1("./snbt_example_no_indent.txt");
+    std::ofstream out1("./snbt_no_indent.txt");
     if (out1.is_open())
     {
         out1 << root.toSnbt();
@@ -70,11 +74,23 @@ int main()
     }
 
     // With indent.
-    std::ofstream out2("./snbt_example_with_indent.txt");
+    std::ofstream out2("./snbt_with_indent.txt");
     if (out2.is_open())
     {
-        out2 << root.toSnbt(4);
+        out2 << root.toSnbt(2);
         out2.close();
+    }
+
+    // Parse SNBT
+    try
+    {
+        auto t1 = Tag::fromSnbt(snbtNoIndent);
+        auto t2 = Tag::fromSnbt(snbtWithIndent);
+        std::cout << "Success to parse SNBT" << std::endl;
+    }
+    catch (std::exception& e)
+    {
+        std::cout << "Failed to parse SNBT: " << e.what() << std::endl;
     }
 
     return 0;
