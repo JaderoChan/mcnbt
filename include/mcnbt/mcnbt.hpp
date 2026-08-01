@@ -1514,12 +1514,17 @@ private:
             case TT_COMPOUND:
             {
                 auto* cmp = new CompoundT();
-                while (!is.eof()) {
+                while (true)
+                {
                     int peek = is.peek();
-                    if (peek == static_cast<int>(TT_END) || peek == EOF)
+                    if (peek == static_cast<int>(TT_END))
                     {
                         is.get(); // consume the End Tag terminator
                         break;
+                    }
+                    else if (peek == EOF)
+                    {
+                        throw std::runtime_error("nbt::BasicTag: unclosed compound tag during parse");
                     }
                     auto named = parseNamed(is, bigEndian);
                     cmp->emplace(std::move(named.first), std::move(named.second));
