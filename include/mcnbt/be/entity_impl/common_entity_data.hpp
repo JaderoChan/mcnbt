@@ -139,9 +139,9 @@ struct CommonEntityData
     float   fallDistance        = 0.0f;
     std::vector<std::string> tags;
     std::vector<std::string> definitions;
-    float pos[3]      = { 0.0f, 0.0f, 0.0f };
-    float rotation[2] = { 0.0f, 0.0f };
-    float motion[3]   = { 0.0f, 0.0f, 0.0f };
+    float pos[3]      = {0.0f, 0.0f, 0.0f};
+    float rotation[2] = {0.0f, 0.0f};
+    float motion[3]   = {0.0f, 0.0f, 0.0f};
     BasicTagType linksTag;
 
 protected:

@@ -38,7 +38,7 @@ struct CommonBlockEntityData
     std::string id;
     /// The custom name of the block entity.
     std::string customName;
-    int32_t pos[3]    = { 0, 0, 0 };
+    int32_t pos[3]    = {0, 0, 0};
     /// Wether the block entity is movable with a piston.
     bool    isMovable = true;
 
