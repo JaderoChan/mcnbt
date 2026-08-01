@@ -35,48 +35,55 @@ std::pair<std::string, bool> inputHint()
         }
     }
 
-    return { filename, isBigEndian };
+    return {filename, isBigEndian};
 }
 
-void wrieExample(const std::string& filename, bool isBigEndian)
+void writeExample(const std::string& filename, bool isBigEndian)
 {
-    auto root = gCompound("Person");
-    root << gString("Alice", "name");
-    root << gInt(25, "age");
-    root << gByte(0, "gender (0=male, 1=female)");
+    auto root = Tag::compound();
+    root["name"]   = "Alice";
+    root["age"]    = int32_t(25);
+    root["gender (0=male, 1=female)"] = int8_t(0);
 
-    auto birthday = gCompound("birthday");
-    birthday << gInt(1990, "year") << gInt(1, "month") << gInt(1, "day");
-    root << birthday;
+    auto birthday = Tag::compound();
+    birthday["year"]  = int32_t(1990);
+    birthday["month"] = int32_t(1);
+    birthday["day"]   = int32_t(1);
+    root["birthday"] = std::move(birthday);
 
-    auto friends = gList(TT_COMPOUND, "friends");
-    friends << (gCompound("Person")
-                << gString("Bob", "name")
-                << gInt(26, "age")
-                << gByte(1, "gender (0=male, 1=female)"));
-    friends << (gCompound("Person")
-                << gString("Charlie", "name")
-                << gInt(30, "age")
-                << gByte(1, "gender (0=male, 1=female)"));
-    root << friends;
+    auto friends = Tag::list();
 
-    root.write(filename, isBigEndian);
+    auto bob = Tag::compound();
+    bob["name"]   = "Bob";
+    bob["age"]    = int32_t(26);
+    bob["gender (0=male, 1=female)"] = int8_t(1);
+    friends << std::move(bob);
+
+    auto charlie = Tag::compound();
+    charlie["name"]   = "Charlie";
+    charlie["age"]    = int32_t(30);
+    charlie["gender (0=male, 1=female)"] = int8_t(1);
+    friends << std::move(charlie);
+
+    root["friends"] = std::move(friends);
+
+    root.dump(filename, isBigEndian, "Person");
 }
 
 void readExample(const std::string& filename, bool isBigEndian)
 {
-    auto root = Tag::fromFile(filename, isBigEndian);
-    std::cout << root.toSnbt() << std::endl;
+    auto result = Tag::parse(filename, isBigEndian);
+    std::cout << result.second.toSnbt(4) << std::endl;
 }
 
 int main()
 {
     // auto rtn = inputHint();
-    std::pair<std::string, bool> rtn = { "./read_and_write_example.nbt", false };
+    std::pair<std::string, bool> rtn = {"./read_and_write_example.nbt", false};
 
     std::cout << "Write example:" << std::endl;
-    wrieExample(rtn.first, rtn.second);
-    std::cout << "Successfully write to " << rtn.first << std::endl;
+    writeExample(rtn.first, rtn.second);
+    std::cout << "Successfully wrote to " << rtn.first << std::endl;
 
     std::cout << std::string(60, '-') << std::endl;
 

@@ -6,58 +6,66 @@ using namespace nbt;
 
 int main()
 {
-    // Create the nbt root compound.
-    auto root = gCompound("Root");
+    auto root = Tag::compound();
 
     // Booleans example.
-    auto booleans = gCompound("Booleans");
-    booleans << gByte(0, "False") << gByte(1, "True");
+    auto booleans = Tag::compound();
+    booleans["False"] = false;
+    booleans["True"]  = true;
 
     // Numbers example.
-    auto numbers = gCompound("Numbers");
-    numbers << gShort(12345, "Short") << gInt(123456789, "Int") << gLong(1234567890123, "Long");
-    numbers << gFloat(3.1415926, "Float") << gDouble(2.718281828459045, "Double");
+    auto numbers = Tag::compound();
+    numbers["Short"]  = int16_t(12345);
+    numbers["Int"]    = int32_t(123456789);
+    numbers["Long"]   = int64_t(1234567890123LL);
+    numbers["Float"]  = 3.1415926f;
+    numbers["Double"] = 2.718281828459045;
 
     // Strings example.
-    auto strings = gCompound("Strings");
-    strings << gString("Hello, world!", "String");
+    auto strings = Tag::compound();
+    strings["String"] = "Hello, world!";
 
     // Arrays example.
-    auto arrays = gCompound("Arrays");
-    arrays << gByteArray({ 1, 2, 3, 4, 5 }, "ByteArray")
-           << gIntArray({ 1, 2, 3, 4, 5 }, "IntArray")
-           << gLongArray({ 1, 2, 3, 4, 5 }, "LongArray")
-           << gByteArray({}, "EmptyByteArray")
-           << gIntArray({}, "EmptyIntArray")
-           << gLongArray({}, "EmptyLongArray");
+    auto arrays = Tag::compound();
+    arrays["ByteArray"]      = Tag::ByteArrayT{int8_t(1), int8_t(2), int8_t(3), int8_t(4), int8_t(5)};
+    arrays["IntArray"]       = Tag::IntArrayT{1, 2, 3, 4, 5};
+    arrays["LongArray"]      = Tag::LongArrayT{1, 2, 3, 4, 5};
+    arrays["EmptyByteArray"] = Tag(Tag::TT_BYTE_ARRAY);
+    arrays["EmptyIntArray"]  = Tag(Tag::TT_INT_ARRAY);
+    arrays["EmptyLongArray"] = Tag(Tag::TT_LONG_ARRAY);
 
     // Lists example.
-    auto lists = gCompound("Lists");
-    auto list1 = gList(TT_INT, "IntList");
-    list1 << gInt(1) << gInt(2) << gInt(3);
-    auto list2 = gList(TT_LIST, "NestedList");
-    list2 << list1.copy() << list1.copy();
-    auto list3 = gList(TT_END, "EmptyEndList");
-    auto list4 = gList(TT_BYTE, "EmptyByteList");
-    lists << list1 << list2 << list3 << list4;
+    auto list1 = Tag::list();
+    list1 << Tag(int32_t(1)) << Tag(int32_t(2)) << Tag(int32_t(3));
+    auto list2 = Tag::list();
+    list2 << list1 << list1;  // lvalue: copies list1 twice
+
+    auto lists = Tag::compound();
+    lists["IntList"]       = std::move(list1);
+    lists["NestedList"]    = std::move(list2);
+    lists["EmptyEndList"]  = Tag::list();
+    lists["EmptyByteList"] = Tag::list();
 
     // Compounds example.
-    auto compounds = gCompound("Compounds");
-    auto sub1 = gCompound("EmptySubCompound");
-    auto sub2 = gCompound("SubCompound");
-    sub2 << gString("This is a string in a subcompound", "StringInSubCompound");
-    compounds << sub1 << sub2;
+    auto sub2 = Tag::compound();
+    sub2["StringInSubCompound"] = "This is a string in a subcompound";
+    auto compounds = Tag::compound();
+    compounds["EmptySubCompound"] = Tag::compound();
+    compounds["SubCompound"]      = std::move(sub2);
 
-    // Add all the exampels to the root compound.
-    root << booleans << numbers << strings << arrays << lists << compounds;
+    root["Booleans"]  = std::move(booleans);
+    root["Numbers"]   = std::move(numbers);
+    root["Strings"]   = std::move(strings);
+    root["Arrays"]    = std::move(arrays);
+    root["Lists"]     = std::move(lists);
+    root["Compounds"] = std::move(compounds);
 
-    // Write the snbt without and with indent.
-
+    auto snbt = root.toSnbt();
     // No indent.
     std::ofstream out1("./snbt_example_no_indent.txt");
     if (out1.is_open())
     {
-        out1 << root.toSnbt(false);
+        out1 << root.toSnbt();
         out1.close();
     }
 
@@ -65,7 +73,7 @@ int main()
     std::ofstream out2("./snbt_example_with_indent.txt");
     if (out2.is_open())
     {
-        out2 << root.toSnbt(true);
+        out2 << root.toSnbt(4);
         out2.close();
     }
 
