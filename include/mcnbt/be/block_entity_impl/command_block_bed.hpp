@@ -19,9 +19,8 @@ struct CommandBlockBED final : CommonBlockEntityData<BasicTagType>
         bool isAuto = false, bool isPowered = true,
         bool conditionMet = false)
         : CommonBlockEntityData<BasicTagType>("CommandBlock"),
-        command(command), tickDelay(tickDelay),
-        isAuto(isAuto), isPowered(isPowered),
-        conditionMet(conditionMet)
+        command(command), isAuto(isAuto), isPowered(isPowered),
+        conditionMet(conditionMet), tickDelay(tickDelay)
     {}
 
     std::string command;

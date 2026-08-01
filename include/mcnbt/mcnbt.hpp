@@ -44,6 +44,7 @@
 #include <iterator>
 #include <functional>
 
+#include <mcnbt/config.hpp>
 #ifdef MCNBT_HAS_ZLIB
     #include <mcnbt/gzip.hpp>
 #endif
@@ -1944,7 +1945,7 @@ private:
             if (pos >= s.size() || s[pos] != ':')
                 throw std::runtime_error("nbt::BasicTag::fromSnbt(): expected ':' after compound key");
             ++pos;
-            tag.emplace(key, snbtParseValue(s, pos));
+            tag.insert(key, snbtParseValue(s, pos));
         }
         return tag;
     }
