@@ -1241,9 +1241,12 @@ public:
 
     /**
      * @brief Serializes this tag to an SNBT string.
-     * @param indent Spaces per indentation level. Pass 0 for compact output (no newlines or spaces).
+     * @param indent Spaces per indentation level.
+     *               Negative: fully compact (no newlines, no spaces).
+     *               Zero: newlines but no indentation or extra spaces.
+     *               Positive: newlines with indentation.
      */
-    StringT toSnbt(int indent = 0) const
+    StringT toSnbt(int indent = -1) const
     {
         return toSnbtImpl(indent, 0);
     }
@@ -1639,7 +1642,7 @@ private:
         const std::string ind  = makeIndent(indent, level);
         const std::string ind1 = makeIndent(indent, level + 1);
         const std::string nl   = indent >= 0 ? "\n" : "";
-        const std::string sp   = indent >= 0 ? " "  : "";
+        const std::string sp   = indent >  0 ? " "  : "";
 
         switch (type_)
         {
