@@ -25,6 +25,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+/**
+ * @file mcnbt.hpp
+ * @brief A header-only C++ library for reading and writing Minecraft NBT format.
+ * @author 頔珞 JaderoChan
+ * @version 2.1.0
+ */
+
 #ifndef MCNBT_MCNBT_HPP
 #define MCNBT_MCNBT_HPP
 
