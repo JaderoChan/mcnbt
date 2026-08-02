@@ -8,21 +8,20 @@ int main()
     std::cout << "Enter the NBT file path:" << std::endl;
     std::cin >> filepath;
 
+    using ResultType = decltype(nbt::Tag::parse("", false));
+    ResultType result;
+
     try
     {
-        auto kv = nbt::Tag::parse(filepath, false);
-        auto rootName = kv.first;
-        auto root = std::move(kv.second);
-        std::cout << root.toSnbt(2) << std::endl;
+        result = nbt::Tag::parse(filepath, false);
+        std::cout << "[Little Endian]" << std::endl;
     }
     catch (std::exception& e)
     {
         try
         {
-            auto kv = nbt::Tag::parse(filepath, true);
-            auto rootName = kv.first;
-            auto root = std::move(kv.second);
-            std::cout << root.toSnbt(2) << std::endl;
+            result = nbt::Tag::parse(filepath, true);
+            std::cout << "[Big Endian]" << std::endl;
         }
         catch (std::exception& e)
         {
@@ -30,6 +29,10 @@ int main()
             return 1;
         }
     }
+
+    auto rootName = result.first;
+    auto root = std::move(result.second);
+    std::cout << root.toSnbt(2) << std::endl;
 
     return 0;
 }
