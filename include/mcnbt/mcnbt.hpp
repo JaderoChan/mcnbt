@@ -235,14 +235,12 @@ struct TagGetter;
 
 /**
  * @brief A type-safe NBT (Named Binary Tag) value.
- * @tparam StringType   String type used for entry names and string payloads (default: std::string).
  * @tparam ListType     Sequence container template for TT_LIST payloads (default: std::vector).
  * @tparam CompoundType Associative container template for TT_COMPOUND payloads (default: std::map).
  *                      Use OrderedMap to preserve entry insertion order.
  * @tparam AllocatorType Allocator template applied to all internal containers.
  */
 template<
-    class StringType = std::string,
     template<typename U, typename... Args> class ListType = std::vector,
     template<typename K, typename V, typename... Args> class CompoundType = std::map,
     template<typename U> class AllocatorType = std::allocator
@@ -250,7 +248,7 @@ template<
 class BasicTag
 {
 private:
-    using BasicTagType = BasicTag<StringType, ListType, CompoundType, AllocatorType>;
+    using BasicTagType = BasicTag<ListType, CompoundType, AllocatorType>;
 
 public:
     using value_type      = BasicTagType;
@@ -258,16 +256,16 @@ public:
     using const_reference = const BasicTagType&;
     using size_type       = size_t;
 
-    using StringT         = StringType;
+    using StringT         = std::string;
     using ByteArrayT      = std::vector<int8_t,  AllocatorType<int8_t>>;
     using IntArrayT       = std::vector<int32_t, AllocatorType<int32_t>>;
     using LongArrayT      = std::vector<int64_t, AllocatorType<int64_t>>;
     using ListT           = ListType<BasicTagType, AllocatorType<BasicTagType>>;
     using CompoundT       = CompoundType<
-        StringType,
+        StringT,
         BasicTagType,
-        std::less<StringType>,
-        AllocatorType<std::pair<const StringType, BasicTagType>>>;
+        std::less<StringT>,
+        AllocatorType<std::pair<const StringT, BasicTagType>>>;
 
     /** @brief NBT tag type identifier. */
     enum TagType : uint8_t
@@ -1148,23 +1146,23 @@ public:
      * @return Pair of {root_name, root_tag}.
      * @note When MCNBT_HAS_ZLIB is defined, gzip-compressed streams are decompressed automatically.
      */
-    static std::pair<StringT, BasicTagType> parse(std::istream& is, bool bigEndian)
+    static std::pair<StringT, BasicTagType> parse(std::istream& is, bool bigEndian, size_t headerSkip = 0)
     {
     #ifdef MCNBT_HAS_ZLIB
         if (gzip::isCompressed(is))
         {
             std::istringstream ss;
             {
-                std::string content((std::istreambuf_iterator<char>(is), std::istreambuf_iterator<char>()));
+                StringT content((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
                 content = gzip::decompress(content);
-                ss << content;
+                ss = std::istringstream(content);
             }
+            if (headerSkip > 0) ss.seekg(static_cast<std::streamoff>(headerSkip), std::ios::cur);
             return parseNamed(ss, bigEndian);
         }
-        return parseNamed(is, bigEndian);
-    #else
-        return parseNamed(is, bigEndian);
     #endif
+        if (headerSkip > 0) is.seekg(static_cast<std::streamoff>(headerSkip), std::ios::cur);
+        return parseNamed(is, bigEndian);
     }
 
     /**
@@ -1175,14 +1173,12 @@ public:
      * @return Pair of {root_name, root_tag}.
      */
     static std::pair<StringT, BasicTagType>
-    parse(const std::string& filepath, bool bigEndian, size_t headerSkip = 0)
+    parse(const StringT& filepath, bool bigEndian, size_t headerSkip = 0)
     {
         std::ifstream ifs(filepath, std::ios::binary);
         if (!ifs.is_open())
             throw std::runtime_error("nbt::BasicTag::parse(): failed to open file: " + filepath);
-        if (headerSkip > 0)
-            ifs.seekg(static_cast<std::streamoff>(headerSkip), std::ios::cur);
-        return parse(ifs, bigEndian);
+        return parse(ifs, bigEndian, headerSkip);
     }
 
     /**
@@ -1202,7 +1198,7 @@ public:
      * @param bigEndian True for big-endian; false for little-endian.
      * @param name      Root tag name (empty string is valid).
      */
-    void dump(const std::string& filepath, bool bigEndian, const StringT& name = StringT{}) const
+    void dump(const StringT& filepath, bool bigEndian, const StringT& name = StringT{}) const
     {
         std::ofstream ofs(filepath, std::ios::binary);
         if (!ofs.is_open())
@@ -1230,7 +1226,7 @@ public:
      * @param bigEndian True for big-endian; false for little-endian.
      * @param name      Root tag name.
      */
-    void dumpCompressed(const std::string& filepath, bool bigEndian, const StringT& name = StringT{}) const
+    void dumpCompressed(const StringT& filepath, bool bigEndian, const StringT& name = StringT{}) const
     {
         std::ofstream ofs(filepath, std::ios::binary);
         if (!ofs.is_open())
@@ -1420,10 +1416,10 @@ private:
         os.write(s.data(), static_cast<std::streamsize>(s.size()));
     }
 
-    static std::string makeIndent(int width, int level)
+    static StringT makeIndent(int width, int level)
     {
         if (width <= 0) return "";
-        return std::string(static_cast<size_t>(width * level), ' ');
+        return StringT(static_cast<size_t>(width * level), ' ');
     }
 
     // =========================
@@ -1433,11 +1429,12 @@ private:
     static std::pair<StringT, BasicTagType>
     parseNamed(std::istream& is, bool bigEndian)
     {
-        auto typeByte = static_cast<TagType>(static_cast<uint8_t>(is.get()));
+        const int rawByte = is.get();
+        if (rawByte == std::char_traits<char>::eof())
+            throw std::runtime_error("nbt::BasicTag: illegal nbt tag data");
+        const auto typeByte = static_cast<TagType>(static_cast<uint8_t>(rawByte));
         if (typeByte == TT_END)
             return {StringT{}, BasicTagType{}};
-        else if (typeByte == is.eof())
-            throw std::runtime_error("nbt::BasicTag: illegal nbt tag data");
 
         StringT name = readNbtString(is, bigEndian);
         BasicTagType tag;
@@ -1650,10 +1647,10 @@ private:
 
     StringT toSnbtImpl(int indent, int level) const
     {
-        const std::string ind  = makeIndent(indent, level);
-        const std::string ind1 = makeIndent(indent, level + 1);
-        const std::string nl   = indent >= 0 ? "\n" : "";
-        const std::string sp   = indent >  0 ? " "  : "";
+        const StringT ind  = makeIndent(indent, level);
+        const StringT ind1 = makeIndent(indent, level + 1);
+        const StringT nl   = indent >= 0 ? "\n" : "";
+        const StringT sp   = indent >  0 ? " "  : "";
 
         switch (type_)
         {
@@ -1811,7 +1808,7 @@ private:
         if (pos < s.size() && (s[pos] == 'b' || s[pos] == 'B' || s[pos] == 's' || s[pos] == 'S' ||
             s[pos] == 'l' || s[pos] == 'L'))
             ++pos;
-        std::string tok(s.begin() + start, s.begin() + pos);
+        StringT tok(s.begin() + start, s.begin() + pos);
         if (!tok.empty() && isalpha(static_cast<unsigned char>(tok.back())))
             tok.pop_back();
         return std::stoll(tok);
@@ -1829,11 +1826,11 @@ private:
         if (end <= start)
             throw std::runtime_error("nbt::BasicTag::fromSnbt(): empty primitive value");
 
-        std::string token(s.begin() + start, s.begin() + end);
+        StringT token(s.begin() + start, s.begin() + end);
         char last = static_cast<char>(tolower(static_cast<unsigned char>(token.back())));
-        std::string body = token.substr(0, token.size() - 1);
+        StringT body = token.substr(0, token.size() - 1);
 
-        auto isIntStr = [](const std::string& t) -> bool
+        auto isIntStr = [](const StringT& t) -> bool
         {
             if (t.empty()) return false;
             size_t i = (t[0] == '-' || t[0] == '+') ? 1 : 0;
@@ -1842,7 +1839,7 @@ private:
                 if (!isdigit(static_cast<unsigned char>(t[i]))) return false;
             return true;
         };
-        auto isNumStr = [](const std::string& t) -> bool
+        auto isNumStr = [](const StringT& t) -> bool
         {
             if (t.empty()) return false;
             try { std::stod(t); return true; } catch (...) { return false; }
@@ -2059,7 +2056,7 @@ struct TagGetter<typename BasicTagType::CompoundT, BasicTagType>
 using Tag = BasicTag<>;
 
 /** @brief Insertion-order-preserving variant. */
-using OrderedTag = BasicTag<std::string, std::vector, OrderedMap>;
+using OrderedTag = BasicTag<std::vector, OrderedMap>;
 
 } // namespace nbt
 
@@ -2067,12 +2064,11 @@ namespace std
 {
 
 template<
-    class S,
     template<typename, typename...> class L,
     template<typename, typename, typename...> class C,
     template<typename> class A
 >
-void swap(nbt::BasicTag<S, L, C, A>& lhs, nbt::BasicTag<S, L, C, A>& rhs) noexcept
+void swap(nbt::BasicTag<L, C, A>& lhs, nbt::BasicTag<L, C, A>& rhs) noexcept
 {
     lhs.swap(rhs);
 }
