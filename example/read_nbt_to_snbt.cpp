@@ -67,7 +67,7 @@ int main()
     auto rootName = result.first;
     auto root = std::move(result.second);
     std::cout << (isBigEndian ? "[Big Endian]" : "[Little Endian]") << std::endl;
-    std::cout << root.toSnbt(2) << std::endl;
+    std::cout << (rootName.empty() ? "" : (rootName + ": ")) << root.toSnbt(2) << std::endl;
 
     return 0;
 }
