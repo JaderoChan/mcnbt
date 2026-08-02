@@ -1151,13 +1151,17 @@ public:
     static std::pair<StringT, BasicTagType> parse(std::istream& is, bool bigEndian)
     {
     #ifdef MCNBT_HAS_ZLIB
-        std::stringstream buf;
-        buf << is.rdbuf();
-        std::string content = buf.str();
-        if (gzip::isCompressed(content))
-            content = gzip::decompress(content);
-        std::istringstream ss(content);
-        return parseNamed(ss, bigEndian);
+        if (gzip::isCompressed(is))
+        {
+            std::istringstream ss;
+            {
+                std::string content((std::istreambuf_iterator<char>(is), std::istreambuf_iterator<char>()));
+                content = gzip::decompress(content);
+                ss << content;
+            }
+            return parseNamed(ss, bigEndian);
+        }
+        return parseNamed(is, bigEndian);
     #else
         return parseNamed(is, bigEndian);
     #endif
@@ -1430,8 +1434,10 @@ private:
     parseNamed(std::istream& is, bool bigEndian)
     {
         auto typeByte = static_cast<TagType>(static_cast<uint8_t>(is.get()));
-        if (typeByte == TT_END || is.eof())
+        if (typeByte == TT_END)
             return {StringT{}, BasicTagType{}};
+        else if (typeByte == is.eof())
+            throw std::runtime_error("nbt::BasicTag: illegal nbt tag data");
 
         StringT name = readNbtString(is, bigEndian);
         BasicTagType tag;

@@ -4,6 +4,7 @@
 #include <cstddef> // size_t
 #include <limits>  // numeric_limits
 #include <string>  // string
+#include <istream>
 
 #ifndef ZLIB_CONST
     #define ZLIB_CONST
@@ -35,6 +36,31 @@ static inline bool isCompressed(const char* data, size_t size) noexcept
 static inline bool isCompressed(const std::string& data) noexcept
 {
     return isCompressed(data.c_str(), data.size());
+}
+
+/** @overload */
+static inline bool isCompressed(std::istream& is) noexcept
+{
+    const auto origin = is.tellg();
+
+    const int byte1 = is.get();
+    if (byte1 == EOF)
+    {
+        is.clear();
+        is.seekg(origin);
+        return false;
+    }
+
+    const int byte2 = is.get();
+    is.clear();
+    is.seekg(origin);
+    if (byte2 == EOF)
+        return false;
+
+    const bool isZlib = (byte1 == 0x78 && (byte2 == 0x9C || byte2 == 0x01 || byte2 == 0xDA || byte2 == 0x5E));
+    const bool isGzip = (byte1 == 0x1F && byte2 == 0x8B);
+
+    return isZlib || isGzip;
 }
 
 /**
@@ -129,7 +155,7 @@ static inline std::string decompress(const char* data, size_t size) noexcept
         stream.avail_out = static_cast<uInt>(decompressed.size() - decompressedSize);
         stream.next_out  = reinterpret_cast<Bytef*>(&decompressed[0] + decompressedSize);
 
-        const int ret = inflate(&stream, Z_FINISH);
+        const int ret = inflate(&stream, Z_NO_FLUSH);
         if (ret != Z_STREAM_END && ret != Z_OK)
         {
             inflateEnd(&stream);
