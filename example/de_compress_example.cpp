@@ -46,12 +46,12 @@ Tag getTestNbt()
 {
     auto root = Tag::compound();
 
-    auto list = Tag::list();
+    auto list = Tag::list(TT_INT);
     int a = 0, b = 1;
     for (size_t i = 0; i < 100; ++i)
     {
         int c = a + b;
-        list << int32_t(c);
+        list << c;
         a = b;
         b = c;
     }
@@ -68,7 +68,6 @@ void compressExample(const std::string& filename, bool isBigEndian)
 
 void decompressExample(const std::string& filename, bool isBigEndian)
 {
-    // parse() decompresses gzip-compressed streams automatically.
     auto result = Tag::parse(filename, isBigEndian);
     std::cout << result.second.toSnbt(2) << std::endl;
 }

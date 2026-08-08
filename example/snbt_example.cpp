@@ -15,9 +15,10 @@ int main()
 
     // Numbers example.
     auto numbers = Tag::compound();
+    numbers["Byte"]   = int8_t(123);
     numbers["Short"]  = int16_t(12345);
-    numbers["Int"]    = int32_t(123456789);
-    numbers["Long"]   = int64_t(1234567890123LL);
+    numbers["Int"]    = 123456789;
+    numbers["Long"]   = 1234567890123LL;
     numbers["Float"]  = 3.1415926f;
     numbers["Double"] = 2.718281828459045;
 
@@ -35,8 +36,8 @@ int main()
     arrays["EmptyLongArray"] = Tag(TT_LONG_ARRAY);
 
     // Lists example.
-    auto list1 = Tag::list();
-    list1 << int32_t(1) << int32_t(2) << int32_t(3);
+    auto list1 = Tag::list(TT_INT);
+    list1 << 1 << 2 << 3;
     auto list2 = Tag::list();
     list2 << list1 << list1;  // lvalue: copies list1 twice
 
