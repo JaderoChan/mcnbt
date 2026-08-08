@@ -535,10 +535,15 @@ public:
     // > Convenience static constructs
     // ================================
 
-    /** @brief Convenience functions for constructing List. */
-    static BasicTag list()     { return BasicTag(TT_LIST); }
+    /** @brief Convenience function for constructing List. */
+    static BasicTag list(TagType listItemType = TT_END)
+    {
+        BasicTag ret(TT_LIST);
+        ret.listItemType_ = listItemType;
+        return ret;
+    }
 
-    /** @brief Convenience functions for constructing Compound. */
+    /** @brief Convenience function for constructing Compound. */
     static BasicTag compound() { return BasicTag(TT_COMPOUND); }
 
     // ================
