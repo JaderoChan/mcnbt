@@ -30,9 +30,9 @@ int main()
     arrays["ByteArray"]      = Tag::ByteArrayT{int8_t(1), int8_t(2), int8_t(3), int8_t(4), int8_t(5)};
     arrays["IntArray"]       = Tag::IntArrayT{1, 2, 3, 4, 5};
     arrays["LongArray"]      = Tag::LongArrayT{1, 2, 3, 4, 5};
-    arrays["EmptyByteArray"] = Tag(Tag::TT_BYTE_ARRAY);
-    arrays["EmptyIntArray"]  = Tag(Tag::TT_INT_ARRAY);
-    arrays["EmptyLongArray"] = Tag(Tag::TT_LONG_ARRAY);
+    arrays["EmptyByteArray"] = Tag(TT_BYTE_ARRAY);
+    arrays["EmptyIntArray"]  = Tag(TT_INT_ARRAY);
+    arrays["EmptyLongArray"] = Tag(TT_LONG_ARRAY);
 
     // Lists example.
     auto list1 = Tag::list();
