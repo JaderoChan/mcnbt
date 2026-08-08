@@ -249,6 +249,9 @@ enum TagType : uint8_t
     TT_LONG_ARRAY = 12
 };
 
+namespace details
+{
+
 // =======================
 // > Static type checkers
 // =======================
@@ -286,14 +289,14 @@ static inline bool isContainer(TagType type)  noexcept
 static inline bool isPrimitive(TagType type)  noexcept
 { return isNumber(type) || isString(type); }
 
-// Forward declarations
-namespace detail
-{
+// =======================
+// > Forward declarations
+// =======================
 
 template<typename T, typename BasicTagType>
 struct TagGetter;
 
-} // namespace detail
+} // namespace details
 
 /**
  * @brief A type-safe NBT (Named Binary Tag) value.
@@ -553,32 +556,32 @@ public:
     /** @brief Return the runtime tag type. */
     TagType type()      const noexcept { return type_; }
 
-    bool isEnd()        const noexcept { return isEnd(type_);        }
-    bool isByte()       const noexcept { return isByte(type_);       }
-    bool isShort()      const noexcept { return isShort(type_);      }
-    bool isInt()        const noexcept { return isInt(type_);        }
-    bool isLong()       const noexcept { return isLong(type_);       }
-    bool isFloat()      const noexcept { return isFloat(type_);      }
-    bool isDouble()     const noexcept { return isDouble(type_);     }
-    bool isString()     const noexcept { return isString(type_);     }
-    bool isByteArray()  const noexcept { return isByteArray(type_);  }
-    bool isIntArray()   const noexcept { return isIntArray(type_);   }
-    bool isLongArray()  const noexcept { return isLongArray(type_);  }
-    bool isList()       const noexcept { return isList(type_);       }
-    bool isCompound()   const noexcept { return isCompound(type_);   }
+    bool isEnd()        const noexcept { return details::isEnd(type_);        }
+    bool isByte()       const noexcept { return details::isByte(type_);       }
+    bool isShort()      const noexcept { return details::isShort(type_);      }
+    bool isInt()        const noexcept { return details::isInt(type_);        }
+    bool isLong()       const noexcept { return details::isLong(type_);       }
+    bool isFloat()      const noexcept { return details::isFloat(type_);      }
+    bool isDouble()     const noexcept { return details::isDouble(type_);     }
+    bool isString()     const noexcept { return details::isString(type_);     }
+    bool isByteArray()  const noexcept { return details::isByteArray(type_);  }
+    bool isIntArray()   const noexcept { return details::isIntArray(type_);   }
+    bool isLongArray()  const noexcept { return details::isLongArray(type_);  }
+    bool isList()       const noexcept { return details::isList(type_);       }
+    bool isCompound()   const noexcept { return details::isCompound(type_);   }
 
     /** @brief Return true when the tag is any integer type (byte, short, int, or long). */
-    bool isInteger()    const noexcept { return isInteger(type_);    }
+    bool isInteger()    const noexcept { return details::isInteger(type_);    }
     /** @brief Return true when the tag is TT_FLOAT or TT_DOUBLE. */
-    bool isFloatPoint() const noexcept { return isFloatPoint(type_); }
+    bool isFloatPoint() const noexcept { return details::isFloatPoint(type_); }
     /** @brief Return true when the tag is any numeric type. */
-    bool isNumber()     const noexcept { return isNumber(type_);     }
+    bool isNumber()     const noexcept { return details::isNumber(type_);     }
     /** @brief Return true when the tag is a typed array (byte, int, or long array). */
-    bool isArray()      const noexcept { return isArray(type_);      }
+    bool isArray()      const noexcept { return details::isArray(type_);      }
     /** @brief Return true when the tag is TT_LIST or TT_COMPOUND. */
-    bool isContainer()  const noexcept { return isContainer(type_);  }
+    bool isContainer()  const noexcept { return details::isContainer(type_);  }
     /** @brief Return true when the tag is a number or a string. */
-    bool isPrimitive()  const noexcept { return isPrimitive(type_);  }
+    bool isPrimitive()  const noexcept { return details::isPrimitive(type_);  }
 
     // ==========
     // > Getters
@@ -767,7 +770,7 @@ public:
     template<typename T>
     T get() const
     {
-        return detail::TagGetter<T, BasicTagType>::get(*this);
+        return details::TagGetter<T, BasicTagType>::get(*this);
     }
     /**
      * @brief Return a mutable reference to the payload cast to type T.
@@ -777,7 +780,7 @@ public:
     template<typename T>
     T& get()
     {
-        return detail::TagGetter<T, BasicTagType>::getRef(*this);
+        return details::TagGetter<T, BasicTagType>::getRef(*this);
     }
 
     // ===========================
@@ -1073,9 +1076,9 @@ public:
 
         if (listItemType_ == TT_END)
             listItemType_ = val.type_;
-        else if (val.isInteger() && isInteger(listItemType_))
+        else if (val.isInteger() && details::isInteger(listItemType_))
             val = std::move(convertInteger(std::move(val), listItemType_));
-        else if (val.isFloatPoint() && isFloatPoint(listItemType_))
+        else if (val.isFloatPoint() && details::isFloatPoint(listItemType_))
             val = std::move(convertFloatPoint(std::move(val), listItemType_));
         else if (val.type_ != listItemType_)
             throw std::domain_error("nbt::BasicTag::pushBack(): element type does not match list item type");
@@ -1098,9 +1101,9 @@ public:
 
         if (listItemType_ == TT_END)
             listItemType_ = val.type_;
-        else if (val.isInteger() && isInteger(listItemType_))
+        else if (val.isInteger() && details::isInteger(listItemType_))
             val = std::move(convertInteger(std::move(val), listItemType_));
-        else if (val.isFloatPoint() && isFloatPoint(listItemType_))
+        else if (val.isFloatPoint() && details::isFloatPoint(listItemType_))
             val = std::move(convertFloatPoint(std::move(val), listItemType_));
         else if (val.type_ != listItemType_)
             throw std::domain_error("nbt::BasicTag::pushBack(): element type does not match list item type");
@@ -2081,7 +2084,7 @@ private:
     }
 };
 
-namespace detail
+namespace details
 {
 
 // =============
@@ -2153,7 +2156,7 @@ struct TagGetter<typename BasicTagType::CompoundT, BasicTagType>
     static typename BasicTagType::CompoundT& getRef(BasicTagType& t)    { return t.getCompound(); }
 };
 
-} // namespace detail
+} // namespace details
 
 // ===========================
 // > Convenience type aliases
