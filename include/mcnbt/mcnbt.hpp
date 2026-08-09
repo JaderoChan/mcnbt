@@ -29,7 +29,7 @@
  * @file mcnbt.hpp
  * @brief A header-only C++ library for reading and writing Minecraft NBT format.
  * @author 頔珞 JaderoChan
- * @version 2.1.1
+ * @version 2.1.2
  */
 
 #ifndef MCNBT_MCNBT_HPP
