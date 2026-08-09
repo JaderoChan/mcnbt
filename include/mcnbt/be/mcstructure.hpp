@@ -15,29 +15,36 @@ struct MCStructure
     MCStructure(int32_t formatVersion = 1, int32_t sizeX = 1, int32_t sizeY = 1, int32_t sizeZ = 1)
         : root(Tag::compound())
     {
+        // Format version
         root["format_version"] = formatVersion;
 
-        auto size = Tag::list();
+        // Size
+        auto size = Tag::list(TT_INT);
         size << sizeX << sizeY << sizeZ;
         root["size"] = std::move(size);
 
-        auto swo = Tag::list();
-        swo << int32_t(0) << int32_t(0) << int32_t(0);
+        // Structure world origin
+        auto swo = Tag::list(TT_INT);
+        swo << 0 << 0 << 0;
         root["structure_world_origin"] = std::move(swo);
 
-        auto blockIndices = Tag::list();
-        blockIndices << Tag::list() << Tag::list();
+        // Structures
+        auto structure = Tag::compound();
+
+        auto blockIndices = Tag::list(TT_LIST);
+        blockIndices << Tag::list(TT_INT) << Tag::list(TT_INT);
+
+        auto entities = Tag::list(TT_COMPOUND);
 
         auto defaultPalette = Tag::compound();
-        defaultPalette["block_palette"]       = Tag::list();
+        defaultPalette["block_palette"]       = Tag::list(TT_COMPOUND);
         defaultPalette["block_position_data"] = Tag::compound();
 
         auto palette = Tag::compound();
         palette["default"] = std::move(defaultPalette);
 
-        auto structure = Tag::compound();
         structure["block_indices"] = std::move(blockIndices);
-        structure["entities"]      = Tag::list();
+        structure["entities"]      = std::move(entities);
         structure["palette"]       = std::move(palette);
 
         root["structure"] = std::move(structure);
