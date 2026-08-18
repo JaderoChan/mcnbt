@@ -1,9 +1,9 @@
 #ifndef MCNBT_GZIP_HPP
 #define MCNBT_GZIP_HPP
 
-#include <cstddef> // size_t
-#include <limits>  // numeric_limits
-#include <string>  // string
+#include <stddef.h> // size_t
+#include <limits>   // numeric_limits
+#include <string>   // string
 #include <istream>
 
 #ifndef ZLIB_CONST

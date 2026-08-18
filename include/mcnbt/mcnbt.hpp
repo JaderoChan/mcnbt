@@ -35,9 +35,9 @@
 #ifndef MCNBT_MCNBT_HPP
 #define MCNBT_MCNBT_HPP
 
-#include <cstdint>
-#include <cstddef>
-#include <cstring>
+#include <stdint.h>
+#include <stddef.h>
+#include <string.h>
 #include <string>
 #include <vector>
 #include <map>
