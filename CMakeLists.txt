@@ -78,7 +78,7 @@ if(MCNBT_BUILD_ZLIB)
         find_package(zlib REQUIRED)
     endif()
 
-    target_link_libraries(${PROJECT_NAME} INTERFACE zlib)
+    target_link_libraries(${PROJECT_NAME} INTERFACE ZLIB::ZLIB)
 endif()
 
 ###########

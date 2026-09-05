@@ -142,16 +142,16 @@ endif(WIN32)
 
 if(ZLIB_BUILD_SHARED)
     add_library(
-        zlib SHARED ${ZLIB_SRCS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS}
+        mcnbt_zlib SHARED ${ZLIB_SRCS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS}
                     $<$<OR:$<BOOL:${WIN32}>,$<BOOL:${CYGWIN}>>:win32/zlib1.rc>)
-    add_library(ZLIB::ZLIB ALIAS zlib)
+    add_library(ZLIB::ZLIB ALIAS mcnbt_zlib)
     target_include_directories(
-        zlib
+        mcnbt_zlib
         PUBLIC $<BUILD_INTERFACE:${zlib_BINARY_DIR}>
                $<BUILD_INTERFACE:${zlib_SOURCE_DIR}>
                $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
     target_compile_definitions(
-        zlib
+        mcnbt_zlib
         PRIVATE ZLIB_BUILD
                 $<$<BOOL:NOT:${HAVE_FSEEKO}>:NO_FSEEKO>
                 $<$<BOOL:${HAVE___ATTR__VIS_HIDDEN}>:HAVE_HIDDEN>
@@ -161,12 +161,12 @@ if(ZLIB_BUILD_SHARED)
     set(INSTALL_VERSION ${zlib_VERSION})
 
     if(NOT CYGWIN)
-        set_target_properties(zlib PROPERTIES SOVERSION ${zlib_VERSION_MAJOR}
+        set_target_properties(mcnbt_zlib PROPERTIES SOVERSION ${zlib_VERSION_MAJOR}
                                               VERSION ${INSTALL_VERSION})
     endif(NOT CYGWIN)
 
     set_target_properties(
-        zlib
+        mcnbt_zlib
         PROPERTIES DEFINE_SYMBOL ZLIB_DLL
                    EXPORT_NAME ZLIB
                    OUTPUT_NAME z)
@@ -176,7 +176,7 @@ if(ZLIB_BUILD_SHARED)
         AND NOT (CMAKE_SYSTEM_NAME STREQUAL SunOS))
         # On unix-like platforms the library is almost always called libz
         set_target_properties(
-            zlib
+            mcnbt_zlib
             PROPERTIES LINK_FLAGS
                        "-Wl,--version-script,\"${zlib_SOURCE_DIR}/zlib.map\"")
     endif(
@@ -211,7 +211,7 @@ endif(ZLIB_BUILD_STATIC)
 if(ZLIB_INSTALL)
     if(ZLIB_BUILD_SHARED)
         install(
-            TARGETS zlib
+            TARGETS mcnbt_zlib
             COMPONENT Runtime
             EXPORT zlibSharedExport
             RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
@@ -225,7 +225,7 @@ if(ZLIB_INSTALL)
 
         if(MSVC)
             install(
-                FILES $<TARGET_PDB_FILE:zlib>
+                FILES $<TARGET_PDB_FILE:mcnbt_zlib>
                 COMPONENT Runtime
                 DESTINATION ${CMAKE_INSTALL_BINDIR}
                 CONFIGURATIONS Debug OR RelWithDebInfo
