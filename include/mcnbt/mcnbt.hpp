@@ -29,7 +29,7 @@
  * @file mcnbt.hpp
  * @brief A header-only C++ library for reading and writing Minecraft NBT format.
  * @author 頔珞 JaderoChan
- * @version 2.1.2
+ * @version 2.1.3
  */
 
 #ifndef MCNBT_MCNBT_HPP
@@ -248,6 +248,27 @@ enum TagType : uint8_t
     TT_INT_ARRAY  = 11,
     TT_LONG_ARRAY = 12
 };
+
+static inline const char* getTagTypeName(TagType type)
+{
+    switch (type)
+    {
+        case TT_END:        return "End";
+        case TT_BYTE:       return "Byte";
+        case TT_SHORT:      return "Short";
+        case TT_INT:        return "Int";
+        case TT_LONG:       return "Long";
+        case TT_FLOAT:      return "Float";
+        case TT_DOUBLE:     return "Double";
+        case TT_BYTE_ARRAY: return "Byte Array";
+        case TT_STRING:     return "String";
+        case TT_LIST:       return "List";
+        case TT_COMPOUND:   return "Compound";
+        case TT_INT_ARRAY:  return "Int Array";
+        case TT_LONG_ARRAY: return "Long Array";
+        default:            return "Unknown Tag Type";
+    }
+}
 
 namespace details
 {
@@ -554,7 +575,9 @@ public:
     // ================
 
     /** @brief Return the runtime tag type. */
-    TagType type()      const noexcept { return type_; }
+    TagType type()         const noexcept { return type_; }
+    /** @brief Return the runtime tag type name string. */
+    const char* typeName() const noexcept { return getTagTypeName(type_); }
 
     bool isEnd()        const noexcept { return details::isEnd(type_);        }
     bool isByte()       const noexcept { return details::isByte(type_);       }
@@ -1385,10 +1408,44 @@ private:
     // > Internal helpers
     // ===================
 
-    void checkType(TagType expected) const
+    template<typename T>
+    static std::string joinTagTypeNames(T type)
     {
-        if (type_ != expected)
-            throw std::domain_error("nbt::BasicTag: tag type mismatch");
+        return getTagTypeName(type);
+    }
+
+    template<typename T, typename... Args>
+    static std::string joinTagTypeNames(T type, Args... types)
+    {
+        return joinTagTypeNames(type) + "|" + joinTagTypeNames(types...);
+    }
+
+    template<typename... Args>
+    static void throwIncorrectType(TagType now, Args... expecteds)
+    {
+        throw std::domain_error(
+            std::string("nbt::BasicTag: tag type mismatch, expected is ") +
+            joinTagTypeNames(expecteds...) + " but now is " + getTagTypeName(now)
+        );
+    }
+
+    template<typename T>
+    bool isType(T expected) const
+    {
+        return type_ == expected;
+    }
+
+    template<typename T, typename... Args>
+    bool isType(T expected, Args... expecteds) const
+    {
+        return (type_ == expected) || isType(expecteds...);
+    }
+
+    template<typename... Args>
+    void checkType(Args... expecteds) const
+    {
+        if (!isType(expecteds...))
+            throwIncorrectType(type_, expecteds...);
     }
 
     void destroyValue() noexcept
