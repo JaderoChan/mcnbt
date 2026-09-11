@@ -74,7 +74,7 @@ if(MCNBT_BUILD_ZLIB)
             SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/zlib
         )
         FetchContent_MakeAvailable(zlib)
-    else()
+    elseif(NOT TARGET zlib)
         find_package(zlib REQUIRED)
     endif()
 
