@@ -2009,7 +2009,7 @@ private:
         auto isNumStr = [](const StringT& t) -> bool
         {
             if (t.empty()) return false;
-            try { std::stod(t); return true; } catch (...) { return false; }
+            try { (void)std::stod(t); return true; } catch (...) { return false; }
         };
 
         if (last == 'b' && isIntStr(body)) return BasicTagType(static_cast<int8_t>(std::stoi(body)));
