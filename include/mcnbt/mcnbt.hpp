@@ -542,7 +542,10 @@ public:
         other.value_.i64 = 0;
     }
 
-    /** @brief Unified copy/move assignment operator via copy-and-swap idiom. */
+    /**
+     * @brief Unified copy/move assignment operator via copy-and-swap idiom.
+     * @attention Do not use different types tag to assign to list elements.
+     */
     BasicTag& operator=(BasicTag other) noexcept
     {
         using std::swap;
