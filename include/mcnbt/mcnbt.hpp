@@ -29,7 +29,7 @@
  * @file mcnbt.hpp
  * @brief A header-only C++ library for reading and writing Minecraft NBT format.
  * @author 頔珞 JaderoChan
- * @version 2.1.4
+ * @version 2.1.5
  */
 
 #ifndef MCNBT_MCNBT_HPP
@@ -38,6 +38,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
+#include <limits>
 #include <string>
 #include <vector>
 #include <map>
@@ -1244,6 +1245,59 @@ public:
     // =======================
     // > Binary serialization
     // =======================
+
+    /**
+     * @brief Guess the NBT byte order from a binary stream.
+     * @return 1 if it is guessed to be big-endian; return 0 if little-endian; return -1 if no result.
+     * @note \p is will be recover.
+     */
+    static int guessByteOrder(std::istream& is, size_t headerSkip = 0) noexcept
+    {
+        bool   bigEndianOk          = false;
+        bool   littleEndianOk       = false;
+        size_t bigEndianConsumed    = 0;
+        size_t littleEndianConsumed = 0;
+
+        try
+        {
+            (void)parse(is, true, headerSkip);
+            bigEndianOk       = true;
+            bigEndianConsumed = is.eof() ? std::numeric_limits<size_t>::max() : static_cast<size_t>(is.tellg());
+        }
+        catch (...) {}
+
+        is.clear();
+        is.seekg(0, std::istream::beg);
+
+        try
+        {
+            (void)parse(is, false, headerSkip);
+            littleEndianOk       = true;
+            littleEndianConsumed = is.eof() ? std::numeric_limits<size_t>::max() : static_cast<size_t>(is.tellg());
+        }
+        catch (...) {}
+
+        is.clear();
+        is.seekg(0, std::istream::beg);
+
+        if (!bigEndianOk && !littleEndianOk) return -1;
+        if ( bigEndianOk && !littleEndianOk) return 1;
+        if (!bigEndianOk &&  littleEndianOk) return 0;
+        if ( bigEndianOk &&  littleEndianOk) return bigEndianConsumed >= littleEndianConsumed ? 1 : 0;
+        return -1;
+    }
+
+    /**
+     * @brief Guess the NBT byte order from a file.
+     * @return 1 if it is guessed to be big-endian; return 0 if little-endian; return -1 if no result.
+     */
+    static bool guessByteOrder(const StringT& filepath, size_t headerSkip = 0) noexcept
+    {
+        std::ifstream ifs(filepath, std::ios::binary);
+        if (!ifs.is_open())
+            return -1;
+        return guessByteOrder(ifs, headerSkip);
+    }
 
     /**
      * @brief Parse a named root tag from a binary stream.
