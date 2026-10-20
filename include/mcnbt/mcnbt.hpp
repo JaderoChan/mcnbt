@@ -29,7 +29,7 @@
  * @file mcnbt.hpp
  * @brief A header-only C++ library for reading and writing Minecraft NBT format.
  * @author 頔珞 JaderoChan
- * @version 2.1.3
+ * @version 2.1.4
  */
 
 #ifndef MCNBT_MCNBT_HPP
@@ -1551,6 +1551,8 @@ private:
     {
         char buf[sizeof(T)];
         is.read(buf, sizeof(T));
+        if (is.gcount() != sizeof(T))
+            throw std::runtime_error("nbt::BasicTag: the stream unexpectedly ended");
         if (bigEndian != isBigEndian())
             std::reverse(buf, buf + sizeof(T));
         T val;
@@ -1570,11 +1572,13 @@ private:
 
     static StringT readNbtString(std::istream& is, bool bigEndian)
     {
-        int16_t len = readBinary<int16_t>(is, bigEndian);
+        const int16_t len = readBinary<int16_t>(is, bigEndian);
         if (len <= 0)
             return StringT{};
         StringT s(static_cast<size_t>(len), typename StringT::value_type{});
         is.read(&s[0], len);
+        if (static_cast<int16_t>(is.gcount()) != len)
+            throw std::runtime_error("nbt::BasicTag: the stream unexpectedly ended");
         return s;
     }
 
