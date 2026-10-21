@@ -29,7 +29,7 @@
  * @file mcnbt.hpp
  * @brief A header-only C++ library for reading and writing Minecraft NBT format.
  * @author 頔珞 JaderoChan
- * @version 2.1.6
+ * @version 2.1.7
  */
 
 #ifndef MCNBT_MCNBT_HPP
@@ -1429,18 +1429,26 @@ public:
 
     /**
      * @brief Serialize this tag to an SNBT string.
-     * @param indent Spaces per indentation level.
-     *               Negative: fully compact (no newlines, no spaces).
-     *               Zero: newlines but no indentation or extra spaces.
-     *               Positive: newlines with indentation.
+     * @param indent      Spaces per indentation level.
+     *                    Negative: fully compact (no newlines, no spaces).
+     *                    Zero: newlines but no indentation or extra spaces.
+     *                    Positive: newlines with indentation.
+     * @param escapeKey   Escape SNBT-special characters (",:[]{}), newline/tab, and
+     *                    backslash in compound keys with a leading backslash.
+     * @param escapeValue Escape the quote, backslash, newline, and tab in string values
+     *                    with a leading backslash (other SNBT-special characters don't
+     *                    need escaping inside a value since it's already quote-delimited).
      */
-    StringT toSnbt(int indent = -1) const
+    StringT toSnbt(int indent = -1, bool escapeKey = false, bool escapeValue = false) const
     {
-        return toSnbtImpl(indent, 0);
+        return toSnbtImpl(indent, 0, escapeKey, escapeValue);
     }
 
     /**
      * @brief Parse an SNBT string and returns the corresponding tag.
+     * @details Backslash escape sequences (\\", \\\\, \\n, \\r, \\t, and backslash-escaped
+     *          literal characters) are always unescaped, both in quoted strings and in
+     *          unquoted compound keys.
      * @param s SNBT-formatted string.
      * @throw std::runtime_error on malformed input.
      */
@@ -1901,7 +1909,7 @@ private:
     // > SNBT helpers
     // ===============
 
-    StringT toSnbtImpl(int indent, int level) const
+    StringT toSnbtImpl(int indent, int level, bool escapeKey, bool escapeValue) const
     {
         const StringT ind  = makeIndent(indent, level);
         const StringT ind1 = makeIndent(indent, level + 1);
@@ -1927,7 +1935,7 @@ private:
             case TT_STRING:
             {
                 const StringT& s = value_.ptr ? *static_cast<const StringT*>(value_.ptr) : StringT{};
-                return StringT("\"") + s + "\"";
+                return StringT("\"") + (escapeValue ? snbtEscapeValue(s) : s) + "\"";
             }
             case TT_BYTE_ARRAY:
             {
@@ -1973,7 +1981,7 @@ private:
                 for (size_t i = 0; i < lst->size(); ++i)
                 {
                     s += nl + ind1;
-                    s += (*lst)[i].toSnbtImpl(indent, level + 1);
+                    s += (*lst)[i].toSnbtImpl(indent, level + 1, escapeKey, escapeValue);
                     if (i + 1 < lst->size()) s += ",";
                 }
                 s += nl + ind + "]";
@@ -1988,8 +1996,8 @@ private:
                 for (const auto& kv : *cmp)
                 {
                     if (!first) s += ",";
-                    s += nl + ind1 + kv.first + ":" + sp;
-                    s += kv.second.toSnbtImpl(indent, level + 1);
+                    s += nl + ind1 + (escapeKey ? snbtEscapeKey(kv.first) : kv.first) + ":" + sp;
+                    s += kv.second.toSnbtImpl(indent, level + 1, escapeKey, escapeValue);
                     first = false;
                 }
                 s += nl + ind + "}";
@@ -1997,6 +2005,69 @@ private:
             }
             default:
                 return "";
+        }
+    }
+
+    // ===============
+    // > SNBT helpers
+    // ===============
+
+    // Prefixes SNBT-special characters (",:[]{}), newline/tab, and backslash with a backslash.
+    static StringT snbtEscapeKey(const StringT& s)
+    {
+        StringT result;
+        result.reserve(s.size());
+        for (char c : s)
+        {
+            switch (c)
+            {
+                case '\\': result += "\\\\"; break;
+                case '"':  result += "\\\""; break;
+                case '\n': result += "\\n";  break;
+                case '\r': result += "\\r";  break;
+                case '\t': result += "\\t";  break;
+                case ',':  result += "\\,";  break;
+                case ':':  result += "\\:";  break;
+                case '[':  result += "\\[";  break;
+                case ']':  result += "\\]";  break;
+                case '{':  result += "\\{";  break;
+                case '}':  result += "\\}";  break;
+                default:   result += c;      break;
+            }
+        }
+        return result;
+    }
+
+    // Escapes only the quote, backslash, and control characters that would break a quoted string
+    // (other SNBT-special characters don't need escaping since the value is already quote-delimited).
+    static StringT snbtEscapeValue(const StringT& s)
+    {
+        StringT result;
+        result.reserve(s.size());
+        for (char c : s)
+        {
+            switch (c)
+            {
+                case '\\': result += "\\\\"; break;
+                case '"':  result += "\\\""; break;
+                case '\n': result += "\\n";  break;
+                case '\r': result += "\\r";  break;
+                case '\t': result += "\\t";  break;
+                default:   result += c;      break;
+            }
+        }
+        return result;
+    }
+
+    // Returns the unescaped character for a backslash escape (default: the char itself).
+    static char snbtUnescapeChar(char c)
+    {
+        switch (c)
+        {
+            case 'n': return '\n';
+            case 'r': return '\r';
+            case 't': return '\t';
+            default:  return c;
         }
     }
 
@@ -2023,15 +2094,7 @@ private:
             if (s[pos] == '\\' && pos + 1 < s.size())
             {
                 ++pos;
-                switch (s[pos])
-                {
-                    case '"':  result += '"';    break;
-                    case '\\': result += '\\';   break;
-                    case 'n':  result += '\n';   break;
-                    case 'r':  result += '\r';   break;
-                    case 't':  result += '\t';   break;
-                    default:   result += s[pos]; break;
-                }
+                result += snbtUnescapeChar(s[pos]);
             }
             else { result += s[pos]; }
             ++pos;
@@ -2047,11 +2110,19 @@ private:
         snbtSkipWs(s, pos);
         if (pos < s.size() && s[pos] == '"')
             return snbtReadQuotedString(s, pos);
-        size_t start = pos;
+        StringT result;
         while (pos < s.size() && s[pos] != ':' && s[pos] != ' ' &&
             s[pos] != '\t' && s[pos] != '\n' && s[pos] != '\r')
+        {
+            if (s[pos] == '\\' && pos + 1 < s.size())
+            {
+                ++pos;
+                result += snbtUnescapeChar(s[pos]);
+            }
+            else { result += s[pos]; }
             ++pos;
-        return s.substr(start, pos - start);
+        }
+        return result;
     }
 
     // Reads an integer token with an optional b/s/l suffix; strips the suffix before numeric conversion.
