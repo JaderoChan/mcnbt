@@ -29,7 +29,7 @@
  * @file mcnbt.hpp
  * @brief A header-only C++ library for reading and writing Minecraft NBT format.
  * @author 頔珞 JaderoChan
- * @version 2.1.5
+ * @version 2.1.6
  */
 
 #ifndef MCNBT_MCNBT_HPP
@@ -1248,21 +1248,26 @@ public:
 
     /**
      * @brief Guess the NBT byte order from a binary stream.
-     * @return 1 if it is guessed to be big-endian; return 0 if little-endian; return -1 if no result.
+     * @return 0 if it is guessed to be big-endian;
+     *         1 if little-endian;
+     *         2 if little-endian with 8 byte header;
+     *        -1 if no result.
      * @note \p is will be recover.
      */
-    static int guessByteOrder(std::istream& is, size_t headerSkip = 0) noexcept
+    static int guessByteOrder(std::istream& is) noexcept
     {
-        bool   bigEndianOk          = false;
-        bool   littleEndianOk       = false;
-        size_t bigEndianConsumed    = 0;
-        size_t littleEndianConsumed = 0;
+        bool   bigOk                = false;
+        bool   littleOk             = false;
+        bool   littleHeaderOk       = false;
+        size_t bigConsumed          = 0;
+        size_t littleConsumed       = 0;
+        size_t littleHeaderConsumed = 0;
 
         try
         {
-            (void)parse(is, true, headerSkip);
-            bigEndianOk       = true;
-            bigEndianConsumed = is.eof() ? std::numeric_limits<size_t>::max() : static_cast<size_t>(is.tellg());
+            (void)parse(is, true, 0);
+            bigOk       = true;
+            bigConsumed = is.eof() ? std::numeric_limits<size_t>::max() : static_cast<size_t>(is.tellg());
         }
         catch (...) {}
 
@@ -1271,25 +1276,48 @@ public:
 
         try
         {
-            (void)parse(is, false, headerSkip);
-            littleEndianOk       = true;
-            littleEndianConsumed = is.eof() ? std::numeric_limits<size_t>::max() : static_cast<size_t>(is.tellg());
+            (void)parse(is, false, 0);
+            littleOk       = true;
+            littleConsumed = is.eof() ? std::numeric_limits<size_t>::max() : static_cast<size_t>(is.tellg());
         }
         catch (...) {}
 
         is.clear();
         is.seekg(0, std::istream::beg);
 
-        if (!bigEndianOk && !littleEndianOk) return -1;
-        if ( bigEndianOk && !littleEndianOk) return 1;
-        if (!bigEndianOk &&  littleEndianOk) return 0;
-        if ( bigEndianOk &&  littleEndianOk) return bigEndianConsumed >= littleEndianConsumed ? 1 : 0;
+        try
+        {
+            (void)parse(is, false, 8);
+            littleHeaderOk       = true;
+            littleHeaderConsumed = is.eof() ? std::numeric_limits<size_t>::max() : static_cast<size_t>(is.tellg());
+        }
+        catch (...) {}
+
+        is.clear();
+        is.seekg(0, std::istream::beg);
+
+        if (!bigOk && !littleOk && !littleHeaderOk) return -1;
+        if ( bigOk && !littleOk && !littleHeaderOk) return  0;
+        if (!bigOk &&  littleOk && !littleHeaderOk) return  1;
+        if (!bigOk && !littleOk &&  littleHeaderOk) return  2;
+        if ( bigOk &&  littleOk && !littleHeaderOk) return bigConsumed    >= littleConsumed       ? 0 : 1;
+        if (!bigOk &&  littleOk &&  littleHeaderOk) return littleConsumed >= littleHeaderConsumed ? 1 : 2;
+        if ( bigOk && !littleOk &&  littleHeaderOk) return bigConsumed    >= littleHeaderConsumed ? 0 : 2;
+
+        const std::size_t maxConsumed = std::max({bigConsumed, littleConsumed, littleHeaderConsumed});
+        if (maxConsumed == bigConsumed)          return 0;
+        if (maxConsumed == littleConsumed)       return 1;
+        if (maxConsumed == littleHeaderConsumed) return 2;
+
         return -1;
     }
 
     /**
      * @brief Guess the NBT byte order from a file.
-     * @return 1 if it is guessed to be big-endian; return 0 if little-endian; return -1 if no result.
+     * @return 0 if it is guessed to be big-endian;
+     *         1 if little-endian;
+     *         2 if little-endian with 8 byte header;
+     *        -1 if no result.
      */
     static bool guessByteOrder(const StringT& filepath, size_t headerSkip = 0) noexcept
     {
